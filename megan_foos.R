@@ -1,0 +1,138 @@
+#' Convert BLAST into rma6. See megan help file (\code{blast2rma.BAS(h=T)}) for full details.
+#'     This is just an R wrapper of that function. This does not support all options for the \code{blast2rma} command.
+#' @title Convert BLAST into rma6
+#' @param infile BLAST results file
+#' @param format format of BLAST results file. Common values: "BlastTab" (default),"BlastXML", "BlastText". See h=T for more
+#' @param blastMode mode used for BLAST
+#' @param reads Optional. fasta file used to perform BLAST
+#' @param outfile filename for output file. Recommended to use .rma6 suffix
+#' @param top Optional. When binning, consider hits falling within \code{top} percent of BLAST score of the top hit
+#' @param mdf Optional. Files containing metadata to be included in RMA6 files ######Need to find the accpeted formats for this
+#' @param ms Min score. Default value: 50.0
+#' @param me Max expected. Default value: 0.01
+#' @param mrc Min percent of read length to be covered by alignments. Default value: 70.0
+#' @param ram Set the read assignment mode. Default value: readCount. Legal values: readCount, readLength, alignedBases, readMagnitude
+#' @param a2t Optional, bit highly recommended. Accession-to-Taxonomy mapping file
+#' @param h Set h=T to show program usage
+#' @return An rma6 file
+#' @note Apparently, if \code{infile} is xml format, filename must end in ".xml"
+#'
+#' @examples
+#' blast2rma.BAS("primer_16S.uniq.l75L120.c20.xml",outfile = "primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6",
+#'    a2t = "nucl_acc2tax-Nov2018.abin")
+#' #inspect file and disable taxa as necessary
+#' primer_16S.uniq.l75L120.c20.TEST.taxon.table<-rma2info.BAS("primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6")
+#' final.table<-merge.tab.taxon(obitab.txt = "primer_16S.uniq.l75L120.c20.tab",primer_16S.uniq.l75L120.c20.TEST.taxon.table)
+#' @export
+blast2rma.BAS<-function(infile,format="BlastTab",blastMode="BlastN",outfile,reads=F,
+                        top=10.0, mdf=F,ms=50.0,me=0.01,mrc=70.0, ram="readCount",a2t=F,h=F){
+  if(reads==F) message("Running without a specified fasta file, which is fine, but resultant megan file will not contain as much information")
+
+  if(h==T){
+    processx::run(command = "blast2rma", args="-h",echo = T)}
+
+  if(h==F){
+    cb <- function(line, proc) {cat(line, "\n")}
+    argsBas<-c(" --in ", infile," --format",format," --blastMode ",blastMode,
+               " --reads ", reads," --out ",outfile," --topPercent ",top," -mdf ",mdf," -ms ",ms,
+               " -me ",me," -mrc ",mrc," -ram ",ram," -a2t ",a2t," -supp ",0)
+    argsBasF<-argsBas[-(grep(FALSE,argsBas)-1)]
+    argsBasF<-argsBasF[-grep(FALSE,argsBasF)]
+    processx::run(command = "blast2rma", args=argsBasF,stderr_line_callback = cb,echo_cmd = T,echo = F)}
+    b<-"SUCCESS!" #this is mainly to stop processx::run printing stdout and stderr to screen, which it does because we
+    #cannot explicitly redirect stdout because the command has an "out" option
+    return(b)
+}
+
+#' Convert rma6 file into a table with read names, associated taxon path and a letter denoting the lowest taxonomic
+#'     level reached. See megan help file (\code{rma2info.BAS(h=T)}) for full details.
+#'     This is just an R wrapper of the \code{rma2info} command, it does not support all options for the \code{rma2info} command.
+#' @title Convert rma6 into taxon path table.
+#' @param infile rma6 file
+#' @param names Report names rather than taxid numbers. Default value: true.
+#' @param h Show program usage
+#' @return A dataframe consisting of read names in the "id" column, a letter denoting the lowest taxonomic in the "resolution"
+#'     column and seven further columns for the taxon path split by major taxonomic ranks (SK,P,C,O,F,G,S).
+#'     The function is fixed to output the taxonomy path to lowest level reached.
+#' @examples
+#' a<-system.file("extdata", "Mblast.c20.uniq.l85L105.PRIMER_16S.rma6", package = "bastools")
+#' b<-rma2info.BAS(a)
+#' @export
+rma2info.BAS<-function(infile,names="true",h=F,out.txt=NULL){
+  if(h==T){
+    processx::run(command = "rma2info", args="-h",echo = T)}
+
+  if(h==F){
+    cb <- function(line, proc) {cat(line, "\n")}
+    if(is.null(out.txt)){
+    argsBas<-c(" --in ", infile,
+               " -r2c ", "Taxonomy", " --names ",names," -u ","true"," -mro ","true",
+               " --ranks ","true"," --paths ","true"," -v ", "true")
+    a<-processx::run(command = "rma2info", args=argsBas, echo_cmd = T,stderr_line_callback = cb)
+
+    b<-read.delim(text = a$stdout,header=F)
+    colnames(b)<-c("id","resolution","path")
+    c<-as.data.frame(stringr::str_split(b$path,pattern = ";",simplify = T))
+    d<-c[,1:(length(colnames(c))-1)]
+    colnames(d)<-c("SK","P","C","O","F","G","S")
+    d[] <- lapply(d, function(x) (gsub("\\[.*\\] ", "", x)))
+    e<-cbind(b[,c("id","resolution")],d)
+  return(e)
+  }
+
+    if(!is.null(out.txt)){
+      argsBas<-c(" --in ", infile,
+                 " -r2c ", "Taxonomy", " --names ",names," -u ","true"," -mro ","true",
+                 " --ranks ","true"," --paths ","true"," -v ", "true")
+      h<-process$new(command = "rma2info", args=argsBas, echo_cmd = T,stdout = out.txt)
+      h$wait()
+      b<-"SUCCESS!" #this is mainly to stop processx::run printing stdout and stderr to screen, which it does because we
+      #cannot explicitly redirect stdout because the command has an "out" option
+      return(b)
+      #########this will not be in correct format for merge.tab.taxon
+    }
+  }
+}
+
+#' Combine an OTU table with a table of taxon names. Most commonly where \code{obitab} was used to convert a fasta file to a table,
+#'    and \code{MEGAN} was used to assign taxonomy from BLAST results of the same fasta file.
+#' @title Merge reads and assigned taxonomy
+#' @param obitab.txt Any tab-delineated text file with a column "id" containing read names,
+#'     such as the file created by \code{obitab}.
+#' @param megan.taxa Can be:
+#'    \itemize{
+#'     \item A simple, headerless text file where the first column consist of the read names
+#'     and the second column consists of taxa, as manually output using the \code{MEGAN::readName_to_taxonName} option.
+#'     \item A dataframe consisting of a taxonomy table with read names in a column named "id", as ouput by \code{rma2info.BAS}}
+#' @return A dataframe which is equal to \code{obitab.txt} but, depending on input, either has one new column "taxon",
+#'     or multiple columns corresponding to taxon path (SK,P,C,O,F,G,S) and lowest taxonomic level reached.
+#'
+#' @examples
+#'   \itemize{
+#'     \item test<-merge.tab.taxon(c20.uniq.l85L105.PRIMER_16S.tab", "Mblast.c20.uniq.l85L105.PRIMER_16S-taxon.txt")
+#'     \item test<-merge.tab.taxon(c20.uniq.l85L105.PRIMER_16S.tab", taxon.table)
+#'     \item blast2rma.BAS("primer_16S.uniq.l75L120.c20.xml",outfile = "primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6",
+#'               a2t = "nucl_acc2tax-Nov2018.abin")
+#'              inspect file and disable taxa as necessary
+#'              primer_16S.uniq.l75L120.c20.TEST.taxon.table<-rma2info.BAS("primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6")
+#'              final.table<-merge.tab.taxon(obitab.txt = "primer_16S.uniq.l75L120.c20.tab",primer_16S.uniq.l75L120.c20.TEST.taxon.table)}
+#' @export
+merge.tab.taxon<-function(obitab.txt,megan.taxa){
+
+  if (class(megan.taxa)!="data.frame") {
+  read.csv(file = obitab.txt, sep = "\t")->obitab_input
+  read.csv(file = megan.taxa, sep = "\t", header = FALSE)->taxon_input
+  taxon_input$taxon<-taxon_input$V2
+  taxon_input$V2<-NULL
+  merged.table<-merge(obitab_input,taxon_input,by.x = "id",by.y = "V1",all.x = TRUE)
+  }
+
+  if (class(megan.taxa)=="data.frame") {
+    read.csv(file = obitab.txt, sep = "\t")->obitab_input
+    merged.table<-merge(obitab_input,megan.taxa,by.x = "id",by.y = "id",all.x = TRUE)
+  }
+  return(merged.table)
+}
+
+
+
