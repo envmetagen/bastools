@@ -44,8 +44,8 @@
 #' obitaxdb<-"/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/bastools/inst/extdata/obitax_26-4-19"
 #' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="12S_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
 #' @export
-bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=70,max_evalue=0.001,top=1,
-                        spident=99,gpident=97,fpident=94,abspident=80){
+bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=80,max_evalue=0.001,top=1,
+                        spident=98,gpident=95,fpident=92,abspident=80){
   
   t1<-Sys.time()
 
@@ -56,8 +56,8 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=70,m
   if(length(grep("staxid",headers))<1) stop("staxid not in headers")
   
   if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
-  if(is.null(obitaxdb)) stop("ncbiTaxDir not specified")
-  if(is.null(out)) stop("ncbiTaxDir not specified")
+  if(is.null(obitaxdb)) stop("obitaxdb not specified")
+  if(is.null(out)) stop("out not specified")
   
 
   message("reading blast results")
@@ -79,12 +79,13 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=70,m
   topdf<-aggregate(x = btab[,colnames(btab) %in% c("qseqid","pident")],by=list(btab$qseqid),FUN = max)
   topdf$min_pident<-topdf$pident-topdf$pident*top/100
   btab<-merge(btab,topdf[,c(2,4)],by = "qseqid", all.y = T) #can definitely do this differently and faster
+  btab<-btab[btab$pident>btab$min_pident,]
   rm(topdf)
 
   #add lineage to results
   message("adding taxonomic lineages")
   btab$taxids<-btab$staxid #add.lineage.df requires this colname
-  btab<-add.lineage.df(btab,ncbiTaxDir)
+  btab<-suppressMessages(add.lineage.df(btab,ncbiTaxDir))
   
   #remove crappy hits 
   #1. btab$S contains uncultured
@@ -128,7 +129,7 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=70,m
   rm(btabsp)
   #get lca names
   colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
-  lcasp<-add.lineage.df(df = lcasp,ncbiTaxDir)
+  lcasp<-suppressMessages(add.lineage.df(df = lcasp,ncbiTaxDir))
   colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
 
   #genus-level assignments
@@ -140,7 +141,7 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=70,m
   rm(btabg)
   #get lca names
   colnames(lcag)<-gsub("x","taxids",colnames(lcag))
-  lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
+  lcag<-suppressMessages(add.lineage.df(df = lcag,ncbiTaxDir))
   colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
 
   #family-level assignments
@@ -152,7 +153,7 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=70,m
   rm(btabf)
   #get lca names
   colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
-  lcaf<-add.lineage.df(df = lcaf,ncbiTaxDir)
+  lcaf<-suppressMessages(add.lineage.df(df = lcaf,ncbiTaxDir))
   colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
 
   #higher-than-family-level assignments
@@ -164,7 +165,7 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=70,m
   rm(btabhtf)
   #get lca names
   colnames(lcahtf)<-gsub("x","taxids",colnames(lcahtf))
-  lcahtf<-add.lineage.df(df = lcahtf,ncbiTaxDir)
+  lcahtf<-suppressMessages(add.lineage.df(df = lcahtf,ncbiTaxDir))
   colnames(lcahtf)<-gsub("Group.1","qseqid",colnames(lcahtf))
 
   ###################################################
