@@ -1,4 +1,4 @@
-mapTrim<-function(query,buffer,blast.results.file,qc=0.7,out){
+mapTrim2<-function(query,buffer,blast.results.file,qc=0.7,out){
   message("reading query file")
   #read in query file and count
   n<-phylotools::read.fasta(query)
@@ -13,10 +13,16 @@ mapTrim<-function(query,buffer,blast.results.file,qc=0.7,out){
   j<-read.table(file = blast.results.file)
   colnames(j)<-c("qseqid", "qlen", "qstart", "qend",
                  "slen", "sstart", "send", "length", "pident", "qcovs","sstrand")
-  count_hits<-length(j$qseqid)
+  #calculate scov
+  j$scov<-j$length/j$slen
+  
+  #remove duplicate hits
+  j2 <- j[order(j$qseqid,j$scov),]
+  j2<-j2[!duplicated(j2$qseqid),]
+  count_hits<-length(j2$qseqid)
   
   #remove hits less than specified subject cover
-  j2<-j[j$length>j$slen*qc,]
+  j2<-j2[j2$scov>qc,]
   count_qc<-length(j2$qseqid)
   
   #merge query and blast results

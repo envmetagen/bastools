@@ -44,7 +44,7 @@
 #' obitaxdb<-"/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/bastools/inst/extdata/obitax_26-4-19"
 #' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="12S_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
 #' @export
-bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=80,max_evalue=0.001,top=1,
+bin.blast.bas<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,obitaxdb,out,min_qcovs=70,max_evalue=0.001,top=1,
                         spident=98,gpident=95,fpident=92,abspident=80){
   
   t1<-Sys.time()
@@ -59,11 +59,10 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=80,m
   if(is.null(obitaxdb)) stop("obitaxdb not specified")
   if(is.null(out)) stop("out not specified")
   
-
   message("reading blast results")
   btab<-as.data.frame(data.table::fread(file = blastfile,sep = "\t"))
   colnames(btab)<-strsplit(headers,split = " ")[[1]]
-
+  
   #preparing some things for final step
   total_hits<-length(btab$qseqid) #for info later
   total_queries<-length(unique(btab$qseqid))
@@ -117,8 +116,8 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=80,m
   #species-level assignments
   message("binning at species level")
   btabsp<-btab[btab$S!="unknown",]
-  if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) {
-    btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]}
+  # if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) {
+  #   btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]}
   if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) {
     btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]}
   if(length(grep("[0-9]",btabsp$S))>0) {
@@ -133,7 +132,8 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=80,m
   colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
 
   #genus-level assignments
-  message("binning at genus level")
+  message("binning at genus level") ######for all the next steps I should only process qseqids that were not yet
+  ######successful, wasting time at the moment
   btabg<-btab[btab$G!="unknown" & btab$S!="unknown",]
   btabg<-btabg[btabg$pident>gpident,]
   lcag = aggregate(btabg$taxids, by=list(btabg$qseqid),
@@ -189,7 +189,7 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=80,m
   abs_level<-abs_level[!abs_level$qseqid %in% f_level$qseqid,]
   
   com_level<-rbind(sp_level,g_level,f_level,abs_level)
-  com_level<-merge(x=qseqids, y = com_level[,c(2,4:10)], by = "qseqid",all.x = T)
+  com_level<-merge(x=qseqids, y = com_level[,c(2,4:10)], by = "qseqid",all = T)
 
   #info
   t2<-Sys.time()
@@ -203,5 +203,4 @@ bin.blast.bas<-function(blastfile,headers,ncbiTaxDir,obitaxdb,out,min_qcovs=80,m
           the results will be NA for all taxon levels.
           If the lca for a particular OTU is above kingdom, e.g. cellular organisms or root, 
           the results will be unknown for all taxon levels.")
-  
 }

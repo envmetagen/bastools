@@ -72,23 +72,26 @@ ecoPrimers.Bas<-function(ecopcrdb,max_error,min_length,max_length,strict_match_p
 #'
 #' @export
 ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length,out,buffer=NULL){
-  cb <- function(line, proc) {cat(line, "\n")}
+  #cb <- function(line, proc) {cat(line, "\n")}
+  
+  if(length(grep("I",Pf))>0)(Pf<-gsub("I","N",Pf))
+  if(length(grep("I",Pr))>0)(Pf<-gsub("I","N",Pr))
+  
   if(is.null(buffer)){
-  a<-processx::run(command = "ecoPCR",
-                   args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k"),
-                   echo=F,echo_cmd = T,stderr_line_callback = cb)}
+  system2(command = "ecoPCR",args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k","-c"),
+          stdout = out,wait = T)}
+  
   if(!is.null(buffer)){
-    a<-processx::run(command = "ecoPCR",
-                     args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k","-D",buffer),
-                     echo=F,echo_cmd = T,stderr_line_callback = cb)}
-  b<-suppressWarnings(data.table::fread(input = a$stdout,sep = "|"))
-  ecopcroutput<-as.data.frame(b)
-  if(length(colnames(ecopcroutput))==1) stop("No hits",call. = F)
-  colnames(ecopcroutput)<- c("AC","seq_length","taxid","rank","species","species_name","genus",
+    system2(command = "ecoPCR",
+            args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k","-c","-D",buffer),
+            stdout = out,wait = T)}
+  
+  b<-suppressWarnings(data.table::fread(input = out,sep = "|"))
+  b<-as.data.frame(b)
+  if(length(colnames(b))==1) stop("No hits",call. = F)
+  colnames(b)<- c("AC","seq_length","taxid","rank","species","species_name","genus",
                                 "genus_name","family","family_name","superkingdom","superkingdom_name",
                                 "strand","forward_match","forward_mismatch","forward_tm","reverse_match",
                              "reverse_mismatch","reverse_tm","amplicon_length","sequence","definition")
-
-  write.table(ecopcroutput,file = out,quote = F,row.names = F,sep = "\t")
-  print("SUCCESS!")
+  write.table(b,file = out,quote = F,row.names = F,sep = "\t")
   }

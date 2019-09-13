@@ -4,8 +4,8 @@ message("Reminders: headers must contain \"species=species_name;\"")
   
 fasta.table<-phylotools::read.fasta(infasta)
 fasta.table$name<-gsub("_"," ",stringr::str_match(fasta.table$seq.name, "species=(.*?);")[,2])
-fasta.table$taxids<-names2taxids(fasta.table$name,ncbiTaxDir)
-suppressMessages(new_lineage<-add.lineage.df(fasta.table,ncbiTaxDir))
+fasta.table$taxids<-names2taxids(vector = fasta.table$name,ncbiTaxDir)
+new_lineage<-add.lineage.df(fasta.table,ncbiTaxDir)
 
 new_lineage$full<-paste0("kingdom=",new_lineage$K,"; phylum=",new_lineage$P,"; class=",new_lineage$C,
                          "; order=",new_lineage$O,"; family=",new_lineage$F,"; genus=",new_lineage$G,
@@ -37,13 +37,14 @@ names2taxids<-function(vector,ncbiTaxDir){
 
   #for unfound taxids, repeat search using only first word
   namesB<-c(as.character(taxidsA$V1)[is.na(taxidsA$V2)],vector[grep(" sp\\.",vector)])
+  if(length(namesB)>0){
   namesB<-gsub(" .*","",namesB)
   names_fileB<-paste0("names",as.numeric(Sys.time()),".txt")
   taxids_fileB<-gsub("names","taxids",names_fileA)
   write.table(unique(namesB),file = names_fileB,row.names = F,col.names = F,quote = F)
   system2(command = "taxonkit", args = c("name2taxid",names_fileB,"-r","--data-dir",ncbiTaxDir),
           stdout = taxids_fileB,stderr = "",wait = T)
-  taxidsB<-read.table(taxids_fileB,sep = "\t")
+  taxidsB<-read.table(taxids_fileB,sep = "\t")}
 
   #Note that if a name matches more than one taxid, taxonkit creates a new row and includes both taxids, 
   #allow user input for choices
@@ -57,7 +58,7 @@ names2taxids<-function(vector,ncbiTaxDir){
   taxidsA5<-taxidsA2[taxidsA2$V1 %in% taxidsA4$V1,]
   colnames(taxidsA5)<-c("name","taxids","rank")
   #add lineage to make choice easier
-  suppressMessages(taxidsA5<-add.lineage.df(taxidsA5,ncbiTaxDir))
+  taxidsA5<-add.lineage.df(taxidsA5,ncbiTaxDir)
   taxidsA5$old_taxids=NULL
   #present choice
   message("The following ", length(unique(taxidsA5$name))," taxa had more than one taxid match. Please
@@ -74,6 +75,8 @@ names2taxids<-function(vector,ncbiTaxDir){
   taxidsA7<-rbind(taxidsA6,choicesA_df)
   } else {taxidsA7<-taxidsA2}
   
+  
+  if(length(namesB)>0){
   #for good results in taxidsB
   taxidsB2<-taxidsB[!is.na(taxidsB$V2),]
   
@@ -84,7 +87,7 @@ names2taxids<-function(vector,ncbiTaxDir){
   taxidsB5<-taxidsB2[taxidsB2$V1 %in% taxidsB4$V1,]
   colnames(taxidsB5)<-c("name","taxids","rank")
   #add lineage to make choice easier
-  suppressMessages(taxidsB5<-add.lineage.df(taxidsB5,ncbiTaxDir))
+  taxidsB5<-add.lineage.df(taxidsB5,ncbiTaxDir)
   taxidsB5$old_taxids=NULL
   #present choice
   message("The following ", length(unique(taxidsB5$name))," taxa had more than one taxid match. Please
@@ -101,26 +104,30 @@ names2taxids<-function(vector,ncbiTaxDir){
   taxidsB7<-rbind(taxidsB6,choicesB_df)
   } else {taxidsB7<-taxidsB2}
   
+  }
   #combine taxidA and taxidB results
   outdf<-as.data.frame(vector)
   outdf$vec2<-gsub(" sp\\.","",outdf$vector)
   outdf$vec3<-gsub(" .*","",outdf$vector)
   outdf<-merge(outdf,taxidsA7,by.x = "vec2",by.y = "V1",all.x = T,all.y = F)
+  if(length(namesB)>0){
   outdf<-merge(outdf,taxidsB7,by.x = "vec3",by.y = "V1",all.x = T,all.y = F)
-  outdf$V2.z<-ifelse(!is.na(outdf$V2.x) & !is.na(outdf$V2.y) | is.na(outdf$V2.y),outdf$V2.z<-outdf$V2.x,NA)
+  outdf$V2.z<-ifelse(!is.na(outdf$V2.x) & !is.na(outdf$V2.y) | is.na(outdf$V2.y),outdf$V2.z<-outdf$V2.x,NA)}
 
   #combine taxids into one column
-  outdf$taxids<-do.call(pmax, c(outdf[,c("V2.z","V2.y")], list(na.rm=TRUE)))
+  if(length(namesB)>0){
+  outdf$taxids<-do.call(pmax, c(outdf[,c("V2.z","V2.y")], list(na.rm=TRUE)))} else {outdf$taxids<-outdf$V2}
+  
+  #remove files
+  unlink(names_fileA)
+  unlink(taxids_fileA)
+  if(length(namesB)>0){
+  unlink(names_fileB)
+  unlink(taxids_fileB)}
+  
   #remove extraneous columns
   colnames(outdf)<-gsub("vector","name",colnames(outdf))
-  
-  unlink(names_fileA)
-  unlink(names_fileB)
-  unlink(taxids_fileA)
-  unlink(taxids_fileB)
-  
   outdf<-outdf[match(vector, outdf$name),]
-  
   outdf<-outdf[,"taxids"]
 }
 
