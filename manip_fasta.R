@@ -88,7 +88,11 @@ bascount.fastas.recur<-function(folder){
   e<-stringr::str_split(string = d$V1,pattern = ":")
   setwd(origpath)
   sum(sapply(e, function(x){as.numeric(x[2])}))
-
 }
+remove.dashes.fasta<-function(infasta,outfasta){
+  f<-process$new(command = "sed",args = c("-e","/^>/!s/-//g;/^$/d",infasta),echo_cmd = T, stdout = outfasta)
+  f$wait()
+}
+
 
 

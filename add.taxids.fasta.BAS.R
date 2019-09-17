@@ -48,6 +48,8 @@ names2taxids<-function(vector,ncbiTaxDir){
 
   #Note that if a name matches more than one taxid, taxonkit creates a new row and includes both taxids, 
   #allow user input for choices
+  message("Should add choices for unknowns")
+  
   
   #first for good results in taxidsA
   taxidsA2<-taxidsA[!is.na(taxidsA$V2),]

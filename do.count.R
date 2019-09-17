@@ -9,8 +9,8 @@ do.counts<-function(df, step){
   
   #remove samples and taxa with no reads
   if(length(colnames(df))>1){
-  df2<-df[!rowSums(df)==0,]
-  df3<-as.data.frame(df2[,!colSums(df2)==0])
+  df2<-df[rowSums(df)!=0,]
+  df3<-as.data.frame(df2[,colSums(df2)!=0])
   if(length(colnames(df3))<2){
   colnames(df3)<-colnames(df2)[colSums(df2)>0]
   df2<-df3

@@ -1,181 +1,169 @@
 
 #DO CALCULATIONS AND STATS
-# sp_amplifications_per_family<-{
-#   
-#   #Amped or not
-#   in_original_db<-as.character(unique(originaldb$F))
-#   Families_amp_success<-as.data.frame(in_original_db)
-#   Families_amp_success$amplified<-Families_amp_success$in_original_db %in% unique(ecopcroutput$family_name)
-#   
-#   #what % of species within each family were amplified?
-#   length(unique(ecopcroutput$species_name))
-#   length(ecopcroutput$species_name)
-#   
-#   amped_species_count<-aggregate(ecopcroutput$species_name[!duplicated(ecopcroutput$species_name)],
-#                                  by = list(ecopcroutput$family_name[!duplicated(ecopcroutput$species_name)]),FUN=length)
-#   orig_species_count<-aggregate(originaldb$S[!duplicated(originaldb$S)],
-#                                 by = list(originaldb$F[!duplicated(originaldb$S)]),FUN=length)
-#   
-#   
-#   
-#   ##No. of species within each family in original
-#   unique_species_ori<-originaldb[!duplicated(originaldb$species_name),]
-#   pc_sp_ori<-as.data.frame(table(unique_species_ori[,c("family_name","species_name")]))
-#   pc_sp_ori<-pc_sp_ori[pc_sp_ori$Freq>0,]
-#   pc_sp_ori<-as.data.frame(table(pc_sp_ori$family_name,pc_sp_ori$Freq))
-#   pc_sp_ori<-pc_sp_ori[pc_sp_ori$Freq>0,]
-#   
-#   #combine
-#   pc_sp_ori_eco<-merge(pc_sp_ori[,c(1,3)],pc_sp_eco[c(1,3)],by = "Var1",all.x = T,all.y = F)
-#   pc_sp_ori_eco$prop_amped<-pc_sp_ori_eco$Freq.y/pc_sp_ori_eco$Freq.x
-#   colnames(pc_sp_ori_eco)<-c("family","no. sp in ecopcrdb","no. amplified","prop amped")
-
-make.primer.bias.tables<-function(originaldb,ecopcroutput,out_bias_file,out_mod_ecopcrout_file,Pf,Pr, obitaxoR){
+make.primer.bias.tables<-function(originaldbtab,ecopcroutput,
+                                  out_bias_file,out_mod_ecopcrout_file,Pf,Pr, obitaxoR){
   
-  in_original_db<-as.character(unique(originaldb$F))
-  amplified<-unique(ecopcroutput$family_name)
-  not_amplified<-in_original_db[!in_original_db %in% amplified]
+  ##########################################
+  #GENERAL CLEANING 
   
-  #combine results
-  Families_amp_success<-data.frame(row.names = 1:length(in_original_db))
-  #Families_amp_success$all.known.families<-all_families
-  Families_amp_success$in.ecopcrdb<-in_original_db
-  Families_amp_success$amplified<-in_original_db %in% amplified
+  #read results
+  ecopcroutput<-data.table::fread(ecopcroutput,sep = "\t")
+  #remove hits outside desired lengths
+  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
+  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
+  #remove duplicates (i.e. pick one entry per AC, based on lowest mismatches)
+  ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
+  ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
+  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
+  #remove weird primer mismatches (only a few usually)
+  ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$forward_match,allowNA = T)<nchar(Pf),]
+  ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$reverse_match,allowNA = T)<nchar(Pr),]
   
-  ################SHOULD ENSURE THIS WORKS FOR SPECIES COUNTS WITHIN FAMILES ALSO
+  #for rest of stats keep only unique barcodes for each family
+  ecopcroutput$fullseq<-paste0(ecopcroutput$forward_match,ecopcroutput$sequence,ecopcroutput$reverse_match)
+  ecopcroutput <- ecopcroutput[order(ecopcroutput$family_name,ecopcroutput$fullseq),]
+  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput[,c("family_name","fullseq")]),]
+  ##########################################
   
+  #READ ORIGINAL DB
+  originaldb<-as.data.frame(data.table::fread(originaldbtab,header = TRUE,sep = "\t"))
+  colnames(originaldb)<-gsub("taxid","taxids",colnames(originaldb))
+  originaldb<-add.lineage.df(originaldb,ncbiTaxDir)
+  
+  ##########################################
+  
+  #LIST FAMILIES IN DB AND THAT AMPED
+  all_primer_bias<-data.frame(row.names = 1:length(unique(originaldb$F)))
+  all_primer_bias$in.odb<-unique(originaldb$F)[order(as.character(unique(originaldb$F)))]
+  all_primer_bias$amplified<-all_primer_bias$in.odb %in% unique(ecopcroutput$family_name)
+  ##########################################
+  
+  #COUNT NO. UNIQUE SEQS IN ORIGINALDB 
+  tibble<-originaldb %>% count(F,sequence)
+  all_primer_bias$odb.n.uniq.seqs<-aggregate(tibble$n,by = list(tibble$F),FUN = sum)[,2]
+  ##########################################
+  
+  #COUNT NO. UNIQUE SEQS IN ECOPCROUTPUT 
+  tibble<-ecopcroutput %>% count(family_name,fullseq)
+  amplified.n.uniq.seqs<-aggregate(tibble$n,by = list(tibble$family_name),FUN = sum)
+  colnames(amplified.n.uniq.seqs)<-gsub("x","amplified.n.uniq.seqs",colnames(amplified.n.uniq.seqs))
+  all_primer_bias<-merge(all_primer_bias,amplified.n.uniq.seqs,all.x = T,by.x = "in.odb", by.y = "Group.1")
+  
+  ##########################################################################################
+  #add 3 prime mms to ecopcroutput
+  ecopcroutput<-add.3pmms(ecopcroutput,Pf,Pr) 
+  #add tm
+  ecopcroutput<-add.tm.ecopcroutput(ecopcroutput)
+  #diff tm
+  ecopcroutput$diff_tm<-ecopcroutput$fTms-ecopcroutput$rTms
+  #add gc content
+  ecopcroutput<-add.gc.ecopcroutput(ecopcroutput)
+  #gc clamp present?###########
+  #add diff ta tm
+  ecopcroutput$tm.ta_fw<-ecopcroutput$fTms-Ta
+  ecopcroutput$tm.ta_rv<-ecopcroutput$rTms-Ta  
+  #Tm of last 6 bp of fw primer divided by overall Tm (%)
+  ecopcroutput$tm_fw_3p6_perc<-ecopcroutput$fTms3prime6/ecopcroutput$fTms*100
+  ecopcroutput$tm_rv_3p6_perc<-ecopcroutput$rTms3prime6/ecopcroutput$rTms*100
+  #add taxonomic resolution
+  ecopcroutput<-add.res.ecopcroutput(ecopcroutput)
   ###########################################################################################
-  
-  #PRIMER MISMATCHES BY FAMILY
-  
-  forward_mismatches<-aggregate(ecopcroutput[, "forward_mismatch"],list(ecopcroutput$family_name), mean)
-  colnames(forward_mismatches)<-c("family","mean no. mismatches")
-  ##reverse primer
-  reverse_mismatches<-aggregate(ecopcroutput[, "reverse_mismatch"],list(ecopcroutput$family_name), mean)
-  colnames(reverse_mismatches)<-c("family","mean no. mismatches")
-  ##total mismatches
-  ecopcroutput$total_mismatches<-ecopcroutput$forward_mismatch+ ecopcroutput$reverse_mismatch
-  total_mismatches<-aggregate(ecopcroutput[, "total_mismatches"], list(ecopcroutput$family_name), mean)
-  colnames(total_mismatches)<-c("family","mean no. mismatches")
-  #combine
-  merged_mismatches<-merge(forward_mismatches,reverse_mismatches,by="family")
-  merged_mismatches<-merge(merged_mismatches,total_mismatches,by="family")
-  colnames(merged_mismatches)<-c("family","mean_f_mms","mean_r_mms","mean_total_mms")
+  #mean no. primer mismatches fw
+  mean_mms_fw<-calc.stat.ecopcroutput(ecopcroutput,variable="forward_mismatch","mean")
+  #mean no. primer mismatches rv
+  mean_mms_rv<-calc.stat.ecopcroutput(ecopcroutput,variable="reverse_mismatch","mean")
+  #mean no. primer mismatches total
+  mean_mms_total<-calc.stat.ecopcroutput(ecopcroutput,variable="total_mismatches","mean")
+  #Mean no. 3 prime mismatches (last half and last 6 bases) 
+  mean.3pmms<-calc.3pmms.fam(ecopcroutput,Pf,Pr) ######LIST
+  mean_fmms3Phalf<-mean.3pmms[[1]]
+  mean_rmms3Phalf<-mean.3pmms[[2]]
+  mean_fmms3P6<-mean.3pmms[[3]]
+  mean_rmms3P6<-mean.3pmms[[4]]
+  #mean ftm 
+  mean_ftm<-calc.stat.ecopcroutput(ecopcroutput,variable="fTms","mean")
+  #mean rtm 
+  mean_rtm<-calc.stat.ecopcroutput(ecopcroutput,variable="rTms","mean")
+  #mean fTm 3' half
+  mean_ftm3Phalf<-calc.stat.ecopcroutput(ecopcroutput,variable="fTms3primehalf","mean")
+  #mean rTm 3' half
+  mean_rtm3Phalf<-calc.stat.ecopcroutput(ecopcroutput,variable="rTms3primehalf","mean")
+  #mean fTm for 3' half - 6bp  
+  mean_ftm3P6<-calc.stat.ecopcroutput(ecopcroutput,variable="fTms3prime6","mean")  
+  #mean rTm for 3' half - 6bp  
+  mean_rtm3P6<-calc.stat.ecopcroutput(ecopcroutput,variable="rTms3prime6","mean")  
+  #% of unqiue seqs that get to fam or better
+  mean_fam.res<-calc.fam.res(ecopcroutput)
+  #mean amplicon length
+  mean_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$family_name),FUN = mean)
+  colnames(mean_amplicon.len)<-gsub("x","mean_amplicon.len",colnames(mean_amplicon.len))
+  #mean gc_fw
+  mean_fgc<-calc.stat.ecopcroutput(ecopcroutput,variable="fgc","mean")
+  #mean gc_rv
+  mean_rgc<-calc.stat.ecopcroutput(ecopcroutput,variable="rgc","mean")
+  #mean tm.ta.fw
+  mean_tm.ta.fw<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_fw","mean")
+  #mean tm.ta.rv
+  mean_tm.ta.rv<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_rv","mean")
+  #mean diff tm
+  mean_diff_tm<-calc.stat.ecopcroutput(ecopcroutput,variable="diff_tm","mean")
+  #mean tm_fw_3p6_perc
+  mean_tm_fw_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_fw_3p6_perc","mean")
+  #mean tm_rv_3p6_perc
+  mean_tm_rv_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_rv_3p6_perc","mean")
+  ##########################################################################################
+  #VARIANCES
+  #var no. primer mismatches fw
+  var_mms_fw<-calc.stat.ecopcroutput(ecopcroutput,variable="forward_mismatch","var")
+  #var no. primer mismatches rv
+  var_mms_rv<-calc.stat.ecopcroutput(ecopcroutput,variable="reverse_mismatch","var")
+  #var no. primer mismatches total
+  var_mms_total<-calc.stat.ecopcroutput(ecopcroutput,variable="total_mismatches","var")
+  #var amplicon length
+  var_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$family_name),FUN = var)
+  colnames(var_amplicon.len)<-gsub("x","var_amplicon.len",colnames(var_amplicon.len))
+  #var gc_fw
+  var_fgc<-calc.stat.ecopcroutput(ecopcroutput,variable="fgc","var")
+  #var gc_rv
+  var_rgc<-calc.stat.ecopcroutput(ecopcroutput,variable="rgc","var")
+  #var tm.ta_fw
+  var_tm.ta.fw<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_fw","var")
+  #var tm.ta_rv
+  var_tm.ta.rv<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_rv","var")
+  #diff tm
+  var_diff_tm<-calc.stat.ecopcroutput(ecopcroutput,variable="diff_tm","var")
+  #var tm_fw_3p6_perc
+  var_tm_fw_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_fw_3p6_perc","var")
+  #var tm_rv_3p6_perc
+  var_tm_rv_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_rv_3p6_perc","var")
+  #mms_fw_3p6
+  var_mms_fw_3p6<-calc.stat.ecopcroutput(ecopcroutput,variable="f_mismatches_3prime6","var")
+  #mms_rv_3p6
+  var_mms_rv_3p6<-calc.stat.ecopcroutput(ecopcroutput,variable="r_mismatches_3prime6","var")
   
   ##########################################################################################
+  #compile
+  h<-list()
+  for(i in 1:length(ls(pattern = "mean\\_.*"))){
+    h[[i]]<-get(ls(pattern = "mean\\_.*")[i])
+  }
+  all_means<-do.call(cbind,h)
+  h<-list()
+  for(i in 1:length(ls(pattern = "var\\_.*"))){
+    h[[i]]<-get(ls(pattern = "var\\_.*")[i])
+  }
+  all_vars<-do.call(cbind,h)
   
-  #add 3' mismatches to ecopcroutput
+  all_mean_and_var<-cbind(all_means,all_vars)
+  all_mean_and_var<-all_mean_and_var[,-grep("family",colnames(all_mean_and_var))]
+  all_mean_and_var$Group.1.1=NULL
   
-  f_mismatch_table<-mismatch.table(ecopcroutput,Pf,"f")
-  f_mismatches_3prime<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)/2):nchar(Pf)]))
-  colnames(f_mismatches_3prime)<-"f_mismatches_3prime"
-  r_mismatch_table<-mismatch.table(ecopcroutput, Pr,"r")
-  r_mismatches_3prime<-as.data.frame(rowSums(r_mismatch_table[,as.integer(nchar(Pr)/2):nchar(Pr)]))
-  colnames(r_mismatches_3prime)<-"r_mismatches_3prime"
-  ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime,r_mismatches_3prime)
-  
-  #add 3' mismatches to ecopcroutput - 6bp
-  f_mismatches_3prime6<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)-5):nchar(Pf)]))
-  colnames(f_mismatches_3prime6)<-"f_mismatches_3prime6"
-  r_mismatches_3prime6<-as.data.frame(rowSums(r_mismatch_table[,as.integer(nchar(Pr)-5):nchar(Pr)]))
-  colnames(r_mismatches_3prime6)<-"r_mismatches_3prime6"
-  ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime6,r_mismatches_3prime6)
-  
-  #mean primer mismatch tables for each base by family
-  fam_f_mismatch_table<-family.mean.mismatch(ecopcroutput,Pf,"f")
-  fam_r_mismatch_table<-family.mean.mismatch(ecopcroutput,Pr,"r")
-  
-  #mean 3' mismatches (last half of bases)
-  fam_f_mismatches_3prime<-as.data.frame(rowMeans(fam_f_mismatch_table[,as.integer(nchar(Pf)/2+1):nchar(Pf)]))
-  fam_f_mismatches_3prime$family<-rownames(fam_f_mismatches_3prime)
-  colnames(fam_f_mismatches_3prime)<-c("mean_3prime_mms_f","family")
-  fam_r_mismatches_3prime<-as.data.frame(rowMeans(fam_r_mismatch_table[,as.integer(nchar(Pr)/2+1):nchar(Pr)]))
-  fam_r_mismatches_3prime$family<-rownames(fam_r_mismatches_3prime)
-  colnames(fam_r_mismatches_3prime)<-c("mean_3prime_mms_r","family")
-  
-  #mean 3' mismatches (last 6 bases)
-  fam_f_mismatches_3prime6<-as.data.frame(rowMeans(fam_f_mismatch_table[,as.integer(nchar(Pf)-5):nchar(Pf)]))
-  fam_f_mismatches_3prime6$family<-rownames(fam_f_mismatches_3prime6)
-  colnames(fam_f_mismatches_3prime6)<-c("mean_3prime6bp_mms_f","family")
-  fam_r_mismatches_3prime6<-as.data.frame(rowMeans(fam_r_mismatch_table[,as.integer(nchar(Pr)-5):nchar(Pr)]))
-  fam_r_mismatches_3prime6$family<-rownames(fam_r_mismatches_3prime6)
-  colnames(fam_r_mismatches_3prime6)<-c("mean_3prime6bp_mms_r","family")
-  
-  ########################################################################################
-  
-  #Tm for each family
-  
-  ecopcroutput$fTms<-Tm.calc(ecopcroutput$forward_match)
-  ecopcroutput$rTms<-Tm.calc(ecopcroutput$reverse_match)
-  meanftmFam<-aggregate(x =  ecopcroutput$fTms,by = list(ecopcroutput$family_name), FUN = mean)
-  colnames(meanftmFam)<-c("family","mean_fTm")
-  meanrtmFam<-aggregate(x =  ecopcroutput$rTms,by = list(ecopcroutput$family_name), FUN = mean)
-  colnames(meanrtmFam)<-c("family","mean_rTm")
-  
-  #mean Tm for 3' half
-  ecopcroutput$fTms3primehalf<-Tm.calc(substr(x = ecopcroutput$forward_match,
-                                              start = as.integer(nchar(as.character(ecopcroutput$forward_match))/2+1),
-                                              stop = nchar(as.character(ecopcroutput$forward_match))))
-  ecopcroutput$rTms3primehalf<-Tm.calc(substr(x = ecopcroutput$reverse_match,
-                                              start = as.integer(nchar(as.character(ecopcroutput$reverse_match))/2+1),
-                                              stop = nchar(as.character(ecopcroutput$reverse_match))))
-  meanftm3PFam<-aggregate(x =  ecopcroutput$fTms3primehalf, by = list(ecopcroutput$family_name), FUN = mean)
-  colnames(meanftm3PFam)<-c("family","mean_fTm_3P")
-  meanrtm3PFam<-aggregate(x =  ecopcroutput$rTms3primehalf, by = list(ecopcroutput$family_name),FUN = mean)
-  colnames(meanrtm3PFam)<-c("family","mean_rTm_3P")
-  
-  #mean Tm for 3' half - 6bp
-  ecopcroutput$fTms3prime6<-Tm.calc(substr(x = ecopcroutput$forward_match,
-                                           start = as.integer(nchar(as.character(ecopcroutput$forward_match))-5),
-                                           stop = nchar(as.character(ecopcroutput$forward_match))))
-  ecopcroutput$rTms3prime6<-Tm.calc(substr(x = ecopcroutput$reverse_match,
-                                           start = as.integer(nchar(as.character(ecopcroutput$reverse_match))-5),
-                                           stop = nchar(as.character(ecopcroutput$reverse_match))))
-  meanftm3P6Fam<-aggregate(x =  ecopcroutput$fTms3prime6, by = list(ecopcroutput$family_name),FUN = mean)
-  colnames(meanftm3P6Fam)<-c("family","mean_fTm_3P6")
-  meanrtm3P6Fam<-aggregate(x =  ecopcroutput$rTms3prime6, by = list(ecopcroutput$family_name),FUN = mean)
-  colnames(meanrtm3P6Fam)<-c("family","mean_rTm_3P6")
-  
-  ##########################################################################################
-  
-  #taxonomic resolution
-  
-  #add taxonomic resolution to ecopcroutput
-  ecopcroutput.res<-add.res.Bas(ecopcroutput,obitaxdb=obitaxoR)
-  
-  #remove extra columns
-  ecopcroutput.res$genus=NULL
-  ecopcroutput.res$genus_name=NULL
-  ecopcroutput.res$species_name=NULL
-  ecopcroutput.res$species=NULL
-  ecopcroutput.res$forward_tm=NULL
-  ecopcroutput.res$reverse_tm=NULL
-  
-  #calculate percentage species that have tax res to family or better
-  famsplit<-split(ecopcroutput.res,f = ecopcroutput.res$family_name)
-  b<-lapply(X = famsplit,FUN = res.fam.or.better)
-  pc.res<-as.data.frame(t(as.data.frame(b)))
-  pc.res$family<-names(famsplit)
-  pc.res$pc_res_to_family_or_better<-pc.res$V1
-  pc.res$V1=NULL
-  #############################################
   #compile all
-  all_primer_bias<-merge(Families_amp_success,merged_mismatches,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,fam_f_mismatches_3prime,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,fam_r_mismatches_3prime,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,fam_f_mismatches_3prime6,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,fam_r_mismatches_3prime6,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,meanftmFam,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,meanrtmFam,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,meanftm3PFam,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,meanrtm3PFam,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,meanftm3P6Fam,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,meanrtm3P6Fam,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
-  all_primer_bias<-merge(all_primer_bias,pc.res,all.x = T,by.x = "in.ecopcrdb", by.y = "family")
+  all_primer_bias<-merge(all_primer_bias,all_mean_and_var,all.x = T,by.x = "in.odb", by.y = "Group.1")
   
   #write primer bias file
   write.table(x=all_primer_bias,file = out_bias_file,quote = F,sep = "\t",row.names = F)
   #write final, modified ecopcroutput file
-  write.table(x=ecopcroutput.res, file = out_mod_ecopcrout_file,quote = F,sep = "\t",row.names = F)
+  write.table(x=ecopcroutput, file = out_mod_ecopcrout_file,quote = F,sep = "\t",row.names = F)
   
 }
