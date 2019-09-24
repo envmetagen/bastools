@@ -30,3 +30,63 @@ MBC_otu_bin_blast_merge<-function(MBC_otutab, bin_blast_results,out){
   write.table(x = taxa.table,file = out,sep="\t",quote = F,row.names = F)
 }
 
+#' Combine an OTU table with a table of taxon names. Most commonly where \code{obitab} was used to convert a fasta file to a table,
+#'    and \code{MEGAN} was used to assign taxonomy from BLAST results of the same fasta file.
+#' @title Merge reads and assigned taxonomy
+#' @param obitab.txt Any tab-delineated text file with a column "id" containing read names,
+#'     such as the file created by \code{obitab}.
+#' @param megan.taxa Can be:
+#'    \itemize{
+#'     \item A simple, headerless text file where the first column consist of the read names
+#'     and the second column consists of taxa, as manually output using the \code{MEGAN::readName_to_taxonName} option.
+#'     \item A dataframe consisting of a taxonomy table with read names in a column named "id", as ouput by \code{rma2info.BAS}}
+#' @return A dataframe which is equal to \code{obitab.txt} but, depending on input, either has one new column "taxon",
+#'     or multiple columns corresponding to taxon path (SK,P,C,O,F,G,S) and lowest taxonomic level reached.
+#'
+#' @examples
+#'   \itemize{
+#'     \item test<-merge.tab.taxon(c20.uniq.l85L105.PRIMER_16S.tab", "Mblast.c20.uniq.l85L105.PRIMER_16S-taxon.txt")
+#'     \item test<-merge.tab.taxon(c20.uniq.l85L105.PRIMER_16S.tab", taxon.table)
+#'     \item blast2rma.BAS("primer_16S.uniq.l75L120.c20.xml",outfile = "primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6",
+#'               a2t = "nucl_acc2tax-Nov2018.abin")
+#'              inspect file and disable taxa as necessary
+#'              primer_16S.uniq.l75L120.c20.TEST.taxon.table<-rma2info.BAS("primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6")
+#'              final.table<-merge.tab.taxon(obitab.txt = "primer_16S.uniq.l75L120.c20.tab",primer_16S.uniq.l75L120.c20.TEST.taxon.table)}
+#' @export
+obitab_bin_blast_merge_minion<-function(obitabfile,binfile,mastersheet=NA,experiment_id,used.obiuniq=F,out){
+  
+  if(used.obiuniq==F){
+    obitab_input<-data.table::fread(obitabfile, sep = "\t")
+    taxon_input<-data.table::fread(file = binfile, sep = "\t")
+    obitab_input$barcode<-gsub("barcode=","",do.call(rbind,stringr::str_split(obitab_input$definition," "))[,3])
+    taxon_input$path<-paste0(taxon_input$K,";",taxon_input$P,";",taxon_input$C,";",taxon_input$O,";",
+                             taxon_input$F,";",taxon_input$G,";",taxon_input$S,";")
+    
+    merged.table<-merge(taxon_input[,c("qseqid","path")],obitab_input[,c("id","barcode")],
+                        by.x = "qseqid",by.y = "id",all = TRUE)
+    merged.table$count<-1
+    
+    taxatable<-reshape2::dcast(merged.table[,c("path","barcode","count")],path~barcode,value.var = "count",
+                    fun.aggregate = sum)
+    taxatable$path[is.na(taxatable$path)]<-"No_hits"
+    
+    if(!is.null(mastersheet)){
+    #replace barcodes with sample_names
+    master<-data.table::fread(mastersheet, sep = "\t")
+    final.barcodes<-as.data.frame(colnames(taxatable[,2:length(colnames(taxatable))]))
+    colnames(final.barcodes)<-"barcode_id"
+    mapping.samples<-master[grep(experiment_id, master$experiment_id),c("barcode_id","ss_sample_id")]
+    final.samples<-merge(final.barcodes,mapping.samples,by = "barcode_id",all.y = F,all.x = T)
+    colnames(taxatable)<-c("path",final.samples$ss_sample_id)
+    }
+    
+    write.table(x = taxatable,file = out,sep="\t",quote = F,row.names = F)
+  }
+  
+  if(used.obiuniq==T) message("Havent writtent his yet!")
+}
+
+
+
+
+

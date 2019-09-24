@@ -1,4 +1,4 @@
-blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=F,outpattern=NULL){
+blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,outpattern=NULL){
   if(is.null(outpattern)){
   for(i in 1:length(infastas)){
   system2(command = blast_exec, args=c("-query", infastas[i],

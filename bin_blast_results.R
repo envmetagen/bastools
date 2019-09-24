@@ -44,7 +44,8 @@
 #' obitaxdb<-"/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/bastools/inst/extdata/obitax_26-4-19"
 #' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="12S_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
 #' @export
-bin.blast.bas<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,obitaxdb,out,min_qcovs=70,max_evalue=0.001,top=1,
+bin.blast.bas<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,obitaxdb,out,min_qcovs=70,
+                        max_evalue=0.001,top=1,
                         spident=98,gpident=95,fpident=92,abspident=80){
   
   t1<-Sys.time()
@@ -115,14 +116,13 @@ bin.blast.bas<-function(blastfile,headers="qseqid evalue staxid pident qcovs",nc
   
   #species-level assignments
   message("binning at species level")
+  message("Removing species with sp., numbers or more than one space")
   btabsp<-btab[btab$S!="unknown",]
-  # if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) {
-  #   btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]}
-  if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) {
-    btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]}
-  if(length(grep("[0-9]",btabsp$S))>0) {
-    btabsp<-btabsp[-grep("[0-9]",btabsp$S),]}
+  if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
+  if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]
+  if(length(grep("[0-9]",btabsp$S))>0) btabsp<-btabsp[-grep("[0-9]",btabsp$S),]
   btabsp<-btabsp[btabsp$pident>spident,]
+  if(length(btabsp$taxids)>0){
   lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),
                     function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   rm(btabsp)
@@ -130,7 +130,10 @@ bin.blast.bas<-function(blastfile,headers="qseqid evalue staxid pident qcovs",nc
   colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
   lcasp<-suppressMessages(add.lineage.df(df = lcasp,ncbiTaxDir))
   colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
-
+  } else {
+    lcasp<-data.frame(matrix(nrow=1,ncol = 10))
+    colnames(lcasp)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+    }
   #genus-level assignments
   message("binning at genus level") ######for all the next steps I should only process qseqids that were not yet
   ######successful, wasting time at the moment

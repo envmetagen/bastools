@@ -2,7 +2,9 @@ taxatab.filter<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=0,a
                        sumreps=T,pcr_neg_pattern="NC",extraction_neg_pattern="EC",real_sample_pattern="F"){
   message("Assumes taxatab is a matrix with samples (in DMP format) as colnames,
           taxa as rownames and reads as values. taxatab.filter2 expects pcr_negs and extraction_negs
-          as character vectors, while taxatab.filter expects a single pattern to distinguish these.")
+          as character vectors, while taxatab.filter expects a single pattern to distinguish these.
+          
+          THIS IS ABSOLETE")
   
   preprocess.samples<-do.counts(taxatab[,grep(real_sample_pattern,colnames(taxatab))],"preprocess-real")
   preprocess.pcr.negs<-do.counts(taxatab[,grep(pcr_neg_pattern,colnames(taxatab))],"preprocess-pcr.negs")
@@ -123,7 +125,7 @@ taxatab.filter<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=0,a
 
 taxatab.filter2<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=6000,absolute_detection=100,
                           sumreps=T,pcr_negs=NULL,extraction_negs=NULL,real_samples){
-  message("Assumes taxatab is a matrix with samples (in DMP format) as colnames,
+  message("Assumes taxatab is a dataframe with samples (in DMP format) as colnames,
           taxa as rownames and reads as values. taxatabfilter2 expects pcr_negs and extraction_negs
           as character vectors, while taxatabfilter expects a single pattern to distinguish these.")
   
@@ -133,9 +135,9 @@ taxatab.filter2<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=60
   
   #remove detections where less than x% of total reads for taxon
   message("Applying taxa_pc filter")
-  taxatab.<-taxatab[!rowSums(taxatab)==0,]
+  taxatab<-taxatab[!rowSums(taxatab)==0,]
   taxatab.PCS<-sweep(taxatab, MARGIN = 1, STATS = rowSums(taxatab), FUN = "/")*100
-  taxatab.PCS[taxatab.PCS<taxa_pc]<-0 #change this value
+  taxatab.PCS[taxatab.PCS<taxa_pc]<-0 
   taxatab[taxatab.PCS==0]<-0
   
   taxa.pc.samples<-do.counts(taxatab[,real_samples],"taxa.pc-real")

@@ -17,10 +17,14 @@ do.counts<-function(df, step){
   } }
   
   if(length(colnames(df))==1){
-    df2<-df[!df[1,]==0,]
+    df2<-as.data.frame(df[!df[1]==0,])
     if(length(colnames(df2))==1){  
-    df2<-df2[,!colSums(df2)==0]
-  }}
+    df2<-as.data.frame(df2[,!colSums(df2)==0])
+    colnames(df2)<-colnames(df)
+    }}
+  
+  if(length(colnames(df))==0){
+    df2<-df}
 
   if(length(colnames(df2))>0){
   #count reads
