@@ -4,10 +4,8 @@
 #'     qcovs, evalue, staxid, qseqid, pident
 #' @param headers A space-separated string of the header names of \code{blastfile}.
 #'     Usually this is the same as the blast command used.
-#' @param ncbiTaxDir The full path to the directory containing ncbi taxonomy. If you don't have one downloaded yet
-#'     use the \link{getNCBItaxonomy} function
-#' @param obitaxdb The full path to the obitools-formatted ncbi taxonomy. If you don't have one use
-#'     the \link{NCBI2obitaxonomy} function
+#' @param ncbiTaxDir The full path to the directory containing ncbi taxonomy. 
+#' @param obitaxdb The full path to the obitools-formatted ncbi taxonomy. 
 #' @param out specify file to output results
 #' @param min_qcovs The minimum query coverage for all hits
 #' @param max_evalue The maximum evalue for all hits
@@ -20,7 +18,7 @@
 #' @param abspident An absolute pident for binning hits above family level. Hits below this threshold will be
 #'     excluded completely
 #'
-#' @return A tab-separated file consisting of otu name and associated taxonomic path
+#' @return A tab-separated file consisting of ESV name and associated taxonomic path
 #' @note It works like this:
 #' \itemize{
 #'     \item 1. Apply min_qcovs (query coverage) to whole table
@@ -38,13 +36,13 @@
 #'     If not family use absolute.
 #'
 #' @examples
-#' blastfile<-"12S.blast.results.head.txt"
+#' blastfile<-"blast.results.txt"
 #' headers<-"qseqid sacc sseqid sallseqid sallacc bitscore score staxid staxids sscinames scomnames salltitles length pident qcovs"
-#' ncbiTaxDir<-"/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/TAXONOMIES/"
-#' obitaxdb<-"/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/bastools/inst/extdata/obitax_26-4-19"
-#' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="12S_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
+#' ncbiTaxDir<-"/Documents/TAXONOMIES/"
+#' obitaxdb<-"/Documents/obitax_26-4-19"
+#' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="blast_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
 #' @export
-bin.blast.bas<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,obitaxdb,out,min_qcovs=70,
+bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,obitaxdb,out,min_qcovs=70,
                         max_evalue=0.001,top=1,
                         spident=98,gpident=95,fpident=92,abspident=80){
   
