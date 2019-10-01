@@ -1,13 +1,14 @@
 
 #DO CALCULATIONS AND STATS
-make.primer.bias.tables<-function(originaldbtab,ecopcroutput,
-                                  out_bias_file,out_mod_ecopcrout_file,Pf,Pr, obitaxoR){
+make.primer.bias.tables<-function(originaldbtab,ecopcrfile,
+                                  out_bias_file,out_mod_ecopcrout_file,Pf,Pr, obitaxoR,min_length,
+                                  max_length){
   
   ##########################################
   #GENERAL CLEANING 
   
   #read results
-  ecopcroutput<-data.table::fread(ecopcroutput,sep = "\t")
+  ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
   #remove hits outside desired lengths
   ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
   ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
@@ -18,36 +19,80 @@ make.primer.bias.tables<-function(originaldbtab,ecopcroutput,
   #remove weird primer mismatches (only a few usually)
   ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$forward_match,allowNA = T)<nchar(Pf),]
   ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$reverse_match,allowNA = T)<nchar(Pr),]
-  
-  #for rest of stats keep only unique barcodes for each family
-  ecopcroutput$fullseq<-paste0(ecopcroutput$forward_match,ecopcroutput$sequence,ecopcroutput$reverse_match)
-  ecopcroutput <- ecopcroutput[order(ecopcroutput$family_name,ecopcroutput$fullseq),]
-  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput[,c("family_name","fullseq")]),]
   ##########################################
-  
   #READ ORIGINAL DB
   originaldb<-as.data.frame(data.table::fread(originaldbtab,header = TRUE,sep = "\t"))
   colnames(originaldb)<-gsub("taxid","taxids",colnames(originaldb))
   originaldb<-add.lineage.df(originaldb,ncbiTaxDir)
-  
   ##########################################
-  
-  #LIST FAMILIES IN DB AND THAT AMPED
+  #LIST FAMILIES IN ODB
   all_primer_bias<-data.frame(row.names = 1:length(unique(originaldb$F)))
   all_primer_bias$in.odb<-unique(originaldb$F)[order(as.character(unique(originaldb$F)))]
+  ##########################################
+  #COUNT NO. SEQS IN ORIGINALDB 
+  originaldb$n<-1
+  nseqs.odb<-aggregate(originaldb$n,by=list(originaldb$F),FUN = sum)
+  colnames(nseqs.odb)<-c("in.odb","nseqs.odb")
+  all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
+  ##########################################
+  #COUNT No. Taxa IN ORIGINALDB 
+  originaldb$path<-paste0(originaldb$F,";",originaldb$G,originaldb$S)
+  originaldb.taxa<-originaldb[!duplicated(originaldb$path),c("path","n")]
+  nseqs.odb<-aggregate(originaldb.taxa$n,by=list(originaldb.taxa$path),FUN = sum)
+  colnames(nseqs.odb)<-c("path","nseqs.odb.taxa")
+  nseqs.odb$F<-do.call(rbind,strsplit(nseqs.odb$path,";"))[,1]
+  nseqs.odb<-aggregate(nseqs.odb$n,by=list(nseqs.odb$F),FUN = sum)
+  colnames(nseqs.odb)<-c("in.odb","ntaxa.odb")
+  all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
+  ##########################################
+  #ADD LOGICAL IF FAMILY AMPED
   all_primer_bias$amplified<-all_primer_bias$in.odb %in% unique(ecopcroutput$family_name)
   ##########################################
-  
-  #COUNT NO. UNIQUE SEQS IN ORIGINALDB 
-  tibble<-originaldb %>% count(F,sequence)
-  all_primer_bias$odb.n.uniq.seqs<-aggregate(tibble$n,by = list(tibble$F),FUN = sum)[,2]
+  #COUNT NO. SEQS THAT AMPED 
+  ecopcroutput$n<-1
+  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$family_name),FUN = sum)
+  colnames(nseqs.amped)<-c("in.odb","nseqs.amped")
+  all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
+  ##########################################
+  #COUNT No. Taxa THAT AMPED
+  ecopcroutput$path<-paste0(ecopcroutput$family_name,";",ecopcroutput$genus_name,ecopcroutput$species_name)
+  ecopcroutput.taxa<-ecopcroutput[!duplicated(ecopcroutput$path),c("path","n")]
+  nseqs.amped<-aggregate(ecopcroutput.taxa$n,by=list(ecopcroutput.taxa$path),FUN = sum)
+  colnames(nseqs.amped)<-c("path","nseqs.amped.taxa")
+  nseqs.amped$F<-do.call(rbind,strsplit(nseqs.amped$path,";"))[,1]
+  nseqs.amped<-aggregate(nseqs.amped$n,by=list(nseqs.amped$F),FUN = sum)
+  colnames(nseqs.amped)<-c("in.odb","ntaxa.amped")
+  all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
+  ##########################################
+  #percentage seqs amped
+  all_primer_bias$pc_seqs_amped<-round(all_primer_bias$nseqs.amped/all_primer_bias$nseqs.odb*100,digits = 2)
+  #percentage taxa amped
+  all_primer_bias$pc_taxa_amped<-round(all_primer_bias$ntaxa.amped/all_primer_bias$ntaxa.odb*100,digits = 2)
   ##########################################
   
-  #COUNT NO. UNIQUE SEQS IN ECOPCROUTPUT 
-  tibble<-ecopcroutput %>% count(family_name,fullseq)
-  amplified.n.uniq.seqs<-aggregate(tibble$n,by = list(tibble$family_name),FUN = sum)
-  colnames(amplified.n.uniq.seqs)<-gsub("x","amplified.n.uniq.seqs",colnames(amplified.n.uniq.seqs))
-  all_primer_bias<-merge(all_primer_bias,amplified.n.uniq.seqs,all.x = T,by.x = "in.odb", by.y = "Group.1")
+  
+  ##########################################
+  #for rest of stats keep only unique barcodes for each family
+  message("dereplicating by family")
+  ecopcroutput$fullseq<-paste0(ecopcroutput$forward_match,ecopcroutput$sequence,ecopcroutput$reverse_match)
+  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput[,c("family_name","fullseq")]),]
+  message("Total_unique_barcodes=",length(ecopcroutput$AC))
+  message("Total_families_odb=",length(all_primer_bias$in.odb))
+  message("Total_families_amped=",sum(all_primer_bias$amplified))
+  ##########################################
+  ##########################################
+  ##########################################
+  ##########################################
+  #COUNT NO. UNIQUE BARCODES THAT AMPED 
+  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$family_name),FUN = sum)
+  colnames(nseqs.amped)<-c("in.odb","n.uniq.brcds.amped")
+  all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
+  ##########################################
+  #ADD LINEAGES TO ALL_PRIMER_BIAS AND ECOPCROUTPUT
+  y=originaldb[,c("K","P","C","O","F")]
+  y=y[!duplicated(y),]
+  all_primer_bias<-merge(x = all_primer_bias,y = y,by.x = "in.odb",by.y = "F",all.y = F)
+  ecopcroutput<-merge(x = ecopcroutput,y = y,by.x = "family_name",by.y = "F",all.y = F)
   
   ##########################################################################################
   #add 3 prime mms to ecopcroutput
@@ -161,9 +206,12 @@ make.primer.bias.tables<-function(originaldbtab,ecopcroutput,
   #compile all
   all_primer_bias<-merge(all_primer_bias,all_mean_and_var,all.x = T,by.x = "in.odb", by.y = "Group.1")
   
+  #remove extraneous columns
+  ecopcroutput$path=NULL
+  ecopcroutput$n=NULL
+  
   #write primer bias file
   write.table(x=all_primer_bias,file = out_bias_file,quote = F,sep = "\t",row.names = F)
   #write final, modified ecopcroutput file
   write.table(x=ecopcroutput, file = out_mod_ecopcrout_file,quote = F,sep = "\t",row.names = F)
-  
 }

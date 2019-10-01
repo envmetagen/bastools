@@ -1,5 +1,4 @@
 ecopcr2refs<-function(ecopcrfile,outfile){
-  message("Reminder: assumes -D option was used for ecopcr")
   #read results
   ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
   #remove hits outside desired lengths
@@ -22,7 +21,7 @@ ecopcr2refs<-function(ecopcrfile,outfile){
   phylotools::dat2fasta(ecopcroutput[,c("seq.name","seq.text")],outfile)
 }
 
-ecopcr2originaldb<-function(ecopcrfile,outfile,bufferecopcr){
+ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr){
   message("Reminder: assumes -D option was used for ecopcr")
   #read results
   ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
@@ -33,21 +32,29 @@ ecopcr2originaldb<-function(ecopcrfile,outfile,bufferecopcr){
   ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
   ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
   ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
-  #remove seqs less than buffer
+  
+  #the edges removal in next step takes a long time, so choose one seq per genus
+  ecopcroutput <- ecopcroutput[order(ecopcroutput$family_name,ecopcroutput$amplicon_length,decreasing = T),]
+  ecopcroutput <-ecopcroutput[!duplicated(ecopcroutput[,c("family_name")]),] 
+  
+  #remove seqs with edges less than buffer
   a<-strsplit(ecopcroutput$sequence,split = "")
   ecopcroutput$leftbuffer<-"0"
   ecopcroutput$rightbuffer<-"0"
   
+  d<-list()
+  pb = txtProgressBar(min = 0, max = length(ecopcroutput$leftbuffer), initial = 0,style = 3) 
   for(i in 1:length(ecopcroutput$leftbuffer)){
     ecopcroutput$leftbuffer[i]<-match(FALSE,a[[i]] %in% letters)
-    b[[i]]<-a[[i]][ecopcroutput$leftbuffer[i]:length(a[[i]])]
-    ecopcroutput$rightbuffer[i]<-length(b[[i]])-as.numeric(match(TRUE,b[[i]] %in% letters))
+    d[[i]]<-a[[i]][ecopcroutput$leftbuffer[i]:length(a[[i]])]
+    ecopcroutput$rightbuffer[i]<-length(d[[i]])-as.numeric(match(TRUE,d[[i]] %in% letters))
+    setTxtProgressBar(pb,i)
   }
   #remove seqs with left buffer less than buffer
   ecopcroutput<-ecopcroutput[!ecopcroutput$leftbuffer<bufferecopcr,]
   #remove seqs with right buffer less than buffer
   ecopcroutput<-ecopcroutput[!ecopcroutput$rightbuffer<bufferecopcr,]
-
+  
   #output as fasta
   colnames(ecopcroutput)<-gsub("sequence", "seq.text",colnames(ecopcroutput))
   ecopcroutput$seq.text<-toupper(ecopcroutput$seq.text)

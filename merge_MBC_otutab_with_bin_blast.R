@@ -15,7 +15,8 @@ MBC_otu_bin_blast_merge<-function(MBC_otutab, bin_blast_results,out){
   otutab.bins<-as.data.frame(merge(x = otutab,y = bins[,2:9], by = "OTU_name"))
   otutab.bins.all<-as.data.frame(merge(x = otutab,y = bins[,2:9], by = "OTU_name",all.x=T))
   no.hit.otutab<-otutab.bins.all[!otutab.bins.all$OTU_name %in% otutab.bins$OTU_name,]
-  no.hit.otutab[,c((length(colnames(otutab.bins))-6):length(colnames(otutab.bins)))]<-"no_hits"
+  if(length(no.hit.otutab$OTU_name)!=0){
+  no.hit.otutab[,c((length(colnames(otutab.bins))-6):length(colnames(otutab.bins)))]<-"no_hits"}
   otutab.bins<-rbind(otutab.bins,no.hit.otutab)
   
   #Reorder columns
@@ -84,6 +85,48 @@ obitab_bin_blast_merge_minion<-function(obitabfile,binfile,mastersheet=NA,experi
   }
   
   if(used.obiuniq==T) message("Havent writtent his yet!")
+}
+
+######################################################################
+#SPLIT TAXATABLES
+splice.taxatables<-function(files,google_ss){
+#read files
+taxatables<-list()
+for(i in 1:length(files)){
+  taxatables[[i]]<-data.table::fread(files[i],data.table = F,sep = "\t")
+}
+
+#split by project
+ssdf<-google.read.ss(google_ss)
+projectnames<-unique(do.call(rbind,stringr::str_split(string = ssdf$Sample_Name,pattern = "-"))[,1])
+projectnames<-paste0(projectnames,"-")
+
+taxatablesplit<-list()
+taxatablesplit2<-list()
+
+for(i in 1:length(taxatables)){
+  for(j in 1:length(projectnames)){
+    taxatablesplit[[j]]<-taxatables[[i]][,grep(projectnames[j],colnames(taxatables[[i]]))]
+    rownames(taxatablesplit[[j]])<-taxatables[[i]]$taxon
+  }
+  taxatablesplit2[[i]]<-taxatablesplit
+  names(taxatablesplit2[[i]])<-projectnames
+}
+
+#write
+for(i in 1:length(taxatablesplit2)){
+  for(j in 1:length(projectnames)){
+    if(length(taxatablesplit2[[i]][[j]])>1) {
+      #remove 0 read taxa
+      taxatablesplit2[[i]][[j]]<-taxatablesplit2[[i]][[j]][rowSums(taxatablesplit2[[i]][[j]])!=0,]
+      taxatablesplit2[[i]][[j]]$taxon<-rownames(taxatablesplit2[[i]][[j]])
+      taxatablesplit2[[i]][[j]]<-taxatablesplit2[[i]][[j]][,c(length(colnames(taxatablesplit2[[i]][[j]])),1:(length(colnames(taxatablesplit2[[i]][[j]]))-1))]
+      write.table(taxatablesplit2[[i]][[j]],
+                  paste0(projectnames[j],gsub("taxatable.tf.txt","taxatable.tf.spliced.txt",files[i])),
+                  row.names = F,quote = F,sep = "\t")
+    }
+  }
+}
 }
 
 

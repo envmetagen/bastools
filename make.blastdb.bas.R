@@ -68,7 +68,6 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxids=T, n
   
   unlink(tempfileA)
   unlink(tempfileB)
-  unlink(mappingfile)
   unlink(gsub(".fasta",".blastdbformatted.test.blast.txt",infasta))
   unlink(gsub(".fasta",".blastdbformatted.test.fasta",infasta))
 }

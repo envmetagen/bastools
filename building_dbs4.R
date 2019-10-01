@@ -5,6 +5,6 @@ map2targets<-function(queries.to.map,refs,out){
 
   system2(command = "blastn", args=c("-query", queries.to.map, "-task", "megablast","-db","refdb",
                 "-outfmt",'"7 qseqid qlen qstart qend slen sstart send length pident qcovs sstrand"',
-                "-num_threads", "16","-max_target_seqs", "1"),stdout=out,wait = T)
+                "-num_threads", "16","-max_target_seqs", "3"),stdout=out,wait = T)
 }
 

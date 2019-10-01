@@ -13,11 +13,11 @@ new_lineage$full<-paste0("kingdom=",new_lineage$K,"; phylum=",new_lineage$P,"; c
 new_lineage$full<-gsub("=;","=unknown;",new_lineage$full)
 
 #make new headers: "seqid taxid path definition"
-seqid<-gsub(" .*","",fasta.table$seq.name)
-definition<-gsub("^(.*) species=.*;","",fasta.table$seq.name)
+seqid<-gsub(" .*","",new_lineage$seq.name)
+definition<-gsub("^(.*) species=.*;","",new_lineage$seq.name)
 newname<-paste0(seqid," taxid=",new_lineage$taxids,"; ",new_lineage$full,definition)
 #make df for outputting as fasta
-fasta.table.winfo<-as.data.frame(cbind(newname,as.character(fasta.table$seq.text)))
+fasta.table.winfo<-as.data.frame(cbind(newname,as.character(new_lineage$seq.text)))
 colnames(fasta.table.winfo)<-c("seq.name","seq.text")
 phylotools::dat2fasta(fasta.table.winfo,outfile = out)
 }
@@ -49,7 +49,6 @@ names2taxids<-function(vector,ncbiTaxDir){
   #Note that if a name matches more than one taxid, taxonkit creates a new row and includes both taxids, 
   #allow user input for choices
   message("Should add choices for unknowns")
-  
   
   #first for good results in taxidsA
   taxidsA2<-taxidsA[!is.na(taxidsA$V2),]
@@ -84,30 +83,50 @@ names2taxids<-function(vector,ncbiTaxDir){
   
   #find names with multiple matches
   if(length(taxidsB2$V1[duplicated(taxidsB2$V1)])>0){
-  
   taxidsB4<-taxidsB2[duplicated(taxidsB2$V1),]
   taxidsB5<-taxidsB2[taxidsB2$V1 %in% taxidsB4$V1,]
   colnames(taxidsB5)<-c("name","taxids","rank")
   #add lineage to make choice easier
   taxidsB5<-add.lineage.df(taxidsB5,ncbiTaxDir)
   taxidsB5$old_taxids=NULL
-  #present choice
-  message("The following ", length(unique(taxidsB5$name))," taxa had more than one taxid match. Please
-  type the full taxid of your choice")
-  choicesB_df<-as.data.frame(unique(taxidsB5$name))
+  
+  #if genus vs subgenus, choose genus
+  choosegenusdf<-as.data.frame(unique(taxidsB5$name))
   for(i in 1:length(unique(taxidsB5$name))){
-    print(taxidsB5[taxidsB5$name %in%  unique(taxidsB5$name)[i],])
+    tempdf<-taxidsB5[taxidsB5$name %in%  unique(taxidsB5$name)[i],]
+    if(TRUE %in% duplicated(tempdf[4:10])){
+      if(length(tempdf$rank)==2){
+        if(length(tempdf$rank[tempdf$rank=="genus"])==1){
+          if(length(tempdf$rank[tempdf$rank=="subgenus"])==1){
+            choosegenusdf[i,2] <- tempdf$taxids[tempdf$rank=="genus"]
+          }
+        }
+      }
+    }
+  }
+  colnames(choosegenusdf)<-c("name","taxid")
+  
+  taxidsB5_remaining<-taxidsB5[!taxidsB5$name %in% 
+                                 choosegenusdf[!is.na(choosegenusdf$taxid),"name"],]
+    
+  #for the remaining options present a choice
+  message("The following ", length(unique(taxidsB5_remaining$name))," taxa had more than one taxid match. Please
+  type the full taxid of your choice")
+  choicesB_df<-as.data.frame(unique(taxidsB5_remaining$name))
+  for(i in 1:length(unique(taxidsB5_remaining$name))){
+    print(taxidsB5_remaining[taxidsB5_remaining$name %in%  unique(taxidsB5_remaining$name)[i],])
     choicesB_df[i,2] <- readline("Type full chosen taxid: ")  
   }
   choicesB_df$V3<-"NA"
   colnames(choicesB_df)<-c("V1","V2","V3")
   #combine good results
-  taxidsB6<-taxidsB2[!taxidsB2$V1 %in% unique(taxidsB5$name),]
+  taxidsB6<-taxidsB2[!taxidsB2$V1 %in% unique(taxidsB5_remaining$name),]
   taxidsB7<-rbind(taxidsB6,choicesB_df)
   } else {taxidsB7<-taxidsB2}
   
   }
-  #combine taxidA and taxidB results
+  
+  #combine taxidA, taxidB:choosegenus and taxidB:remaining results
   outdf<-as.data.frame(vector)
   outdf$vec2<-gsub(" sp\\.","",outdf$vector)
   outdf$vec3<-gsub(" .*","",outdf$vector)
@@ -115,10 +134,14 @@ names2taxids<-function(vector,ncbiTaxDir){
   if(length(namesB)>0){
   outdf<-merge(outdf,taxidsB7,by.x = "vec3",by.y = "V1",all.x = T,all.y = F)
   outdf$V2.z<-ifelse(!is.na(outdf$V2.x) & !is.na(outdf$V2.y) | is.na(outdf$V2.y),outdf$V2.z<-outdf$V2.x,NA)}
+  #add choosegenus
+  if(length(namesB)>0){
+  outdf<-merge(outdf,choosegenusdf,by.x = "vec3",by.y = "name",all.x = T,all.y = F)
+  outdf$V2.w<-ifelse(is.na(outdf$V2.x) & is.na(outdf$V2.z),outdf$V2.w<-outdf$taxid,NA)}
 
   #combine taxids into one column
   if(length(namesB)>0){
-  outdf$taxids<-do.call(pmax, c(outdf[,c("V2.z","V2.y")], list(na.rm=TRUE)))} else {outdf$taxids<-outdf$V2}
+  outdf$taxids<-do.call(pmax, c(outdf[,c("V2.z","V2.y","V2.w")], list(na.rm=TRUE)))} else {outdf$taxids<-outdf$V2}
   
   #remove files
   unlink(names_fileA)

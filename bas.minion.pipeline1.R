@@ -4,7 +4,7 @@ bas.minion.pipeline1<-function(demuxed_fstq_dir,mastersheet,expid,run){
 #for unseperated files...
 setwd(demuxed_fstq_dir)
 
-  #cat and convert to fasta
+  #cat 
   system2(command = "cat",args = c("*"),stdout = paste0(run,"_all.fastq"),wait = T)   
   
   #convert to fasta
@@ -15,6 +15,8 @@ setwd(demuxed_fstq_dir)
   
   #split by barcode
   system2(command = "obisplit", args = c("-t", "barcode", paste0(run,"_all_rf.fasta")),wait=T)
+  #these files should be the ones for DMP
+  message("should replace barcodes with sample names here and change filenames for DMP")
           
   message("not removing primers in this pipeline")
   
@@ -59,15 +61,16 @@ setwd(demuxed_fstq_dir)
                                            paste0(run,"_",names(a)[i],"_wlen.fasta")),wait = T,
               stdout =  paste0(run,"_",names(a)[i],"_l",fraglengths[i,2],"L",fraglengths[i,3],"_wlen.fasta"))
     }
+    
+    #obitab all
+    for(i in 1:length(fraglengths$primerset)){
+      system2(command = "obitab",args = c(paste0(run,"_",names(a)[i],
+                                                 "_l",fraglengths[i,2],"L",fraglengths[i,3],"_wlen.fasta")),wait = T,
+              stdout =  paste0(run,"_",names(a)[i],"_l",fraglengths[i,2],"L",fraglengths[i,3],"_wlen.tab"))
+    }
   
   # #dereplicate - not worth it, doesnt reduce anything!
-  #   for(i in 1:length(fraglengths$primerset)){
-  #     system2(command = "obiuniq",args = c("-m", "barcode", 
-  #                                              paste0(run,"_",names(a)[i],"_l",fraglengths[i,2],
-  #                                                     "L",fraglengths[i,3],"_wlen.fasta")), wait = T,
-  #             stdout =  paste0(run,"_",names(a)[i],"_l",fraglengths[i,2],
-  #                              "L",fraglengths[i,3],"_wlen_uniq.fasta"))
-  #   }  
+ 
     
 }
     

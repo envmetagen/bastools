@@ -49,7 +49,7 @@ ecoPrimers.Bas<-function(ecopcrdb,max_error,min_length,max_length,strict_match_p
   message(paste("Primer search complete.",h,"primers found"))
   if(!h>0) stop("stop", call. = F)
 
-  b<-suppressWarnings(data.table::fread(input = a$stdout,sep = "\t"))
+  b<-data.table::fread(input = a$stdout,sep = "\t")
   ecoprimeroutput<-as.data.frame(b[,1:21])
   colnames(ecoprimeroutput)<- c("PID","Pf","Pr","TmPf","MinTmPf","TmPr","MinTmPr","CGPf","CGPr","Specificity","Amp_Records","IGNORE","P_Records",
                                 "Amp_taxa","IGNORE2","Amp_NT_taxa","Taxa_unique","P_taxa_unique","Min_length","Max_length","Mean_length")
@@ -86,12 +86,22 @@ ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length,out,buffer=N
             args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k","-c","-D",buffer),
             stdout = out,wait = T)}
   
-  b<-suppressWarnings(data.table::fread(input = out,sep = "|"))
-  b<-as.data.frame(b)
-  if(length(colnames(b))==1) stop("No hits",call. = F)
-  colnames(b)<- c("AC","seq_length","taxid","rank","species","species_name","genus",
-                                "genus_name","family","family_name","superkingdom","superkingdom_name",
-                                "strand","forward_match","forward_mismatch","forward_tm","reverse_match",
-                             "reverse_mismatch","reverse_tm","amplicon_length","sequence","definition")
+  #remove comment lines to help data.table to read properly
+  f<-process$new(command = "sed", args = c("-i","/^#/ d", out), echo_cmd = T)
+  f$wait()
+  
+  b<-data.table::fread(file = out,data.table = F,
+                       sep = "|",fill=T,
+                       col.names = c("AC","seq_length","taxid","rank","species","species_name","genus",
+                                      "genus_name","family","family_name","superkingdom","superkingdom_name",
+                                    "strand","forward_match","forward_mismatch","forward_tm","reverse_match",
+                                     "reverse_mismatch","reverse_tm","amplicon_length","sequence","definition"))
+  #remove any apparently erroneous entries
+  #those that have no amplicon length or forward_mismatch or reverse_mismatch
+  b<-b[!is.na(b$amplicon_length),]
+  b<-b[!is.na(b$forward_mismatch),]
+  b<-b[!is.na(b$reverse_mismatch),]
+  
+  if(length(b$AC)<1) stop("No hits",call. = F)
   write.table(b,file = out,quote = F,row.names = F,sep = "\t")
   }

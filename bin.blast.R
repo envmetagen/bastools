@@ -74,6 +74,7 @@ bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTa
   message("applying global max_evalue threshold")
   btab<-btab[btab$evalue<max_evalue,]
   message("applying global top threshold")
+  if(length(btab[,1])==0) stop("No hits passing min_qcovs and max_evalue thresholds")
   topdf<-aggregate(x = btab[,colnames(btab) %in% c("qseqid","pident")],by=list(btab$qseqid),FUN = max)
   topdf$min_pident<-topdf$pident-topdf$pident*top/100
   btab<-merge(btab,topdf[,c(2,4)],by = "qseqid", all.y = T) #can definitely do this differently and faster
@@ -173,18 +174,18 @@ bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTa
   #combine
   sp_level<-lcasp[lcasp$S!="unknown",]
   g_level<-lcag[lcag$G!="unknown",]
-  g_level$S<-NA
+  if(length(g_level$taxids)>0) g_level$S<-NA
   g_level<-g_level[!g_level$qseqid %in% sp_level$qseqid,]
   f_level<-lcaf[lcaf$F!="unknown",]
-  f_level$G<-NA
-  f_level$S<-NA
+  if(length(f_level$taxids)>0) f_level$G<-NA
+  if(length(f_level$taxids)>0) f_level$S<-NA
   f_level<-f_level[!f_level$qseqid %in% sp_level$qseqid,]
   f_level<-f_level[!f_level$qseqid %in% g_level$qseqid,]
   
   abs_level<-lcahtf
-  abs_level$G<-NA
-  abs_level$S<-NA
-  abs_level$F<-NA
+  if(length(abs_level$taxids)>0) abs_level$G<-NA
+  if(length(abs_level$taxids)>0) abs_level$S<-NA
+  if(length(abs_level$taxids)>0) abs_level$F<-NA
   abs_level<-abs_level[!abs_level$qseqid %in% sp_level$qseqid,]
   abs_level<-abs_level[!abs_level$qseqid %in% g_level$qseqid,]
   abs_level<-abs_level[!abs_level$qseqid %in% f_level$qseqid,]

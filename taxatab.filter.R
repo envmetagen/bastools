@@ -1,3 +1,23 @@
+taxon.filter.solo<-function(files,filterpc=0.1){
+#remove detections where less than x% of total reads for taxon
+  taxatables<-list()
+  for(i in 1:length(files)){
+    taxatables[[i]]<-data.table::fread(files[i],data.table = F)
+    rownames(taxatables[[i]])<-taxatables[[i]]$taxon
+    taxatables[[i]]$taxon=NULL
+    taxatables[[i]]<-taxatables[[i]][rowSums(taxatables[[i]])!=0,]
+    taxatab.PCS<-sweep(taxatables[[i]], MARGIN = 1, STATS = rowSums(taxatables[[i]]), FUN = "/")*100
+    taxatab.PCS[taxatab.PCS<filterpc]<-0 
+    taxatables[[i]][taxatab.PCS==0]<-0
+    taxatables[[i]]<-taxatables[[i]][rowSums(taxatables[[i]])!=0,]
+    taxatables[[i]]$taxon<-rownames(taxatables[[i]])
+    taxatables[[i]]<-taxatables[[i]][,c(length(colnames(taxatables[[i]])),1:(length(colnames(taxatables[[i]]))-1))]
+    write.table(taxatables[[i]],gsub("taxatable.txt","taxatable.tf.txt",files[i]),row.names = F,quote = F,sep = "\t")
+  }
+}
+
+
+
 taxatab.filter<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=0,absolute_detection=100,
                        sumreps=T,pcr_neg_pattern="NC",extraction_neg_pattern="EC",real_sample_pattern="F"){
   message("Assumes taxatab is a matrix with samples (in DMP format) as colnames,
@@ -12,7 +32,7 @@ taxatab.filter<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=0,a
   
   #remove detections where less than x% of total reads for taxon
   message("Applying taxa_pc filter")
-  taxatab.<-taxatab[!rowSums(taxatab)==0,]
+  taxatab<-taxatab[!rowSums(taxatab)==0,]
   taxatab.PCS<-sweep(taxatab, MARGIN = 1, STATS = rowSums(taxatab), FUN = "/")*100
   taxatab.PCS[taxatab.PCS<taxa_pc]<-0 #change this value
   taxatab[taxatab.PCS==0]<-0

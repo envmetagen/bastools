@@ -1,19 +1,63 @@
-blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,outpattern=NULL){
-  if(is.null(outpattern)){
+blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T){
+  message("should add default of restricting blasts to animals and plants")
+  
+  if(length(infastas)==1) threads<-8
+  if(length(infastas)==2 | length(infastas)==3) threads<-4
+  if(length(infastas)==4 | length(infastas)==5) threads<-2
+  if(length(infastas)>5) threads<-1
+  
+  continue<-data.frame("file"<-infastas,"response"="y")
+  continue$response<-as.character(continue$response)
   for(i in 1:length(infastas)){
-  system2(command = blast_exec, args=c("-query", infastas[i],
-          "-task", "megablast","-db",refdb,"-outfmt", '"6 qseqid evalue staxid pident qcovs"', 
-          "-num_threads", "16", "-max_target_seqs", "100", "-max_hsps","1", "-out",
-          paste0(gsub(x = infastas[i],pattern = ".fasta",replacement = ".blast.txt"))),stdout = NULL,wait = wait)
-  }}
-  if(!is.null(outpattern)){
-    for(i in 1:length(infastas)){
-      system2(command = blast_exec, args=c("-query", infastas[i],
-               "-task", "megablast","-db",refdb,"-outfmt", '"6 qseqid evalue staxid pident qcovs"', 
-              "-num_threads", "16", "-max_target_seqs", "100", "-max_hsps","1", "-out",
-              paste0(gsub(x = infastas[i],pattern = ".fasta",replacement = outpattern))),stdout = NULL,wait = wait)
-    }}
+    if(paste0(gsub(x = infastas[i],pattern = ".fasta",replacement = ".blast.txt")) %in% list.files()){
+      continue[i,2]<-readline(paste0("The following file already exists, Overwrite? (y/n):", "
+                      ",gsub(x = infastas[i],pattern = ".fasta",replacement = ".blast.txt")))
+    }
+  }
+   if("n" %in% continue$response) stop("Abandoned blast due to overwrite conflict")
+  
+  h<-list()
+  for(i in 1:length(infastas)){
+    h[[i]]<-process$new(command = blast_exec, 
+                        args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
+                               "6 qseqid evalue staxid pident qcovs",
+                                "-num_threads", threads, "-max_target_seqs", "100", "-max_hsps","1", "-out",
+                               paste0(gsub(x = infastas[i],pattern = ".fasta",replacement = ".blast.txt"))),
+                        echo_cmd = T)
+  }
+  
+  Sys.sleep(time = 2)
+  
+  exits<-list()
+  for(i in 1:length(h)){
+  exits[[i]]<-h[[i]]$get_exit_status()
+  }
+  
+  if(1 %in% exits){
+    message("There was a problem with ", infastas[match(1,exits)], ", aborting all blasts")
+      for(i in 1:length(h)){
+        h[[i]]$kill()
+      }
+  }
+  
+  if(wait==T){
+    for(i in 1:length(h)){
+      h[[i]]$wait()
+    }
+  }
+  return(h)
 }
+
+
+check.blasts<-function(infastas,h){
+  for(i in 1:length(h)){
+    print(infastas[i])
+      a[[i]]<-tryCatch(h[[i]]$get_status(),error=function(e) print("not running"))
+       if(nchar(a[[i]])!=11) print(gsub("sleeping","running",h[[i]]$get_status()))
+    print(paste0("exit status: ",h[[i]]$get_exit_status()))
+  }
+}
+
 
 split.blast.min.bas<-function(infastas,refdb,blast_exec="blastn",outpattern=NULL){
   

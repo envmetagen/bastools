@@ -1,3 +1,49 @@
+mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out){
+  message("reading query file")
+  #read in query file and count
+  n<-phylotools::read.fasta(query)
+  n$qseqid = sub(" .*", "", x = n$seq.name)
+  n$seq.text<-as.character(n$seq.text)
+  #count
+  count_queries=length(n$qseqid)
+  
+  message("reading mapping results")
+  #turn result into table, ignoring comment lines (so ignoring defintions). The table length excludes queries with
+  #non-hits
+  j<-read.table(file = blast.results.file)
+  colnames(j)<-c("qseqid", "qlen", "qstart", "qend",
+                 "slen", "sstart", "send", "length", "pident", "qcovs","sstrand")
+  #calculate scov
+  j$scov<-j$length/j$slen
+  
+  #remove duplicate hsp hits, based on highest scov
+  j2 <- j[order(j$qseqid,j$scov,decreasing = T),]
+  j2<-j2[!duplicated(j2$qseqid),]
+  count_hits<-length(j2$qseqid)
+  
+  #remove hits less than specified subject cover
+  j2<-j2[j2$scov>qc,]
+  count_qc<-length(j2$qseqid)
+  
+  #merge query and blast results
+  k<-merge(x = j2,y = n,by = "qseqid",all.y = F) 
+  
+  message("outputting as fasta")
+  message("testing keeping all sequence that passed buffers, rather than extracting sequence")
+  k_export<-k[,c("seq.name","seq.text")]
+  count_final_db<-length(k_export$seq.name)
+  phylotools::dat2fasta(k_export,outfile = out)
+  
+  ###########################
+  message(c("Done. ", "From ", count_queries," sequences, ", count_hits, " mapped to a reference, ",count_qc,
+            " of which had > ",qc*100,"% coverage"))
+}
+            
+            
+            
+            #####################################################################################
+  
+
 mapTrim2<-function(query,buffer,blast.results.file,qc=0.7,out){
   message("reading query file")
   #read in query file and count
@@ -28,7 +74,8 @@ mapTrim2<-function(query,buffer,blast.results.file,qc=0.7,out){
   #merge query and blast results
   k<-merge(x = j2,y = n,by = "qseqid",all.y = F)
   
-  #find query position that matches first subject position (i.e. first base of primer-binding site)
+  #find query position that matches first subject position (i.e. first base of primer-binding site,
+  #or first base of buffer if ref already included buffer)
   ##the strand problem...
   kplus<-k[k$sstrand=="plus",]
   kminus<-k[k$sstrand=="minus",]
@@ -57,8 +104,10 @@ mapTrim2<-function(query,buffer,blast.results.file,qc=0.7,out){
   count_right_buffer<-length(k3$qseqid)
   
   message("outputting as fasta")
-  k3_export<-k3[,c("seq.name","ex.seq")]
-  colnames(k3_export)<-c("seq.name","seq.text")
+  message("testing keeping all sequence that passed buffers, rather than extracting sequence")
+  k3_export<-k3[,c("seq.name","seq.text")]
+  #k3_export<-k3[,c("seq.name","ex.seq")]
+  #colnames(k3_export)<-c("seq.name","seq.text")
   count_final_db<-length(k3_export$seq.name)
   phylotools::dat2fasta(k3_export,outfile = out)
   
