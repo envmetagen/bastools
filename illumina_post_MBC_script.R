@@ -2,7 +2,6 @@
 #put all final otutabs (usually one per primer) in a folder called "final_otutabs", with no other tabs.
 #the parent directory should be empty also, as the outputs will be put here
 
-#source config file first
 
 library(processx)
 library(dplyr)
