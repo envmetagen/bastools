@@ -2,8 +2,6 @@
 #put all final otutabs (usually one per primer) in a folder called "final_otutabs", with no other tabs.
 #the parent directory should be empty also, as the outputs will be put here
 
-#source config file first
-
 library(processx)
 library(dplyr)
 library(mgsub)
@@ -19,9 +17,8 @@ setwd("./final_fastas")
 
 #BLASTING NT
 files<-list.files(pattern = "*.fasta")
-blast.status<-blast.min.bas(infastas = files,refdb = "/mnt/Disk1/Tools/BLAST+/DBs/nt_v5/nt_v5",blast_exec) 
-# need to fix this blast to output exit codes and run asynchronously - actually hanging is probably ok
-#if can be run as Rscipt with nohup?
+blast.status<-blast.min.bas(infastas = files,refdb = refdb,blast_exec) 
+# need to fix this blast to output exit codes 
 
 check.blasts(infastas = files,h = blast.status)
 
@@ -32,14 +29,21 @@ file.copy(list.files(full.names = T,path = "./final_fastas", pattern = ".blast.t
           "./blasts")
 file.remove(list.files(full.names = T,path = "./final_fastas", pattern = ".blast.txt"))
 #############################################################################
-#BINNING READS
+#FILTER BLASTS
 setwd("./blasts/")
 files<-list.files(pattern = ".blast.txt")
-
 for(i in 1:length(files)){
-  blastfile<-files[i]
-  binfile<-gsub(".blast.txt",".bins.txt",files[i])
-  bin.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,
+  blastfile = files[i]
+  out<-gsub(".blast.txt",".blast.filt.txt",files[i])
+  filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out)
+}
+#############################################################################
+#BIN READS
+files<-list.files(pattern = ".blast.filt.txt")
+for(i in 1:length(files)){
+  filtered_blastfile<-files[i]
+  binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
+  bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
             obitaxdb = obitaxdb,out = binfile)
 }
 files<-list.files(pattern = ".bins.txt")
@@ -79,4 +83,18 @@ taxon.filter.solo(files,filterpc=0.1)
 
 #Output taxatables by project
 files<-list.files(pattern = "*taxatable.tf.txt")
-splice.taxatables(files,google_ss)
+splice.taxatables(files,mastersheet)
+
+#make contributor files
+files<-list.files(pattern = "*spliced.txt")
+for(i in 1:length(files)){
+check.low.res.df(
+  filtered.taxatab = files[i],
+  filtered_blastfile = list.files(path = "../blasts",full.names = T,
+   pattern = gsub("taxatable.tf.spliced.txt","blast.filt.txt",strsplit(files[i],"-")[[1]][2])),
+  binfile = list.files(path = "../bins",full.names = T,
+   pattern = gsub("taxatable.tf.spliced.txt","bins.txt",strsplit(files[i],"-")[[1]][2])))
+}
+
+#inspect contributor files by eye and make list of taxids to exclude...then build this into bin.blast.R
+

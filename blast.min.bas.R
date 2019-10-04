@@ -50,11 +50,12 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T){
 
 
 check.blasts<-function(infastas,h){
+  a<-list()
   for(i in 1:length(h)){
-    print(infastas[i])
-      a[[i]]<-tryCatch(h[[i]]$get_status(),error=function(e) print("not running"))
-       if(nchar(a[[i]])!=11) print(gsub("sleeping","running",h[[i]]$get_status()))
-    print(paste0("exit status: ",h[[i]]$get_exit_status()))
+    message(infastas[i])
+    a[[i]]<-tryCatch(h[[i]]$get_status(),error=function(e) print("not running"))
+    if(nchar(a[[i]])!=11) message(gsub("sleeping","running",h[[i]]$get_status()))
+    message(paste0("exit status: ",h[[i]]$get_exit_status()))
   }
 }
 

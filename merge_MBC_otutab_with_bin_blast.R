@@ -54,14 +54,14 @@ MBC_otu_bin_blast_merge<-function(MBC_otutab, bin_blast_results,out){
 #'              primer_16S.uniq.l75L120.c20.TEST.taxon.table<-rma2info.BAS("primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6")
 #'              final.table<-merge.tab.taxon(obitab.txt = "primer_16S.uniq.l75L120.c20.tab",primer_16S.uniq.l75L120.c20.TEST.taxon.table)}
 #' @export
-obitab_bin_blast_merge_minion<-function(obitabfile,binfile,mastersheet=NA,experiment_id,used.obiuniq=F,out){
+obitab_bin_blast_merge_minion<-function(obitabfile,binfile,mastersheetfile=NA,experiment_id,used.obiuniq=F,out){
   
   if(used.obiuniq==F){
     obitab_input<-data.table::fread(obitabfile, sep = "\t")
     taxon_input<-data.table::fread(file = binfile, sep = "\t")
-    obitab_input$barcode<-gsub("barcode=","",do.call(rbind,stringr::str_split(obitab_input$definition," "))[,3])
+    #obitab_input$barcode<-gsub("barcode=","",do.call(rbind,stringr::str_split(obitab_input$definition," "))[,3])
     taxon_input$path<-paste0(taxon_input$K,";",taxon_input$P,";",taxon_input$C,";",taxon_input$O,";",
-                             taxon_input$F,";",taxon_input$G,";",taxon_input$S,";")
+                             taxon_input$F,";",taxon_input$G,";",taxon_input$S)
     
     merged.table<-merge(taxon_input[,c("qseqid","path")],obitab_input[,c("id","barcode")],
                         by.x = "qseqid",by.y = "id",all = TRUE)
@@ -71,14 +71,14 @@ obitab_bin_blast_merge_minion<-function(obitabfile,binfile,mastersheet=NA,experi
                     fun.aggregate = sum)
     taxatable$path[is.na(taxatable$path)]<-"No_hits"
     
-    if(!is.null(mastersheet)){
+    if(!is.null(mastersheetfile)){
     #replace barcodes with sample_names
-    master<-data.table::fread(mastersheet, sep = "\t")
     final.barcodes<-as.data.frame(colnames(taxatable[,2:length(colnames(taxatable))]))
     colnames(final.barcodes)<-"barcode_id"
+    master<-data.table::fread(file = mastersheetfile, sep = "\t",data.table = F)
     mapping.samples<-master[grep(experiment_id, master$experiment_id),c("barcode_id","ss_sample_id")]
     final.samples<-merge(final.barcodes,mapping.samples,by = "barcode_id",all.y = F,all.x = T)
-    colnames(taxatable)<-c("path",final.samples$ss_sample_id)
+    colnames(taxatable)<-c("taxon",final.samples$ss_sample_id)
     }
     
     write.table(x = taxatable,file = out,sep="\t",quote = F,row.names = F)
@@ -89,7 +89,7 @@ obitab_bin_blast_merge_minion<-function(obitabfile,binfile,mastersheet=NA,experi
 
 ######################################################################
 #SPLIT TAXATABLES
-splice.taxatables<-function(files,google_ss){
+splice.taxatables<-function(files,mastersheet){
 #read files
 taxatables<-list()
 for(i in 1:length(files)){
@@ -97,8 +97,8 @@ for(i in 1:length(files)){
 }
 
 #split by project
-ssdf<-google.read.ss(google_ss)
-projectnames<-unique(do.call(rbind,stringr::str_split(string = ssdf$Sample_Name,pattern = "-"))[,1])
+ssdf<-mastersheet
+projectnames<-unique(do.call(rbind,stringr::str_split(string = ssdf$ss_sample_id,pattern = "-"))[,1])
 projectnames<-paste0(projectnames,"-")
 
 taxatablesplit<-list()
