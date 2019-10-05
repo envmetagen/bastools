@@ -334,3 +334,26 @@ basplot.ecopcr.primer.logo<-function(ecopcroutput,forward=NULL,reverse=NULL){
   par(mfrow =c(1,1))
 }
 
+#taxatable to krona format
+bas.krona.plot<-function(taxatable){
+  
+  a<-read.table(taxatable,header = T,sep = "\t")
+  
+  b<-as.data.frame(do.call(rbind, stringr::str_split(a[,1],";")))
+  colnames(b)<-c("K","P","C","O","F","G","S")
+  
+  a$all<-rowSums(a[,2:length(colnames(a))])
+  d<-colnames(a[,2:length(colnames(a))])
+  
+  for(i in 1:length(d)){
+    sample<-cbind(a[,d[i]],b)
+    colnames(sample)[1]<-d[i]
+    write.table(sample,row.names = F,file = paste0(d[i],".krona.txt"),quote = F,sep = "\t",col.names = F)
+  }
+  
+  system2(command = "ktImportText",args = c(list.files(pattern = "*krona.txt"),"-o", paste0(gsub(".txt",".krona.html",taxatable)))
+          ,stdout = F,stderr = "",wait = T)
+  
+  unlink(list.files(pattern = "*krona.txt"))
+}
+
