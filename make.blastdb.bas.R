@@ -1,11 +1,14 @@
-make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxids=T, ncbiTaxDir, dbversion=5){
+make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=T, ncbiTaxDir, dbversion=5){
+  library(processx)
+  
+  if(!infasta %in% list.files()) stop("infasta not found in current directory")
   
   message("Reminder: Only works for blast 2.9.0: Current version:")
   system2(command = makeblastdb_exec,args = c("-version"))
   
   tempfileA<-paste0("temp",as.numeric(Sys.time()),".fasta")
   
-  if(addtaxids==T){  
+  if(addtaxidsfasta==T){  
     message("assumes fasta with species=xxx;") 
     add.lineage.fasta.BAS(infasta,ncbiTaxDir,out = tempfileA)
     tempfasta<-phylotools::read.fasta(tempfileA)
@@ -16,10 +19,10 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxids=T, n
                      " sequences for which taxonomy could not be found"))
       tempfasta<-tempfasta[-grep("kingdom=unknown",tempfasta$seq.name),]
     }
+    phylotools::dat2fasta(tempfasta,tempfileA)
+    
   } else{message("Assumes fasta with taxid=xxx;")
-    tempfasta<-phylotools::read.fasta(infasta)}
-  
-  phylotools::dat2fasta(tempfasta,tempfileA)
+         file.copy(infasta,tempfileA)}
   
   #give unique ids
   message("giving unique ids")
@@ -60,10 +63,10 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxids=T, n
   #testblast
   message("Running test blast")
   phylotools::dat2fasta(head(tempfasta,n=1),gsub(".fasta",".blastdbformatted.test.fasta",infasta))
-  blast.min.bas(gsub(".fasta",".blastdbformatted.test.fasta",infasta),refdb = gsub(".fasta","",infasta))
-  print(data.table::fread(gsub(".fasta",".blastdbformatted.test.blast.txt",infasta)))
-  
+  h<-blast.min.bas(gsub(".fasta",".blastdbformatted.test.fasta",infasta),refdb = gsub(".fasta","",infasta))
+  check.blasts(gsub(".fasta",".blastdbformatted.test.fasta",infasta),h)
   message("Does new db have taxids?")
+  print(data.table::fread(gsub(".fasta",".blastdbformatted.test.blast.txt",infasta)))
   system2(command = "blastdbcheck",args = c("-must_have_taxids","-db",gsub(".fasta","",infasta)))
   
   unlink(tempfileA)

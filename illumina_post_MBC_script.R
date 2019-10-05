@@ -2,6 +2,10 @@
 #put all final otutabs (usually one per primer) in a folder called "final_otutabs", with no other tabs.
 #the parent directory should be empty also, as the outputs will be put here
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8e7a61e30dad90500da8b98830abdb1edf6fefa4
 library(processx)
 library(dplyr)
 library(mgsub)
