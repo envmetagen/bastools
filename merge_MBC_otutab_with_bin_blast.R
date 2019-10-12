@@ -97,7 +97,7 @@ for(i in 1:length(files)){
 }
 
 #split by project
-ssdf<-mastersheet
+ssdf<-data.table::fread(file = mastersheet,sep = "\t")
 projectnames<-unique(do.call(rbind,stringr::str_split(string = ssdf$ss_sample_id,pattern = "-"))[,1])
 projectnames<-paste0(projectnames,"-")
 
@@ -121,9 +121,11 @@ for(i in 1:length(taxatablesplit2)){
       taxatablesplit2[[i]][[j]]<-taxatablesplit2[[i]][[j]][rowSums(taxatablesplit2[[i]][[j]])!=0,]
       taxatablesplit2[[i]][[j]]$taxon<-rownames(taxatablesplit2[[i]][[j]])
       taxatablesplit2[[i]][[j]]<-taxatablesplit2[[i]][[j]][,c(length(colnames(taxatablesplit2[[i]][[j]])),1:(length(colnames(taxatablesplit2[[i]][[j]]))-1))]
+      if(length(taxatablesplit2[[i]][[j]]$taxon)>0){
       write.table(taxatablesplit2[[i]][[j]],
                   paste0(projectnames[j],gsub("taxatable.tf.txt","taxatable.tf.spliced.txt",files[i])),
                   row.names = F,quote = F,sep = "\t")
+      }
     }
   }
 }

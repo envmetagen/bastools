@@ -2,10 +2,6 @@
 #put all final otutabs (usually one per primer) in a folder called "final_otutabs", with no other tabs.
 #the parent directory should be empty also, as the outputs will be put here
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 8e7a61e30dad90500da8b98830abdb1edf6fefa4
 library(processx)
 library(dplyr)
 library(mgsub)
@@ -37,6 +33,7 @@ file.remove(list.files(full.names = T,path = "./final_fastas", pattern = ".blast
 setwd("./blasts/")
 files<-list.files(pattern = ".blast.txt")
 for(i in 1:length(files)){
+  message(paste("filtering blast results for",files[i]))
   blastfile = files[i]
   out<-gsub(".blast.txt",".blast.filt.txt",files[i])
   filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out)
@@ -45,6 +42,7 @@ for(i in 1:length(files)){
 #BIN READS
 files<-list.files(pattern = ".blast.filt.txt")
 for(i in 1:length(files)){
+  message(paste("binning filtered blast results for",files[i]))
   filtered_blastfile<-files[i]
   binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
   bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
@@ -66,6 +64,7 @@ for(i in 1:length(files)){
   binfile<-gsub(".tsv",".bins.txt",files[i])
   binfile<-list.files(pattern = binfile,path = "../bins",full.names = T)
   mergefile<-gsub(".tsv",".taxatable.txt",files[i])
+  message(paste("mergeing bins and otutabs for",binfile, "and" , otutabfile))
   MBC_otu_bin_blast_merge(MBC_otutab = otutabfile,bin_blast_results = binfile,out = mergefile)
 }
 setwd("../")
@@ -83,15 +82,18 @@ file.remove(list.files(full.names = T,path = "./final_otutabs", pattern = ".taxa
 #Apply taxa filter
 setwd("taxatables/")
 files<-list.files(pattern = "*taxatable.txt")
+message(paste("applying taxon filters for all taxatables"))
 taxon.filter.solo(files,filterpc=0.1)
 
 #Output taxatables by project
 files<-list.files(pattern = "*taxatable.tf.txt")
+message(paste("splicing taxatables by project"))
 splice.taxatables(files,mastersheet)
 
 #make contributor files
 files<-list.files(pattern = "*spliced.txt")
 for(i in 1:length(files)){
+  message(paste("making contributor file for",files[i]))
 check.low.res.df(
   filtered.taxatab = files[i],
   filtered_blastfile = list.files(path = "../blasts",full.names = T,
