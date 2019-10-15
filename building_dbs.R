@@ -1,3 +1,69 @@
+DL.nuccore2fasta<-function(group.taxid,ncbiTaxDir,gene,rank_req="family"){
+  
+  children<-bas.get.children(group.taxid,ncbiTaxDir = ncbiTaxDir,rank_req = rank_req)
+  
+  message(paste(length(children$taxid), "children found at required rank"))
+  
+  for(i in 1:length(children$taxid)){
+    bas.get.nuccore(children[i,1],gene,name = children[i,3])
+  }
+  
+  #concatenate files
+  fastas<-paste0(children[,3],"_",children[,1],"_",gene,".fasta")
+  
+  system2("cat", args = c(fastas), 
+          stdout = paste0(colnames(children[3]),"_",group.taxid,"_",gene,"_nuccore_",Sys.Date(),".fasta"),wait = T)
+
+  #count seqs in each file
+  #system2("grep",args = c("-c",">",fastas),wait = T,stdout = T)
+  #for(i in 1:length(fastas)) {unlink(fastas[i])}
+  
+}
+
+bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req){
+  taxalist<-system2(command = "taxonkit",args = c("list","-r","--show-name", "--ids", group.taxid, "--indent", 
+                                                  '""',"--data-dir",ncbiTaxDir),wait=T,stdout = T)
+  taxalistdf<-data.table::fread(text = taxalist,sep = "\t",header = F)
+  taxalistdf<-as.data.frame(do.call(rbind,stringr::str_split(taxalistdf$V1," \\[")))
+  taxalistdf[,2:3]<-do.call(rbind,stringr::str_split(taxalistdf$V2,"\\] "))
+  
+  out<-taxalistdf[taxalistdf$V2==rank_req,]
+  colnames(out)<-c("taxid","rank",taxalistdf[1,3])
+  return(out)
+}
+
+
+bas.get.nuccore<-function(taxon,gene,as.taxid=T,name=NULL){
+  #######GENE CAN ONLY = 18S, 16S OR COI FOR NOW
+  if(gene!="18S" & gene!="16S" & gene!="COI") stop("accepted values for gene are 16S, 18S or COI")
+  
+  if(gene=="18S") geneTerm<-"18S*"
+  if(gene=="16S") geneTerm<-"16S*"
+  ########################COI...............
+  
+  if(as.taxid) {
+    searchQ <- paste0("txid",taxon, "[Organism] AND ", geneTerm,"[Gene]")
+  } else {searchQ <- paste0(taxon, "[Organism] AND ", geneTerm,"[Gene]")
+  message("Using a taxid is recommended over using a name as many taxa have names in common")}
+  
+  search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = T)
+  DLseqs <- rentrez::entrez_fetch(db = "nuccore", web_history = search_results$web_history, rettype = "gb")
+  
+  if(!is.null(name)) {
+    out<-paste0(name,"_",taxon,"_",gene,".gb")
+  } else {out<-paste0(taxon,"_",gene,".gb")}
+  
+  writeLines(DLseqs,out)
+  
+  #convert to fasta (including taxids)
+  system2(command = "obiconvert", args=c("--genbank", out, "--fasta-output"),wait = T,
+          stdout=gsub(out,pattern = ".gb",replacement = ".fasta"))
+  
+  unlink(out)
+}
+
+
+
 #' Download sequences from NCBI and BOLD based on taxonomy and gene search terms
 #' @param groups Can be Families, Orders, higher?? As many groups as required can be entered
 #' @param target_gene The gene to be downloaded. Make sure to include any variations of the gene (e.g. COI, COX1)
