@@ -1,10 +1,18 @@
 #infasta<-"DB_MiFish12S_EUfwfish_04022019.temp.fasta"
-add.lineage.fasta.BAS<-function(infasta,ncbiTaxDir,out){
-message("Reminders: headers must contain \"species=species_name;\"")
+add.lineage.fasta.BAS<-function(infasta,ncbiTaxDir,out,taxids=T){
   
-fasta.table<-phylotools::read.fasta(infasta)
-fasta.table$name<-gsub("_"," ",stringr::str_match(fasta.table$seq.name, "species=(.*?);")[,2])
-fasta.table$taxids<-names2taxids(vector = fasta.table$name,ncbiTaxDir)
+  if(taxids) {
+    message("Reminders: headers must contain \"taxid=taxid;\"")
+    fasta.table<-phylotools::read.fasta(infasta)
+    fasta.table$taxids<-stringr::str_match(fasta.table$seq.name, "taxid=(.*?);")[,2]
+    
+  } else {
+    message("Reminders: headers must contain \"species=species_name;\"")
+    fasta.table<-phylotools::read.fasta(infasta)
+    fasta.table$name<-gsub("_"," ",stringr::str_match(fasta.table$seq.name, "species=(.*?);")[,2])
+    fasta.table$taxids<-names2taxids(vector = fasta.table$name,ncbiTaxDir)
+  }
+  
 new_lineage<-add.lineage.df(fasta.table,ncbiTaxDir)
 
 new_lineage$full<-paste0("kingdom=",new_lineage$K,"; phylum=",new_lineage$P,"; class=",new_lineage$C,
@@ -20,6 +28,7 @@ newname<-paste0(seqid," taxid=",new_lineage$taxids,"; ",new_lineage$full,definit
 fasta.table.winfo<-as.data.frame(cbind(newname,as.character(new_lineage$seq.text)))
 colnames(fasta.table.winfo)<-c("seq.name","seq.text")
 phylotools::dat2fasta(fasta.table.winfo,outfile = out)
+
 }
 
 names2taxids<-function(vector,ncbiTaxDir){
@@ -158,7 +167,7 @@ names2taxids<-function(vector,ncbiTaxDir){
 
 add.lineage.df<-function(df,ncbiTaxDir){
   if(is.null(df$taxids)) {stop("No column called taxids")}
-  df$taxids<-as.integer(df$taxids) 
+  df$taxids<-as.character(df$taxids) 
   #write taxids to file
   taxids_fileA<-paste0("taxids",as.numeric(Sys.time()),".txt")
   write.table(unique(df$taxids),file = taxids_fileA,row.names = F,col.names = F,quote = F)

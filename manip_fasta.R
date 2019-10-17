@@ -89,6 +89,20 @@ bascount.fastas.recur<-function(folder){
   setwd(origpath)
   sum(sapply(e, function(x){as.numeric(x[2])}))
 }
+
+bascount.gb.recur<-function(folder){
+  cb <- function(line, proc) {cat(line, "\n")}
+  origpath<-getwd()
+  setwd(folder)
+  a<-list.files(pattern = "*.gb",recursive = T)
+  b<-processx::run(command = "grep",args = c("-cH",'//',a),echo_cmd = F,echo = F,stderr_line_callback = cb)
+  d<-read.table(text = b$stdout,sep = "\n")
+  print(d)
+  e<-stringr::str_split(string = d$V1,pattern = ":")
+  setwd(origpath)
+  sum(sapply(e, function(x){as.numeric(x[2])}))
+}
+
 remove.dashes.fasta<-function(infasta,outfasta){
   f<-process$new(command = "sed",args = c("-e","/^>/!s/-//g;/^$/d",infasta),echo_cmd = T, stdout = outfasta)
   f$wait()

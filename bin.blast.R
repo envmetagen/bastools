@@ -83,7 +83,7 @@ bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTa
   #add lineage to results
   message("adding taxonomic lineages")
   btab$taxids<-btab$staxid #add.lineage.df requires this colname
-  btab<-suppressMessages(add.lineage.df(btab,ncbiTaxDir))
+  btab<-add.lineage.df(btab,ncbiTaxDir)
   
   #remove crappy hits 
   #1. btab$S contains uncultured
@@ -126,7 +126,7 @@ bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTa
   rm(btabsp)
   #get lca names
   colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
-  lcasp<-suppressMessages(add.lineage.df(df = lcasp,ncbiTaxDir))
+  lcasp<-add.lineage.df(df = lcasp,ncbiTaxDir)
   colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
   } else {
     lcasp<-data.frame(matrix(nrow=1,ncol = 10))
@@ -142,7 +142,7 @@ bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTa
   rm(btabg)
   #get lca names
   colnames(lcag)<-gsub("x","taxids",colnames(lcag))
-  lcag<-suppressMessages(add.lineage.df(df = lcag,ncbiTaxDir))
+  lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
   colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
 
   #family-level assignments
@@ -154,7 +154,7 @@ bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTa
   rm(btabf)
   #get lca names
   colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
-  lcaf<-suppressMessages(add.lineage.df(df = lcaf,ncbiTaxDir))
+  lcaf<-add.lineage.df(df = lcaf,ncbiTaxDir)
   colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
 
   #higher-than-family-level assignments
@@ -166,7 +166,7 @@ bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTa
   rm(btabhtf)
   #get lca names
   colnames(lcahtf)<-gsub("x","taxids",colnames(lcahtf))
-  lcahtf<-suppressMessages(add.lineage.df(df = lcahtf,ncbiTaxDir))
+  lcahtf<-add.lineage.df(df = lcahtf,ncbiTaxDir)
   colnames(lcahtf)<-gsub("Group.1","qseqid",colnames(lcahtf))
 
   ###################################################
@@ -288,7 +288,7 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
   #add lineage to results
   message("adding taxonomic lineages")
   btab$taxids<-btab$staxid #add.lineage.df requires this colname
-  btab<-suppressMessages(add.lineage.df(btab,ncbiTaxDir))
+  btab<-add.lineage.df(btab,ncbiTaxDir)
   
   #remove crappy hits 
   #1. btab$S contains uncultured
@@ -346,7 +346,7 @@ if(length(btabsp$taxids)>0){
   rm(btabsp)
   #get lca names
   colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
-  lcasp<-suppressMessages(add.lineage.df(df = lcasp,ncbiTaxDir))
+  lcasp<-add.lineage.df(df = lcasp,ncbiTaxDir)
   colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
 } else {
   lcasp<-data.frame(matrix(nrow=1,ncol = 10))
@@ -362,7 +362,7 @@ lcag = aggregate(btabg$taxids, by=list(btabg$qseqid),
 rm(btabg)
 #get lca names
 colnames(lcag)<-gsub("x","taxids",colnames(lcag))
-lcag<-suppressMessages(add.lineage.df(df = lcag,ncbiTaxDir))
+lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
 colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
 
 #family-level assignments
@@ -374,7 +374,7 @@ lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid),
 rm(btabf)
 #get lca names
 colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
-lcaf<-suppressMessages(add.lineage.df(df = lcaf,ncbiTaxDir))
+lcaf<-add.lineage.df(df = lcaf,ncbiTaxDir)
 colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
 
 #higher-than-family-level assignments
@@ -386,7 +386,7 @@ lcahtf = aggregate(btabhtf$taxids, by=list(btabhtf$qseqid),
 rm(btabhtf)
 #get lca names
 colnames(lcahtf)<-gsub("x","taxids",colnames(lcahtf))
-lcahtf<-suppressMessages(add.lineage.df(df = lcahtf,ncbiTaxDir))
+lcahtf<-add.lineage.df(df = lcahtf,ncbiTaxDir)
 colnames(lcahtf)<-gsub("Group.1","qseqid",colnames(lcahtf))
 
 ###################################################

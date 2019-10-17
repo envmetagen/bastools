@@ -1,23 +1,85 @@
-DL.nuccore2fasta<-function(group.taxid,ncbiTaxDir,gene,rank_req="family"){
+DL.nuccore.gb<-function(group.taxid,ncbiTaxDir,gene,rank_req="family"){
   
   children<-bas.get.children(group.taxid,ncbiTaxDir = ncbiTaxDir,rank_req = rank_req)
   
   message(paste(length(children$taxid), "children found at required rank"))
   
+  pb = txtProgressBar(min = 0, max = length(children$taxid), initial = 0,style = 3)
   for(i in 1:length(children$taxid)){
-    bas.get.nuccore(children[i,1],gene,name = children[i,3])
+    #could maybe add a trycatch to output remaining children df in case of failure?
+    bas.get.nuccore(taxon = children[i,1],gene = gene,name = children[i,3],as.taxid = T)
+    setTxtProgressBar(pb,i)
+  }
+  #remove files with empty result
+  a<-system2("grep",args = c("'Empty result - nothing to do'",list.files(pattern = "*.gb")),wait = T,
+             stderr = T,stdout = T)
+  unlink(gsub(":\t.*","",a))
+  a<-system2("grep",args = c("'Unable to obtain query'",list.files(pattern = "*.gb")),wait = T,
+             stderr = T,stdout = T)
+  unlink(gsub(":\t.*","",a))
+}
+
+extract.gene.gb<-function(gbfile,gene){
+  if(gene!="18S") stop("havent written this yet")
+  #split gb file by record
+  system2(command = "cat", args=c(gbfile, "|", "sh","/home/bastian.egeter/git_bastools/bastools/split_gb.sh"),
+          wait=T) 
+  #remove last file cause its always empty
+  files<-list.files(pattern = "^outTemp.*")
+  a<-suppressWarnings(max(as.numeric(do.call(rbind,stringr::str_split(files,"outTemp"))[,2])))
+  unlink(paste0("outTemp",a))
+  
+  #extract gene for each file
+  for(i in 1:length(list.files(pattern = "^outTemp.*"))){
+    a<-list.files(pattern = "^outTemp.*")[i]
+    if(gene!="18S") stop("havent written this yet")
+    if(gene=="18S") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-18S.py"
+    system2("python",args = c(script, a),wait = T,
+            stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
+    
+    #some files have /note instead of /product
+    count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
+    if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
+      system2("python",args = c(gsub(".py","_note.py",script), a),wait = T,
+              stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
+    }
+    #some files have "small subunit ribosomal RNA" in /product (no "18S")
+    count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
+    if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
+      system2("python",args = c(gsub(".py","_ssrrna.py",script), a),wait = T,
+              stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
+    }
+    
+    #some files fail for other reasons 
+    count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
+    if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
+      message(paste("One record from",gbfile,"failed and was excluded"))
+      unlink(gsub("outTemp","extract.outTemp",a))
+    }
   }
   
-  #concatenate files
-  fastas<-paste0(children[,3],"_",children[,1],"_",gene,".fasta")
+  #cat files
+  if(length(list.files(pattern = "^extract.outTemp.*"))!=0){
+    
+    system2("cat",args=c(list.files(pattern = "^extract.outTemp.*")),
+            stdout = gsub(".gb",".extract.Temp.fasta",gbfile),wait = T)
   
-  system2("cat", args = c(fastas), 
-          stdout = paste0(colnames(children[3]),"_",group.taxid,"_",gene,"_nuccore_",Sys.Date(),".fasta"),wait = T)
-
-  #count seqs in each file
-  #system2("grep",args = c("-c",">",fastas),wait = T,stdout = T)
-  #for(i in 1:length(fastas)) {unlink(fastas[i])}
+  #replace fasta file seqs from obiconvert with these seqs
+  obifasta<-phylotools::read.fasta(gsub(".gb",".fasta",gbfile))
+  newfasta<-phylotools::read.fasta(gsub(".gb",".extract.Temp.fasta",gbfile))
+  newfasta[1,1]
+  obifasta[1,1]
+  obifasta$seqid<-do.call(rbind,stringr::str_split(obifasta$seq.name," "))[,1]
+  combofasta<-merge(obifasta,newfasta,by.x = "seqid",by.y = "seq.name")
+  combofasta$seq.text<-combofasta$seq.text.y
+  combofasta<-combofasta[,c(2,5)]
+  phylotools::dat2fasta(combofasta,gsub(".gb",".extract.fasta",gbfile))
+  }
   
+  #remove extraneuos files
+  unlink(list.files(pattern = "^extract.outTemp.*"))
+  unlink(list.files(pattern = "^outTemp.*"))
+  unlink(gsub(".gb",".extract.Temp.fasta",gbfile))
 }
 
 bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req){
@@ -35,31 +97,59 @@ bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req){
 
 bas.get.nuccore<-function(taxon,gene,as.taxid=T,name=NULL){
   #######GENE CAN ONLY = 18S, 16S OR COI FOR NOW
+  if(gene!="18S") stop("the rest not done yet!")
+  
   if(gene!="18S" & gene!="16S" & gene!="COI") stop("accepted values for gene are 16S, 18S or COI")
   
-  if(gene=="18S") geneTerm<-"18S*"
+  if(gene=="18S") geneTerm<-
+      "(18S ribosomal RNA[All Fields] OR 18S small subunit ribosomal RNA[All Fields] OR 18S*[Gene])"
   if(gene=="16S") geneTerm<-"16S*"
+  
+  
   ########################COI...............
   
   if(as.taxid) {
-    searchQ <- paste0("txid",taxon, "[Organism] AND ", geneTerm,"[Gene]")
-  } else {searchQ <- paste0(taxon, "[Organism] AND ", geneTerm,"[Gene]")
+    searchQ <- paste0("txid",taxon, "[Organism] AND ", geneTerm)
+  } else {searchQ <- paste0(taxon, "[Organism] AND ", geneTerm)
   message("Using a taxid is recommended over using a name as many taxa have names in common")}
   
   search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = T)
+  
+  if(length(search_results$ids)<600){
   DLseqs <- rentrez::entrez_fetch(db = "nuccore", web_history = search_results$web_history, rettype = "gb")
   
   if(!is.null(name)) {
-    out<-paste0(name,"_",taxon,"_",gene,".gb")
-  } else {out<-paste0(taxon,"_",gene,".gb")}
+           out<-paste0(name,"_",taxon,"_",gene,".gb")
+         } else {out<-paste0(taxon,"_",gene,".gb")}
   
   writeLines(DLseqs,out)
+  }
   
+  if(length(search_results$ids)>=600){
+  
+  # #modified from primer miner:
+    start <- 0
+    chunks <- ceiling(length(search_results$ids)/100)
+    
+    if(!is.null(name)) {
+      out<-paste0(name,"_",taxon,"_",gene,".gb")
+    } else {out<-paste0(taxon,"_",gene,".gb")}
+    
+    for (i in 1:chunks) {
+      DLseqs <- rentrez::entrez_fetch(db = "nuccore",
+                                      web_history = search_results$web_history, rettype = "gb",
+                                      retmax = 100, retstart = start)
+      cat(DLseqs, file = out, sep = "",  append = T)
+      start <- start + 100
+      Sys.sleep(2.5)
+    }
+  }
+}
+
+gb2fasta<-function(gbfile){
   #convert to fasta (including taxids)
-  system2(command = "obiconvert", args=c("--genbank", out, "--fasta-output"),wait = T,
-          stdout=gsub(out,pattern = ".gb",replacement = ".fasta"))
-  
-  unlink(out)
+  system2(command = "obiconvert", args=c("--genbank", gbfile, "--fasta-output"),wait = T,
+          stdout=gsub(gbfile,pattern = ".gb",replacement = ".fasta"))
 }
 
 
