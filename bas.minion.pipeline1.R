@@ -1,77 +1,223 @@
 
-bas.minion.pipeline1<-function(demuxed_fstq_dir,mastersheet,expid,run){
+library(processx)
+library(dplyr)
+library(mgsub)
 
-#for unseperated files...
-setwd(demuxed_fstq_dir)
 
-  #cat 
-  system2(command = "cat",args = c("*"),stdout = paste0(run,"_all.fastq"),wait = T)   
+####################################################
+#step 0 master sheet creation
+
+if("step0" %in% stepstotake){
   
+#read master sheets
+master<-list()
+headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
+for(i in 1:length(sheeturls)){
+master[[i]]<-google.read.master.url(sheeturls[i])
+if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
+  stop (c("one of the following headers missing: ", paste(headers)))}
+master[[i]]<-master[[i]][,headers]
+}
+
+#make a processing sheet
+experimentsheet<-as.data.frame(data.table::rbindlist(master))
+experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
+
+#get barcodes used  
+barcodes.used<-unique(experimentsheet$barcode_id)
+barcodes.used <- barcodes.used[!is.na(barcodes.used)]
+barcodes.used<-gsub("BC","barcode",barcodes.used)
+
+#size select, for each fragment, I checked an seqs appear to have primers plus one base (at each end)
+experimentsheet$primer_combo<-paste0(experimentsheet$Primer_F,experimentsheet$Primer_R)
+primer_combo<-unique(experimentsheet$primer_combo)
+
+#barcodes in each primer combo
+primer_combo.bcs<-list()
+for(i in 1:length(primer_combo)){
+  primer_combo.bcs[[i]]<-unique(experimentsheet[experimentsheet$primer_combo==primer_combo[i],"barcode_id"])
+  primer_combo.bcs[[i]]<-gsub("BC","barcode",primer_combo.bcs[[i]])
+  names(primer_combo.bcs[[i]])<-gsub(" ","",
+                                     experimentsheet[experimentsheet$primer_combo==primer_combo[i],"Primer_set"][1])
+}
+
+#size calc
+message("size calc includes primer lengths at the moment")
+minlength<-list()
+for(i in 1:length(primer_combo)){
+  minlength[[i]]<-sum(experimentsheet[experimentsheet$primer_combo==primer_combo[i],
+                                      "Min_length"][1],nchar(primer_combo[i]))
+  names(minlength[[i]])<-names(primer_combo.bcs[[i]][1])
+}
+
+maxlength<-list()
+for(i in 1:length(primer_combo)){
+  maxlength[[i]]<-sum(experimentsheet[experimentsheet$primer_combo==primer_combo[i],
+                                      "Max_length"][1],nchar(primer_combo[i]))
+  names(maxlength[[i]])<-names(primer_combo.bcs[[i]][1])
+}
+
+}
+
+####################################################
+#step 1 extract gz files and convert to fasta
+if("step1" %in% stepstotake){
+  
+#extract gz to new files
+if(in_folders) {
+  for(i in 1:length(barcodes.used)){
+    folder<-paste0(demuxed_fstq_dir,barcodes.used[i],"/")
+    system2(command = "zcat",args = c(paste0(folder,list.files(folder))),
+            stdout = paste0(outDir,barcodes.used[i],".fastq"),wait = T)
+  }
+} else stop ("Not written yet")
+
+#these files should be the ones for DMP
+#file.rename(list.files(pattern="water_*.img"), paste0("water_", 1:700))
+
   #convert to fasta
-  system2(command = "sed",args = c("-n", "'1~4s/^@/>/p;2~4p'",paste0(run,"_all.fastq")),wait=T,stdout= paste0(run,"_all.fasta"))
+  files<-list.files(path = outDir,pattern = "*.fastq")
+  for(i in 1:length(files)){
+  system2(command = "sed",args = c("-n", "'1~4s/^@/>/p;2~4p'",paste0(outDir,files[i])),
+          wait=T,stdout= gsub(".fastq",".fasta",paste0(outDir,files[i])))
+  }
   
   #reformat for obitools
-  system2(command = "sed",args = c("'s/ /; /g;s/; / /1'",paste0(run,"_all.fasta")),wait=T,stdout= paste0(run,"_all_rf.fasta"))
+  files<-list.files(path = outDir,pattern = "*.fasta")
+  for(i in 1:length(files)){
+    system2(command = "sed",
+            args = c("'s/ /; /g;s/; / /1;s/   / /g;s/barcode=barcode\\([0-9][0-9]\\)/barcode=barcode\\1;/g'",
+                     paste0(outDir,files[i])),
+            wait=T,stdout= gsub(".fasta",".obi.fasta",paste0(outDir,files[i])))
+  }
   
-  #split by barcode
-  system2(command = "obisplit", args = c("-t", "barcode", paste0(run,"_all_rf.fasta")),wait=T)
-  #these files should be the ones for DMP
-  message("should replace barcodes with sample names here and change filenames for DMP")
-          
-  message("not removing primers in this pipeline")
+  #add ss_sample_id titles to headers
+  for(i in 1:length(barcodes.used)){
+    file<-paste0(outDir,barcodes.used[i],".obi.fasta")
+    ss_sample_id<-experimentsheet[experimentsheet$barcode_id==gsub("barcode","BC",barcodes.used[i]),"ss_sample_id"]
+    system2(command = "sed",
+    args = c(paste0("'s/\\(barcode=barcode[0-9][0-9];\\)/\\1 ss_sample_id=",ss_sample_id,";/g'"),
+                     paste0(file)),
+            wait=T,stdout= gsub(".obi.fasta",".ss.obi.fasta",paste0(file)))
+  }
   
-  #size select, for each fragment, I checked an seqs appear to have primers plus one base (at each end)
-    #list barcodes in each frag in run
-    #this run
-    mastersheetrun<-mastersheet[mastersheet$experiment_id==expid,]
-    #used bcs each frag  
-    primersets<-unique(mastersheetrun$Primer_set)
-    a<-list()
-    for(i in 1:length(primersets)){
-      a[[i]]<-mastersheetrun[mastersheetrun$Primer_set==primersets[i],"barcode_id"]
-    }
-    names(a)<-primersets
-    
-    #cat each frag
-    for(i in 1:length(a)){
-      system2(command = "cat",args = c(paste0(a[[i]]$barcode_id,".fasta")),wait = T,stdout = paste0(run,"_",names(a)[i],".fasta")) 
-    }
-    
-    #size calc
-    fraglengths<-data.frame("primerset"=primersets)
-    for(i in 1:length(primersets)){
-    thisprimer<-match(primersets[i],mastersheetrun$Primer_set)
-    minL<-mastersheetrun$Min_length[thisprimer]+nchar(mastersheetrun$Primer_F[thisprimer])+
-      nchar(mastersheetrun$Primer_R[thisprimer])
-    maxL<-mastersheetrun$Max_length[thisprimer]+nchar(mastersheetrun$Primer_F[thisprimer])+
-      nchar(mastersheetrun$Primer_R[thisprimer])
-    fraglengths[match(primersets[i],fraglengths$primerset),2]<-minL
-    fraglengths[match(primersets[i],fraglengths$primerset),3]<-maxL
-    }
-    
-    #add length to fasta
-    for(i in 1:length(names(a))){
-    system2(command = "obiannotate",args = c("--length", paste0(run,"_",names(a)[i],".fasta")),wait = T,
-            stdout =  paste0(run,"_",names(a)[i],"_wlen.fasta"))
-    }
-    
-    #obigrep lengths
-    for(i in 1:length(fraglengths$primerset)){
-      system2(command = "obigrep",args = c("-l",fraglengths[i,2],"-L",fraglengths[i,3],
-                                           paste0(run,"_",names(a)[i],"_wlen.fasta")),wait = T,
-              stdout =  paste0(run,"_",names(a)[i],"_l",fraglengths[i,2],"L",fraglengths[i,3],"_wlen.fasta"))
-    }
-    
-    #obitab all
-    for(i in 1:length(fraglengths$primerset)){
-      system2(command = "obitab",args = c(paste0(run,"_",names(a)[i],
-                                                 "_l",fraglengths[i,2],"L",fraglengths[i,3],"_wlen.fasta")),wait = T,
-              stdout =  paste0(run,"_",names(a)[i],"_l",fraglengths[i,2],"L",fraglengths[i,3],"_wlen.tab"))
-    }
-  
-  # #dereplicate - not worth it, doesnt reduce anything!
- 
-    
 }
+####################################################
+#step 2 cat by frag
+if("step2" %in% stepstotake){  
+    #cat each frag
+    files<-list.files(path = outDir,pattern = "*.ss.obi.fasta")
+    for(i in 1:length(primer_combo.bcs)){
+      primercombofiles<-files[files %in% paste0(primer_combo.bcs[[i]],".ss.obi.fasta")]
+      system2(command = "cat",args = c(paste0(outDir,primercombofiles)),
+              wait = T,stdout = paste0(outDir,experiment_id,"_",names(primer_combo.bcs[[i]])[1],
+                                       ".fasta")) 
+    }
+    
+}    
+####################################################
+#step 3 size select
+if("step3" %in% stepstotake){
+  #add length to fasta
+    
+    #add seq lengths
+    files<-grep(experiment_id,list.files(path = outDir,pattern = ".fasta"),value = T)
+    for(i in 1:length(files)){
+    system2(command = "obiannotate",args = c("--length", paste0(outDir,files[i])),wait = T,
+            stdout= gsub(".fasta",".wlen.obi.fasta",paste0(outDir,files[i])))
+    }
+    
+  #obigrep lengths
+  files<-grep(experiment_id,list.files(path = outDir,pattern = ".wlen.obi.fasta"),value = T)
+  for(i in 1:length(minlength)){
+    file<-paste0(outDir,grep(names(minlength[[i]]),files,value = T))
+    system2(command = "obigrep",args = c("-l",minlength[[i]],"-L",maxlength[[i]], file),wait = T,
+              stdout =  gsub(".wlen.obi.fasta",".filtlen.wlen.obi.fasta",file ))
+  }
+} 
+
+
+####################################################
+#step 4 demultiplex
+if("step4" %in% stepstotake){
+  
+#do obiuniq
+files<-list.files(path = outDir,pattern="*.filtlen.wlen.obi.fasta")
+for(i in 1:length(files)){
+  system2(command = "obiuniq",args = c("-c", "ss_sample_id",paste0(outDir,files[i])),wait = T,
+          stdout =  gsub(".filtlen.wlen.obi.fasta",".uniq.filtlen.wlen.obi.fasta",paste0(outDir,files[i])))
+}
+
+}
+####################################################
+#step 5 make otu tabs
+if("step5" %in% stepstotake){
+  
+  
+  #make obitabs
+  files<-list.files(path = outDir,pattern="*.uniq.filtlen.wlen.obi.fasta")
+  for(i in 1:length(files)){
+    system2(command = "obitab",args = c(paste0(outDir,files[i])),wait = T,
+              stdout =  gsub(".fasta",".tab",paste0(outDir,files[i])))
+  }
+
+}
+  
+####################################################
+#step 6 create and tidy folders
+if("step6" %in% stepstotake){
+
+  dir.create(paste0(outDir,"post.minion.pipe"))
+  dir.create(paste0(outDir,"post.minion.pipe/final_fastas"))
+  dir.create(paste0(outDir,"post.minion.pipe/final_otutabs"))
+  dir.create(paste0(outDir,"post.minion.pipe/blasts"))
+  
+  #move otutabs 
+  files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.tab")
+  for(i in 1:length(files)){
+    file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_otutabs"))
+    unlink(paste0(outDir,files[i]))
+  }
+  
+  #move fastas 
+  files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.fasta")
+  for(i in 1:length(files)){
+    file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_fastas"))
+    unlink(paste0(outDir,files[i]))
+  }
+} 
+####################################################
+#step 7 blast and bin
+if("step7" %in% stepstotake){
+
+  #BLASTING NT
+  files<-paste0(outDir,"post.minion.pipe/final_fastas/",
+                list.files(path = paste0(outDir,"post.minion.pipe/final_fastas"),pattern = "*.fasta"))
+  blast.status<-blast.min.bas(infastas = files,refdb = refdb,blast_exec) 
+  
+  check.blasts(infastas = files,h = blast.status)
+
+  #############################################################################
+  #FILTER BLASTS
+  files<-paste0(outDir,"post.minion.pipe/final_fastas/",
+                list.files(path = paste0(outDir,"post.minion.pipe/final_fastas"),pattern = ".blast.txt"))
+  for(i in 1:length(files)){
+    message(paste("filtering blast results for",files[i]))
+    blastfile = files[i]
+    out<-gsub(".blast.txt",".blast.filt.txt",files[i])
+    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out)
+  }
+  #############################################################################
+  #BIN READS
+  files<-paste0(outDir,"post.minion.pipe/final_fastas/",
+                list.files(path = paste0(outDir,"post.minion.pipe/final_fastas"),pattern = ".blast.filt.txt"))
+  for(i in 1:length(files)){
+    message(paste("binning filtered blast results for",files[i]))
+    filtered_blastfile<-files[i]
+    binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
+    bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
+               obitaxdb = obitaxdb,out = binfile)
+  }
+}  
     
     

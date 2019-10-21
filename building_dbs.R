@@ -20,7 +20,6 @@ DL.nuccore.gb<-function(group.taxid,ncbiTaxDir,gene,rank_req="family"){
 }
 
 extract.gene.gb<-function(gbfile,gene){
-  if(gene!="18S") stop("havent written this yet")
   #split gb file by record
   system2(command = "cat", args=c(gbfile, "|", "sh","/home/bastian.egeter/git_bastools/bastools/split_gb.sh"),
           wait=T) 
@@ -32,8 +31,8 @@ extract.gene.gb<-function(gbfile,gene){
   #extract gene for each file
   for(i in 1:length(list.files(pattern = "^outTemp.*"))){
     a<-list.files(pattern = "^outTemp.*")[i]
-    if(gene!="18S") stop("havent written this yet")
     if(gene=="18S") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-18S.py"
+    if(gene=="16S") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-16S.py"
     system2("python",args = c(script, a),wait = T,
             stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
     
@@ -43,7 +42,7 @@ extract.gene.gb<-function(gbfile,gene){
       system2("python",args = c(gsub(".py","_note.py",script), a),wait = T,
               stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
     }
-    #some files have "small subunit ribosomal RNA" in /product (no "18S")
+    #some files have "small subunit ribosomal RNA" in /product (no "16S")
     count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
     if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
       system2("python",args = c(gsub(".py","_ssrrna.py",script), a),wait = T,
@@ -82,14 +81,17 @@ extract.gene.gb<-function(gbfile,gene){
   unlink(gsub(".gb",".extract.Temp.fasta",gbfile))
 }
 
-bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req){
+bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req=NULL){
   taxalist<-system2(command = "taxonkit",args = c("list","-r","--show-name", "--ids", group.taxid, "--indent", 
                                                   '""',"--data-dir",ncbiTaxDir),wait=T,stdout = T)
   taxalistdf<-data.table::fread(text = taxalist,sep = "\t",header = F)
   taxalistdf<-as.data.frame(do.call(rbind,stringr::str_split(taxalistdf$V1," \\[")))
-  taxalistdf[,2:3]<-do.call(rbind,stringr::str_split(taxalistdf$V2,"\\] "))
+  taxalistdf[,2:3]<-suppressWarnings(do.call(rbind,stringr::str_split(taxalistdf$V2,"\\] ")))
   
+  if(!is.null(rank_req)){
   out<-taxalistdf[taxalistdf$V2==rank_req,]
+  } else out <- taxalistdf
+  
   colnames(out)<-c("taxid","rank",taxalistdf[1,3])
   return(out)
 }
@@ -97,13 +99,12 @@ bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req){
 
 bas.get.nuccore<-function(taxon,gene,as.taxid=T,name=NULL){
   #######GENE CAN ONLY = 18S, 16S OR COI FOR NOW
-  if(gene!="18S") stop("the rest not done yet!")
-  
   if(gene!="18S" & gene!="16S" & gene!="COI") stop("accepted values for gene are 16S, 18S or COI")
   
   if(gene=="18S") geneTerm<-
       "(18S ribosomal RNA[All Fields] OR 18S small subunit ribosomal RNA[All Fields] OR 18S*[Gene])"
-  if(gene=="16S") geneTerm<-"16S*"
+  if(gene=="16S") geneTerm<-
+      "(16S ribosomal RNA[All Fields] OR 16S small subunit ribosomal RNA[All Fields] OR 16S*[Gene])"
   
   
   ########################COI...............

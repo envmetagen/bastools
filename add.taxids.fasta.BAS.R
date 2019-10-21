@@ -167,7 +167,7 @@ names2taxids<-function(vector,ncbiTaxDir){
 
 add.lineage.df<-function(df,ncbiTaxDir){
   if(is.null(df$taxids)) {stop("No column called taxids")}
-  df$taxids<-as.character(df$taxids) 
+  df$taxids<-as.integer(as.character(df$taxids)) 
   #write taxids to file
   taxids_fileA<-paste0("taxids",as.numeric(Sys.time()),".txt")
   write.table(unique(df$taxids),file = taxids_fileA,row.names = F,col.names = F,quote = F)

@@ -26,7 +26,7 @@ obitaxdb<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/obitaxdump/obitaxdb"
 blast_exec<-"/home/bastian.egeter/Tools/ncbi-blast-2.9.0+/bin/blastn"
 setwd("/home/bastian.egeter/Minion_data/run8/")
 
-bas.minion.pipeline1(emuxed_fstq_dir,mastersheet,expid,run)
+bas.minion.pipeline1(demuxed_fstq_dir,mastersheet,expid,run)
 
 infastas<-list.files(pattern = "test*")
 refdb = "/mnt/Disk1/Tools/BLAST+/DBs/nt_v5/nt_v5"

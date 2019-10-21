@@ -18,7 +18,6 @@ setwd("./final_fastas")
 #BLASTING NT
 files<-list.files(pattern = "*.fasta")
 blast.status<-blast.min.bas(infastas = files,refdb = refdb,blast_exec) 
-# need to fix this blast to output exit codes 
 
 check.blasts(infastas = files,h = blast.status)
 

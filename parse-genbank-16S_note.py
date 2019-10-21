@@ -14,12 +14,12 @@ for record in list(SeqIO.parse(sys.argv[1], 'genbank')):
     name = record.name
     for feat in genome.features:
         if feat.type == "rRNA":
-            if '16S' in feat.qualifiers['product'][0]:#or '16S ribosomal' for strict match
+            if '16S' in feat.qualifiers['note'][0]:#or '16S ribosomal' for strict match?
                 start = feat.location.start.position
                 end = feat.location.end.position
                 pos = [start, end]
                 l.append(pos)
-                print '>' + name                
+                print '>' + name               
 
                 print feat.extract(genome.seq)
                 n = n + 1

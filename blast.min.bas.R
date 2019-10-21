@@ -1,4 +1,4 @@
-blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T){
+blast.min.bas<-function(infastas,outfiles,refdb,blast_exec="blastn",wait=T){
   message("should add default of restricting blasts to animals and plants")
   
   if(length(infastas)==1) threads<-8
@@ -22,7 +22,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T){
                         args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
                                "6 qseqid evalue staxid pident qcovs",
                                 "-num_threads", threads, "-max_target_seqs", "100", "-max_hsps","1", "-out",
-                               paste0(gsub(x = infastas[i],pattern = ".fasta",replacement = ".blast.txt"))),
+                               paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),
                         echo_cmd = T)
   }
   
