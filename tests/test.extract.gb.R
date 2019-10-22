@@ -13,7 +13,7 @@ setwd(paste0(bastoolsDir,"tests"))
 #then, matching a query string within the primary field "rRNA" and subfield "product"
 
 # the issue I have is that I like to search for a couple of different strings
-# e.g. "18S*" (the default) OR 
+# e.g. "18S*" OR "small subunit ribosomal RNA"
 
 # view example files
 readLines("Xenidae_41039_18S.gb") #works, see below
