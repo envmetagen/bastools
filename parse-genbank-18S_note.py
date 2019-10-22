@@ -21,7 +21,7 @@ for record in list(SeqIO.parse(sys.argv[1], 'genbank')):
         org=re.sub(r'.*organism=','',org)
     for feat in genome.features:
         if feat.type == "rRNA":
-            if '18S' in feat.qualifiers['note'][0]:#or '18S ribosomal' for strict match?
+            if '18S' in feat.qualifiers['note'][0]:
                 start = feat.location.start.position
                 end = feat.location.end.position
                 pos = [start, end]

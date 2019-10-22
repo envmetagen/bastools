@@ -2,14 +2,16 @@ DL.nuccore.gb<-function(group.taxid,ncbiTaxDir,gene,rank_req="family"){
   
   children<-bas.get.children(group.taxid,ncbiTaxDir = ncbiTaxDir,rank_req = rank_req)
   
-  message(paste(length(children$taxid), "children found at required rank"))
+  message(paste("************",length(children$taxid), "children found at required rank ************"))
   
   pb = txtProgressBar(min = 0, max = length(children$taxid), initial = 0,style = 3)
   for(i in 1:length(children$taxid)){
     #could maybe add a trycatch to output remaining children df in case of failure?
-    bas.get.nuccore(taxon = children[i,1],gene = gene,name = children[i,3],as.taxid = T)
+    message(paste("Downloading data for",colnames(children)[3],":",children[i,3]))
+    bas.get.nuccore(taxid = children[i,1],gene = gene,name = children[i,3])
     setTxtProgressBar(pb,i)
   }
+  
   #remove files with empty result
   a<-system2("grep",args = c("'Empty result - nothing to do'",list.files(pattern = "*.gb")),wait = T,
              stderr = T,stdout = T)
@@ -21,7 +23,7 @@ DL.nuccore.gb<-function(group.taxid,ncbiTaxDir,gene,rank_req="family"){
 
 extract.gene.gb<-function(gbfile,gene){
   #split gb file by record
-  system2(command = "cat", args=c(gbfile, "|", "sh","/home/bastian.egeter/git_bastools/bastools/split_gb.sh"),
+  system2(command = "cat", args=c(gbfile, "|", "sh",paste0(bastoolsDir,"split_gb.sh")),
           wait=T) 
   #remove last file cause its always empty
   files<-list.files(pattern = "^outTemp.*")
@@ -31,24 +33,24 @@ extract.gene.gb<-function(gbfile,gene){
   #extract gene for each file
   for(i in 1:length(list.files(pattern = "^outTemp.*"))){
     a<-list.files(pattern = "^outTemp.*")[i]
-    if(gene=="18S") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-18S.py"
-    if(gene=="16S") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-16S.py"
-    if(gene=="COI") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-COI.py"
+    if(gene=="18S") script<-paste0(bastoolsDir,"parse-genbank-18S.py")
+    if(gene=="16S") script<-paste0(bastoolsDir,"parse-genbank-16S.py")
+    if(gene=="COI") script<-paste0(bastoolsDir,"parse-genbank-COI.py")
     system2("python",args = c(script, a),wait = T,
             stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
     
-    #some files have /note instead of /product
-    count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
-    if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
-      system2("python",args = c(gsub(".py","_note.py",script), a),wait = T,
-              stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
-    }
-    #some files have "small subunit ribosomal RNA" in /product (no "16S")
-    count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
-    if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
-      system2("python",args = c(gsub(".py","_ssrrna.py",script), a),wait = T,
-              stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
-    }
+    # #some files have /note instead of /product
+    # count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
+    # if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
+    #   system2("python",args = c(gsub(".py","_note.py",script), a),wait = T,
+    #           stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
+    # }
+    # #some files have "small subunit ribosomal RNA" in /product (no "16S")
+    # count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
+    # if(as.numeric(do.call(rbind,stringr::str_split(count," "))[,1])==0){
+    #   system2("python",args = c(gsub(".py","_ssrrna.py",script), a),wait = T,
+    #           stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
+    # }
     
     #some files fail for other reasons 
     count<-system2("wc",args = c("-l",gsub("outTemp","extract.outTemp",a)),wait = T,stdout = T)
@@ -86,7 +88,7 @@ bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req=NULL){
 }
 
 
-bas.get.nuccore<-function(taxon,gene,as.taxid=T,name=NULL){
+bas.get.nuccore<-function(taxid,name,gene){
   #######GENE CAN ONLY = 18S, 16S OR COI FOR NOW
   if(gene!="18S" & gene!="16S" & gene!="COI") stop("accepted values for gene are 16S, 18S or COI")
   
@@ -96,36 +98,33 @@ bas.get.nuccore<-function(taxon,gene,as.taxid=T,name=NULL){
       "(16S ribosomal RNA[All Fields] OR 16S small subunit ribosomal RNA[All Fields] OR 16S*[Gene])"
   if(gene=="COI") geneTerm<-
       "(COXi[Gene] OR CO1[Gene] OR COI[Gene] OR MTCO1[Gene] OR COX1[Gene]) AND (cytochrome oxidase subunit 1[All fields] OR cytochrome c oxidase subunit 1[All fields] OR cytochrome c oxidase subunit I[All fields] OR cytochrome oxidase subunit I[All fields])"
+  if(gene=="12S") geneTerm<-
+      "(12S ribosomal RNA[All Fields] OR 12S*[Gene])"
+          #seems like 12S is a little different
+  # rRNA            73..1024
+  # /product="s-rRNA"
+  # /note="12S ribosomal RNA"
+  #OR
+  # rRNA            <1..>170
+  # /product="12S ribosomal RNA"
+  out<-paste0(name,"_",taxid,"_",gene,".gb")
   
+  if(!out %in% list.files()) {
   
-  ########################COI...............
-  
-  if(as.taxid) {
-    searchQ <- paste0("txid",taxon, "[Organism] AND ", geneTerm)
-  } else {searchQ <- paste0(taxon, "[Organism] AND ", geneTerm)
-  message("Using a taxid is recommended over using a name as many taxa have names in common")}
-  
+  searchQ <- paste0("txid",taxid, "[Organism] AND ", geneTerm)
   search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = T)
   
   if(length(search_results$ids)<600){
-  DLseqs <- rentrez::entrez_fetch(db = "nuccore", web_history = search_results$web_history, rettype = "gb")
-  
-  if(!is.null(name)) {
-           out<-paste0(name,"_",taxon,"_",gene,".gb")
-         } else {out<-paste0(taxon,"_",gene,".gb")}
-  
-  writeLines(DLseqs,out)
+    DLseqs <- rentrez::entrez_fetch(db = "nuccore", web_history = search_results$web_history, rettype = "gb")
+    
+    writeLines(DLseqs,out)
   }
   
   if(length(search_results$ids)>=600){
-  
-  # #modified from primer miner:
+    
+    # #modified from primer miner:
     start <- 0
     chunks <- ceiling(length(search_results$ids)/100)
-    
-    if(!is.null(name)) {
-      out<-paste0(name,"_",taxon,"_",gene,".gb")
-    } else {out<-paste0(taxon,"_",gene,".gb")}
     
     for (i in 1:chunks) {
       DLseqs <- rentrez::entrez_fetch(db = "nuccore",
@@ -136,6 +135,7 @@ bas.get.nuccore<-function(taxon,gene,as.taxid=T,name=NULL){
       Sys.sleep(2.5)
     }
   }
+  } else {message("Skipping download, file already exists")}
 }
 
 gb2fasta<-function(gbfile){

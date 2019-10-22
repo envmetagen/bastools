@@ -20,12 +20,11 @@ write.table(count.download,stepcountfile,quote = F,sep = "\t",row.names = F)
 }
 
 #######################################################
-#Step2 - convert to fasta and extract genes
+#Step2 - extract genes
 if("step2" %in% stepstotake){
   
   message("RUNNING STEP2")
   
-#convert to fasta and extract genes
 for(i in 1:length(list.files(pattern = "*.gb"))){
   a<-list.files(pattern = "*.gb")[i]
   extract.gene.gb(gbfile = a,gene = gene)

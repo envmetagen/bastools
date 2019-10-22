@@ -72,7 +72,7 @@ obiconvert.Bas<-function(infile,in_type,taxo,out_type,out){
 
 #' @export
 bascount.fasta<-function(infile){
-  f<-processx::run(command = "grep",args = c("-c",'>',infile),echo_cmd = T,echo = T)
+  f<-processx::run(command = "grep",args = c("-c",'>',infile),echo_cmd = F,echo = T)
   as.numeric(f$stdout)
 }
 
@@ -101,6 +101,12 @@ bascount.gb.recur<-function(folder){
   e<-stringr::str_split(string = d$V1,pattern = ":")
   setwd(origpath)
   sum(sapply(e, function(x){as.numeric(x[2])}))
+}
+
+bascount.gb<-function(gbfile){
+  b<-processx::run(command = "grep",args = c('-c','//',gbfile),echo_cmd = F,echo = F)
+  d<-read.table(text = b$stdout,sep = "\n")
+  return(d$V1)
 }
 
 remove.dashes.fasta<-function(infasta,outfasta){
