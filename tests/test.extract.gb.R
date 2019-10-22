@@ -9,7 +9,7 @@ source(paste0(bastoolsDir,"manip_fasta.R"))
 setwd(paste0(bastoolsDir,"tests"))
 
 #I am parsing genbank files to extract the gene of interest
-#this is done by first splitting the genbank file by record (no issues there)
+#this is done by first splitting the genbank file by record (no real issues there)
 #then, matching a query string within the primary field "rRNA" and subfield "product"
 
 # the issue I have is that I like to search for a couple of different strings
