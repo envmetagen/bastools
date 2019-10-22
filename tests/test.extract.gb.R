@@ -1,9 +1,8 @@
 
 
-bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
+bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" 
 
 ###############
-
 
 source(paste0(bastoolsDir,"building_dbs.R"))
 source(paste0(bastoolsDir,"manip_fasta.R"))
