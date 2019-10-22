@@ -33,6 +33,7 @@ extract.gene.gb<-function(gbfile,gene){
     a<-list.files(pattern = "^outTemp.*")[i]
     if(gene=="18S") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-18S.py"
     if(gene=="16S") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-16S.py"
+    if(gene=="COI") script<-"/home/bastian.egeter/git_bastools/bastools/parse-genbank-COI.py"
     system2("python",args = c(script, a),wait = T,
             stdout = gsub("outTemp","extract.outTemp",a),stderr = F)
     
@@ -61,24 +62,12 @@ extract.gene.gb<-function(gbfile,gene){
   if(length(list.files(pattern = "^extract.outTemp.*"))!=0){
     
     system2("cat",args=c(list.files(pattern = "^extract.outTemp.*")),
-            stdout = gsub(".gb",".extract.Temp.fasta",gbfile),wait = T)
-  
-  #replace fasta file seqs from obiconvert with these seqs
-  obifasta<-phylotools::read.fasta(gsub(".gb",".fasta",gbfile))
-  newfasta<-phylotools::read.fasta(gsub(".gb",".extract.Temp.fasta",gbfile))
-  newfasta[1,1]
-  obifasta[1,1]
-  obifasta$seqid<-do.call(rbind,stringr::str_split(obifasta$seq.name," "))[,1]
-  combofasta<-merge(obifasta,newfasta,by.x = "seqid",by.y = "seq.name")
-  combofasta$seq.text<-combofasta$seq.text.y
-  combofasta<-combofasta[,c(2,5)]
-  phylotools::dat2fasta(combofasta,gsub(".gb",".extract.fasta",gbfile))
+            stdout = gsub(".gb",".extract.fasta",gbfile),wait = T)
+    
+    #remove extraneuos files
+    unlink(list.files(pattern = "^extract.outTemp.*"))
+    unlink(list.files(pattern = "^outTemp.*"))
   }
-  
-  #remove extraneuos files
-  unlink(list.files(pattern = "^extract.outTemp.*"))
-  unlink(list.files(pattern = "^outTemp.*"))
-  unlink(gsub(".gb",".extract.Temp.fasta",gbfile))
 }
 
 bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req=NULL){
@@ -105,6 +94,8 @@ bas.get.nuccore<-function(taxon,gene,as.taxid=T,name=NULL){
       "(18S ribosomal RNA[All Fields] OR 18S small subunit ribosomal RNA[All Fields] OR 18S*[Gene])"
   if(gene=="16S") geneTerm<-
       "(16S ribosomal RNA[All Fields] OR 16S small subunit ribosomal RNA[All Fields] OR 16S*[Gene])"
+  if(gene=="COI") geneTerm<-
+      "(COXi[Gene] OR CO1[Gene] OR COI[Gene] OR MTCO1[Gene] OR COX1[Gene]) AND (cytochrome oxidase subunit 1[All fields] OR cytochrome c oxidase subunit 1[All fields] OR cytochrome c oxidase subunit I[All fields] OR cytochrome oxidase subunit I[All fields])"
   
   
   ########################COI...............

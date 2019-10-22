@@ -1,8 +1,6 @@
 
 library(processx)
 library(dplyr)
-library(mgsub)
-
 
 ####################################################
 #step 0 master sheet creation
@@ -101,6 +99,10 @@ if(in_folders) {
             wait=T,stdout= gsub(".obi.fasta",".ss.obi.fasta",paste0(file)))
   }
   
+  #remove intermediates
+  unlink(paste0(outDir,barcodes.used,".fastq"))
+  unlink(paste0(outDir,barcodes.used,".fasta"))
+  unlink(paste0(outDir,list.files(path = outDir,pattern = "barcode[0-9][0-9].obi.fasta")))
 }
 ####################################################
 #step 2 cat by frag
@@ -140,7 +142,7 @@ if("step3" %in% stepstotake){
 ####################################################
 #step 4 demultiplex
 if("step4" %in% stepstotake){
-  
+
 #do obiuniq
 files<-list.files(path = outDir,pattern="*.filtlen.wlen.obi.fasta")
 for(i in 1:length(files)){
@@ -152,10 +154,13 @@ for(i in 1:length(files)){
 ####################################################
 #step 5 make otu tabs
 if("step5" %in% stepstotake){
-  
+  if("step4" %in% stepstotake) {
+    files<-list.files(path = outDir,pattern="*.uniq.filtlen.wlen.obi.fasta")} else {
+      files<-list.files(path = outDir,pattern="*.filtlen.wlen.obi.fasta")
+    }
   
   #make obitabs
-  files<-list.files(path = outDir,pattern="*.uniq.filtlen.wlen.obi.fasta")
+  
   for(i in 1:length(files)){
     system2(command = "obitab",args = c(paste0(outDir,files[i])),wait = T,
               stdout =  gsub(".fasta",".tab",paste0(outDir,files[i])))
@@ -164,43 +169,48 @@ if("step5" %in% stepstotake){
 }
   
 ####################################################
-#step 6 create and tidy folders
-if("step6" %in% stepstotake){
-
-  dir.create(paste0(outDir,"post.minion.pipe"))
-  dir.create(paste0(outDir,"post.minion.pipe/final_fastas"))
-  dir.create(paste0(outDir,"post.minion.pipe/final_otutabs"))
-  dir.create(paste0(outDir,"post.minion.pipe/blasts"))
-  
-  #move otutabs 
-  files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.tab")
-  for(i in 1:length(files)){
-    file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_otutabs"))
-    unlink(paste0(outDir,files[i]))
-  }
-  
-  #move fastas 
-  files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.fasta")
-  for(i in 1:length(files)){
-    file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_fastas"))
-    unlink(paste0(outDir,files[i]))
-  }
-} 
+# #step 6 create and tidy folders
+# if("step6" %in% stepstotake){
+# 
+#   dir.create(paste0(outDir,"post.minion.pipe"))
+#   dir.create(paste0(outDir,"post.minion.pipe/final_fastas"))
+#   dir.create(paste0(outDir,"post.minion.pipe/final_otutabs"))
+#   dir.create(paste0(outDir,"post.minion.pipe/blasts"))
+#   
+#   #move otutabs 
+#   files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.tab")
+#   for(i in 1:length(files)){
+#     file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_otutabs"))
+#     unlink(paste0(outDir,files[i]))
+#   }
+#   
+#   #move fastas 
+#   files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.fasta")
+#   for(i in 1:length(files)){
+#     file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_fastas"))
+#     unlink(paste0(outDir,files[i]))
+#   }
+# } 
 ####################################################
-#step 7 blast and bin
+#step 7 blast
 if("step7" %in% stepstotake){
 
   #BLASTING NT
-  files<-paste0(outDir,"post.minion.pipe/final_fastas/",
-                list.files(path = paste0(outDir,"post.minion.pipe/final_fastas"),pattern = "*.fasta"))
-  blast.status<-blast.min.bas(infastas = files,refdb = refdb,blast_exec) 
-  
+  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".filtlen.wlen.obi.fasta"),value = T))
+  blast.status<-blast.min.bas(infastas = files,refdb = refdb,blast_exec = blast_exec) 
   check.blasts(infastas = files,h = blast.status)
+  
+}
+ 
+####################################################
+#step 8 filter and bin 
+if("step8" %in% stepstotake){  
 
   #############################################################################
   #FILTER BLASTS
-  files<-paste0(outDir,"post.minion.pipe/final_fastas/",
-                list.files(path = paste0(outDir,"post.minion.pipe/final_fastas"),pattern = ".blast.txt"))
+  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".filtlen.wlen.obi.blast.txt"),
+                            value = T))
+  
   for(i in 1:length(files)){
     message(paste("filtering blast results for",files[i]))
     blastfile = files[i]
@@ -209,8 +219,8 @@ if("step7" %in% stepstotake){
   }
   #############################################################################
   #BIN READS
-  files<-paste0(outDir,"post.minion.pipe/final_fastas/",
-                list.files(path = paste0(outDir,"post.minion.pipe/final_fastas"),pattern = ".blast.filt.txt"))
+  files<-grep(experiment_id,list.files(path = outDir,pattern = ".blast.filt.txt"),value = T)
+  
   for(i in 1:length(files)){
     message(paste("binning filtered blast results for",files[i]))
     filtered_blastfile<-files[i]
@@ -218,6 +228,30 @@ if("step7" %in% stepstotake){
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
                obitaxdb = obitaxdb,out = binfile)
   }
-}  
+} 
+
+####################################################
+#step 9 merge with obitab
+
+if("step8" %in% stepstotake){  
+  message("not done yet")
+  files<-grep(experiment_id,list.files(path = outDir,pattern = ".tab"),value = T)
+  
+  binfiles<-grep(experiment_id,list.files(path = outDir,pattern = ".tab"),value = T)
+  
+  for(i in 1:length(files)){
+    obitabfile<-files[i]
+    binfile<-gsub(".tab",".bins.txt",files[i])
+    out<-gsub(".tab",".taxatable.txt",files[i])
+    
+    obitab_bin_blast_merge_minion(obitabfile = obitabfile,binfile = binfile,mastersheetfile = mastersheetfile,
+                                  experiment_id = expid,out=out)
+  }
+  
+  obitab_bin_blast_merge_minion(paste0(outDir,"post.minion.pipe/final_otutabs"),
+                                binfile,mastersheetfile=NA,experiment_id,used.obiuniq=F,out)
+}
+
+
     
     

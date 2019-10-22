@@ -1,4 +1,4 @@
-blast.min.bas<-function(infastas,outfiles,refdb,blast_exec="blastn",wait=T){
+blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T){
   message("should add default of restricting blasts to animals and plants")
   
   if(length(infastas)==1) threads<-8

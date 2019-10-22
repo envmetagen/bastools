@@ -20,8 +20,16 @@ for record in list(SeqIO.parse(sys.argv[1], 'genbank')):
         org=''.join(feature.qualifiers['organism'])
         org=re.sub(r'.*organism=','',org)
     for feat in genome.features:
-        if feat.type == "rRNA":
-            if '16S' in feat.qualifiers['product'][0]:#or '16S ribosomal' for strict match
+        if feat.type == "CDS":
+            if 'cytochrome oxidase subunit 1' in feat.qualifiers['product'][0]: 
+            # POSSIBLE VALUES FOR if
+              #cytochrome oxidase subunit 1
+              #cytochrome c oxidase subunit 1
+              #cytochrome c oxidase subunit I
+              #cytochrome oxidase subunit I
+            #POSSIBLE VALUES FOR feat.qualifiers
+              #product
+              #note
                 start = feat.location.start.position
                 end = feat.location.end.position
                 pos = [start, end]

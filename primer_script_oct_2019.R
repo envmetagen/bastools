@@ -6,6 +6,8 @@
 ###for dividning into steps need to reassess counts - write file each step I think
 
 if("step1" %in% stepstotake){
+  
+  message("RUNNING STEP1")
 
 for(i in 1:length(group.taxids)){
 DL.nuccore.gb(group.taxid = group.taxids[i],gene = gene,ncbiTaxDir = ncbiTaxDir,rank_req = "family")
@@ -20,10 +22,12 @@ write.table(count.download,stepcountfile,quote = F,sep = "\t",row.names = F)
 #######################################################
 #Step2 - convert to fasta and extract genes
 if("step2" %in% stepstotake){
+  
+  message("RUNNING STEP2")
+  
 #convert to fasta and extract genes
 for(i in 1:length(list.files(pattern = "*.gb"))){
   a<-list.files(pattern = "*.gb")[i]
-  gb2fasta(gbfile = a)
   extract.gene.gb(gbfile = a,gene = gene)
 }
 
@@ -40,17 +44,27 @@ write.table(count.afterextract,stepcountfile,quote = F,sep = "\t",row.names = F,
 #######################################################
 #step 3 remove min L and add taxonomy
 if("step3" %in% stepstotake){
+  
+  message("RUNNING STEP3")
+  
+  catted_DLS<- list.files(pattern = paste0(paste(groups,collapse = "_")))
+    
 #remove any seqs less than minimum required length
 f<-process$new(command = "obigrep", 
                args = c("-l",sum(min_length,nchar(Pf),nchar(Pr),buffer,buffer), catted_DLS), echo_cmd = T,
                stdout=gsub(".fasta",".minL.fasta",catted_DLS))
 f$wait()
-stepcounts$count.after.rm.minL<-bascount.fasta(gsub(".fasta",".minL.fasta",catted_DLS))
+
+count.after.rm.minL<-as.data.frame(bascount.fasta(gsub(".fasta",".minL.fasta",catted_DLS)))
+colnames(count.after.rm.minL)<-"count.after.rm.minL"
+write.table(count.after.rm.minL,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
 
 #add lineage
 add.lineage.fasta.BAS(infasta=gsub(".fasta",".minL.fasta",catted_DLS),taxids=T,
                       ncbiTaxDir=ncbiTaxDir,out=gsub(".fasta",".lin.minL.fasta",catted_DLS))
-stepcounts$count.after.add.lin<-bascount.fasta(gsub(".fasta",".lin.minL.fasta",catted_DLS))
+count.after.add.lin<-as.data.frame(bascount.fasta(gsub(".fasta",".lin.minL.fasta",catted_DLS)))
+colnames(count.after.add.lin)<-"count.after.add.lin"
+write.table(count.after.add.lin,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
 
 #some checks & removals
 #1. remove unknown kingdoms
@@ -83,6 +97,9 @@ write.table(count.familes.after.rmNoFams,stepcountfile,quote = F,sep = "\t",row.
 #######################################################
 #step 4 make refdb 
 if("step4" %in% stepstotake){
+  
+  message("RUNNING STEP4")
+  
 #just for ease for now
 file.copy(list.files(pattern = "*.checked.lin.minL.fasta"),to = "formatted.minL.lineage.goodfam.fasta")
 
@@ -122,6 +139,9 @@ write.table(mapping.reference,stepcountfile,quote = F,sep = "\t",row.names = F,a
 #######################################################
 #step 5 map to refdb and make final db
 if("step5" %in% stepstotake){
+  
+  message("RUNNING STEP5")
+  
 ###########################################################################################
 #MAP ALL SEQUENCES AGAINST TARGET REFERENCE DATABASE
 map2targets(queries.to.map = "formatted.minL.lineage.goodfam.uid2.fasta",
@@ -132,7 +152,10 @@ mapTrim2.simple(query = "formatted.minL.lineage.goodfam.uid2.fasta",
                 blast.results.file = "formatted.minL.lineage.goodfam.uid2.mapped.txt",
                 out = "formatted.minL.lineage.goodfam.uid2.mapped.fasta",qc=0.97)
 
-stepcounts$count.aftermap<-bascount.fasta("formatted.minL.lineage.goodfam.uid2.mapped.fasta")
+count.aftermap<-as.data.frame(bascount.fasta("formatted.minL.lineage.goodfam.uid2.mapped.fasta"))
+colnames(count.aftermap)<-"count.aftermap"
+write.table(count.aftermap,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
+
 #count.families
 tempfasta<-phylotools::read.fasta("formatted.minL.lineage.goodfam.uid2.mapped.fasta")
 
@@ -150,6 +173,9 @@ obiconvert.Bas(infile = "formatted.minL.lineage.goodfam.uid2.mapped.fasta",
 #######################################################
 #step 6 - run final ecopcr and do stats
 if("step6" %in% stepstotake){
+  
+  message("RUNNING STEP6")
+  
 #run final ecopcr without buffer option
 ecoPCR.Bas(Pf,Pr,ecopcrdb = "final.ecopcrdb",max_error = max_error_ecopcr,
            min_length,max_length,out = "final.ecopcr.hits.txt")

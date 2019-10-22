@@ -6,9 +6,16 @@ setwd("/home/bastian.egeter/git_bastools/bastools/")
 file.sources<-c("add.taxids.fasta.BAS.R","bin.blast.R","merge_MBC_otutab_with_bin_blast.R","blast.min.bas.R",
                 "taxatab.filter.R","do.count.R","googlesheet.foos.R")
 sapply(file.sources,source)
+googlesheets::gs_auth()
 obitaxdb<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/obitaxdump/obitaxdb"
 ncbiTaxDir<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/October-2019/"
-setwd("/mnt/Disk1/Minion_data/2019_August_002_Mussels/test_incr1/")
+#setwd("/mnt/Disk1/Minion_data/2019_August_002_Mussels/test_incr1/")
+setwd("/mnt/Disk1/Minion_data/2019_September_001/res/")
+filterpc<-0.1
+#out.taxatable<-"2019_August_002_Mussels_ALL_PRIMERS_nuno.then.bas.taxatable.tf.txt"
+out.taxatable<-"2019_September_001_ALL_PRIMERS_nuno.then.bas.taxatable.tf.txt"
+
+
 #############################################################################
 #FILTER BLAST
 nuno.res<-data.table::fread("results.tsv",header = T,sep = "\t",fill = T,data.table = F)
@@ -26,6 +33,49 @@ for(i in 1:length(files)){
              obitaxdb = obitaxdb,out = binfile,spident = 95,gpident = 92,fpident = 80,abspident = 70)
 }
 
+############################################################################
+#make taxon table
+
+#deal with multiple hits - 
+  #1st order by pident
+  nuno.res2<-nuno.res[order(-nuno.res$pident),]
+  #then rm dup reads
+  nuno.res2<-nuno.res2[!duplicated(nuno.res2$read),]
+
+#next extract counts
+  nuno.res2$count<-as.numeric(do.call(rbind,stringr::str_split(nuno.res2$read,":size="))[,3])
+
+#merge with bins
+  taxon_input<-data.table::fread(file = binfile, sep = "\t")
+  taxon_input$path<-paste0(taxon_input$K,";",taxon_input$P,";",taxon_input$C,";",taxon_input$O,";",
+                             taxon_input$F,";",taxon_input$G,";",taxon_input$S)
+  merged.table<-merge(taxon_input[,c("qseqid","path")],nuno.res2[,c("read","count")],
+                        by.x = "qseqid",by.y = "read",all = TRUE)
+  merged.table<-merged.table[!is.na(merged.table$count),]
+  
+  
+  barcodes<-do.call(rbind,stringr::str_split(merged.table$qseqid,"barcode="))[,2]
+  merged.table$barcode<-do.call(rbind,stringr::str_split(barcodes,":"))[,1]
+    
+  taxatable<-reshape2::dcast(merged.table[,c("path","barcode","count")],path~barcode,value.var = "count",
+                               fun.aggregate = sum)
+  
+  taxatable$path[is.na(taxatable$path)]<-"No_hits"
+  
+  #Apply taxa filter
+  rownames(taxatable)<-taxatable$path
+  taxatable$path=NULL
+  taxatable<-taxatable[rowSums(taxatable)!=0,]
+  taxatab.PCS<-sweep(taxatable, MARGIN = 1, STATS = rowSums(taxatable), FUN = "/")*100
+  taxatab.PCS[taxatab.PCS<filterpc]<-0 
+  taxatable[taxatab.PCS==0]<-0
+  taxatable<-taxatable[rowSums(taxatable)!=0,]
+  
+  taxatable$taxon<-rownames(taxatable)
+  taxatable<-taxatable[,c(length(colnames(taxatable)),1:(length(colnames(taxatable))-1))]
+  write.table(taxatable,out.taxatable,row.names = F,quote = F,sep = "\t")
+  
+  
 filter.blast.nuno<-function(blastfile,ncbiTaxDir,out, max_evalue=0.001,top=1){
   
   message("reading blast results")
@@ -74,8 +124,7 @@ filter.blast.nuno<-function(blastfile,ncbiTaxDir,out, max_evalue=0.001,top=1){
 }
 
 
-############################################################################
-#make otu table
+
 
 
 
