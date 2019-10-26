@@ -335,7 +335,7 @@ basplot.ecopcr.primer.logo<-function(ecopcroutput,forward=NULL,reverse=NULL){
 }
 
 #taxatable to krona format
-bas.krona.plot<-function(taxatable){
+bas.krona.plot<-function(taxatable,KronaPath=NULL){
   
   a<-read.table(taxatable,header = T,sep = "\t")
   
@@ -351,7 +351,10 @@ bas.krona.plot<-function(taxatable){
     write.table(sample,row.names = F,file = paste0(d[i],".krona.txt"),quote = F,sep = "\t",col.names = F)
   }
   
-  system2(command = "ktImportText",args = c(list.files(pattern = "*krona.txt"),"-o", paste0(gsub(".txt",".krona.html",taxatable)))
+  if(!is.null(KronaPath)){
+    command<-KronaPath} else {command<- "ktImportText"}
+  
+  system2(command = command,args = c(list.files(pattern = "*krona.txt"),"-o", paste0(gsub(".txt",".krona.html",taxatable)))
           ,stdout = F,stderr = "",wait = T)
   
   unlink(list.files(pattern = "*krona.txt"))

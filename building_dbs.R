@@ -12,13 +12,6 @@ DL.nuccore.gb<-function(group.taxid,ncbiTaxDir,gene,rank_req="family"){
     setTxtProgressBar(pb,i)
   }
   
-  #remove files with empty result
-  a<-system2("grep",args = c("'Empty result - nothing to do'",list.files(pattern = "*.gb")),wait = T,
-             stderr = T,stdout = T)
-  unlink(gsub(":\t.*","",a))
-  a<-system2("grep",args = c("'Unable to obtain query'",list.files(pattern = "*.gb")),wait = T,
-             stderr = T,stdout = T)
-  unlink(gsub(":\t.*","",a))
 }
 
 extract.gene.gb<-function(gbfile,gene){
@@ -90,7 +83,9 @@ bas.get.children<-function(group.taxid,ncbiTaxDir,rank_req=NULL){
 
 bas.get.nuccore<-function(taxid,name,gene){
   #######GENE CAN ONLY = 18S, 16S OR COI FOR NOW
-  if(gene!="18S" & gene!="16S" & gene!="COI") stop("accepted values for gene are 16S, 18S or COI")
+  if(gene!="18S" & gene!="16S" & gene!="COI" & gene!="12S") stop("accepted values for gene are 12S,16S, 18S or COI")
+  
+  message("Note: results limited to records < 50kbp")
   
   if(gene=="18S") geneTerm<-
       "(18S ribosomal RNA[All Fields] OR 18S small subunit ribosomal RNA[All Fields] OR 18S*[Gene])"
@@ -99,7 +94,7 @@ bas.get.nuccore<-function(taxid,name,gene){
   if(gene=="COI") geneTerm<-
       "(COXi[Gene] OR CO1[Gene] OR COI[Gene] OR MTCO1[Gene] OR COX1[Gene]) AND (cytochrome oxidase subunit 1[All fields] OR cytochrome c oxidase subunit 1[All fields] OR cytochrome c oxidase subunit I[All fields] OR cytochrome oxidase subunit I[All fields])"
   if(gene=="12S") geneTerm<-
-      "(12S ribosomal RNA[All Fields] OR 12S*[Gene])"
+      "(12S[All Fields] OR 12S*[Gene])"
           #seems like 12S is a little different
   # rRNA            73..1024
   # /product="s-rRNA"
@@ -111,7 +106,7 @@ bas.get.nuccore<-function(taxid,name,gene){
   
   if(!out %in% list.files()) {
   
-  searchQ <- paste0("txid",taxid, "[Organism] AND ", geneTerm)
+  searchQ <- paste0("txid",taxid, "[Organism] AND ", geneTerm, " AND (0[SLEN] : 50000[SLEN])")
   search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = T)
   
   if(length(search_results$ids)<600){

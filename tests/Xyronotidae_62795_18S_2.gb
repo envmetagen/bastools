@@ -1,0 +1,124 @@
+LOCUS       KM853179                 656 bp    DNA     linear   INV 18-APR-2015
+DEFINITION  Xyronotus aztecus 18S ribosomal RNA gene, partial sequence.
+ACCESSION   KM853179
+VERSION     KM853179.1
+KEYWORDS    .
+SOURCE      Xyronotus aztecus
+  ORGANISM  Xyronotus aztecus
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Polyneoptera; Orthoptera; Caelifera;
+            Acrididea; Acridomorpha; Pneumoroidea; Xyronotidae; Xyronotus.
+REFERENCE   1  (bases 1 to 656)
+  AUTHORS   Song,H., Amedegnato,C., Cigliano,M.M., Desutter-Grandcolas,L.,
+            Heads,S.W., Huang,Y., Otte,D. and Whiting,M.F.
+  TITLE     300 million years of diversification: elucidating the patterns of
+            orthopteran evolution based on comprehensive taxon and gene
+            sampling
+  JOURNAL   Cladistics (2015) In press
+  REMARK    Publication Status: Available-Online prior to print
+REFERENCE   2  (bases 1 to 656)
+  AUTHORS   Song,H., Amedegnato,C., Cigliano,M.M., Desutter-Grandcolas,L.,
+            Heads,S.W., Huang,Y., Otte,D. and Whiting,M.F.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-OCT-2014) Department of Biology, University of
+            Central Florida, 4000 Central Florida Blvd., Orlando, FL 32816, USA
+COMMENT     ##Assembly-Data-START##
+            Assembly Method       :: Sequencher v. 4.8
+            Sequencing Technology :: Sanger dideoxy sequencing
+            ##Assembly-Data-END##
+FEATURES             Location/Qualifiers
+     source          1..656
+                     /organism="Xyronotus aztecus"
+                     /mol_type="genomic DNA"
+                     /strain="OR1175"
+                     /specimen_voucher="BYU-IGC-OR1175"
+                     /db_xref="taxon:62797"
+     rRNA            <1..>656
+                     /product="18S ribosomal RNA"
+ORIGIN      
+        1 aacttaaaga attgacggaa gggcacccca ggagtggagc ctgcggctta atttgactca
+       61 acacgggaaa cctcaccagg cccggacacc ggaaggattg acagattgat agctctttct
+      121 tgattcggtg ggtggtggtg catggccgtt cttagttggt ggagcgattt gtctggttaa
+      181 ttccgataac gaacgagact ctagcctgct aactagtcgc gtgacatcct tcgtgctgtc
+      241 agcgatcact tttcttctta gagggacagg cggcatctag ccgcacgaga ttgagcaata
+      301 acaggtctgt gatgccctta gatgttctgg gccgcacgcg cgctacactg aaggaatcag
+      361 cgtgtcttcc tagtccgaaa ggtcggggta acccgctgaa cctccttcgt gctagggatt
+      421 ggggcttgca attgttcccc atgaacgagg aattcccagt aagcgcgagt cataagctcg
+      481 cgttgattac gtccctgccc tttgtacaca ccgcccgtcg ctactaccga ttgaatgatt
+      541 tagtgaggtc ttcggactgg tacgcggcat cgactccgtc gttgccgatg ctaccggaaa
+      601 gatgaccaaa cttgatcatt taaggagtaa aagtcgtaac aaggtttccg tagtga
+//
+
+LOCUS       Z97588                  1872 bp    DNA     linear   INV 03-AUG-1999
+DEFINITION  Xyronotus aztecus nuclear 18S rRNA gene (partial).
+ACCESSION   Z97588
+VERSION     Z97588.1
+KEYWORDS    18S ribosomal RNA; 18S rRNA gene; small subunit ribosomal RNA.
+SOURCE      Xyronotus aztecus
+  ORGANISM  Xyronotus aztecus
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Polyneoptera; Orthoptera; Caelifera;
+            Acrididea; Acridomorpha; Pneumoroidea; Xyronotidae; Xyronotus.
+REFERENCE   1
+  AUTHORS   Flook,P.K. and Rowell,C.H.
+  TITLE     Inferences about orthopteroid phylogeny and molecular evolution
+            from small subunit nuclear ribosomal DNA sequences
+  JOURNAL   Insect Mol. Biol. 7 (2), 163-178 (1998)
+   PUBMED   9535161
+REFERENCE   2
+  AUTHORS   Flook,P.K., Klee,S. and Rowell,C.H.
+  TITLE     Combined molecular phylogenetic analysis of the Orthoptera
+            (Arthropoda, Insecta) and implications for their higher systematics
+  JOURNAL   Syst. Biol. 48 (2), 233-253 (1999)
+   PUBMED   12066707
+REFERENCE   3  (bases 1 to 1872)
+  AUTHORS   Flook,P.K.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (10-JUL-1997) Flook P.K., Zoology Institute, Rheinsprung
+            9, Basel-4051, SWITZERLAND
+FEATURES             Location/Qualifiers
+     source          1..1872
+                     /organism="Xyronotus aztecus"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:62797"
+     gene            <1..>1872
+                     /gene="18S rRNA"
+     rRNA            <1..>1872
+                     /gene="18S rRNA"
+                     /product="small subunit ribosomal RNA"
+ORIGIN      
+        1 tagtcatatg cttgtctcaa agattaagcc atgcatgtct cagtacaagc cgcactaagg
+       61 tgaaaccgcg aatggctcat taaatcagtt atggttcctt agatcgtacc cacgttactt
+      121 ggataactgt ggtaattcta gagctaatac atgcaaacag agtcccgacc agagatggga
+      181 gggacgcttt tattagatca aaaccaatcg gtcggctcgt ccggtccgtt tgccttggtg
+      241 actctgaata actttgggct gatcgcacgg tctttgtacc ggcgacgcat ctttcaaatg
+      301 tctgccttat caactgtcga tggtaggttc tgcgcctacc atggttgtaa cgggtaacgg
+      361 ggaatcaggg ttcgattccg gagagggagc ctgagaaacg gctaccacat ccaaggaagg
+      421 cagcaggcgc gcaaattacc cactcccggc acggggaggt agtgacgaaa aataacgata
+      481 cgggactcat ccgaggcccc gtaatcggaa tgagtacact ttaaatcctt taacgagtat
+      541 ctattggagg gcaagtctgg tgccagcagc cgcggtaatt ccagctccaa tagcgtatat
+      601 taaagttgtt gcggttaaaa agctcgtagt tggatttgtg tcccacgctg ttggttcacc
+      661 gcccgtcggt gtttaactgg catgtatcgt gggacgtcct gccggtgggg cgagccgagg
+      721 gcgcgtgcgc gaccgcctcg cgcgggacgc gcgcgtcccg aggcggaccc cgttgaaatc
+      781 ctaccgcggt gctcttcacc gagtgtcgag gtgggccggc acgtttactt tgaacaaatt
+      841 agagtgctta aagcaggcaa gcccgcctga atactgtgtg catggaataa tggaatagga
+      901 cctcggttct attttgttgg ttttcggaac ccgaggtaat gattaatagg gacaggcggg
+      961 ggcattcgta ttgcgacgtt agaggtgaaa ttcttggatc gtcgcaagac gaacagaagc
+     1021 gaaagcattt gccaagtatg ttttcattaa tcaagaacga aagttagagg ttcgaaggcg
+     1081 atcagatacc gccctagttc taaccataaa cgatgccagc cagcgatccg ccgcagttcc
+     1141 tccgatgact cggcgggcag cctccgggaa accaaagctt ttgggttccg ggggaagtat
+     1201 ggttgcaaag ctgaaactta aaggaattga cggaagggca ccaccaggag tggagcctgc
+     1261 ggcttaattt gactcaacac gggaaacctc accaggcccg gacaccggaa ggattgacag
+     1321 attgatagct ctttcttgat tcggtgggtg gtggtgcatg gccgttctta gttggtggag
+     1381 cgatttgtct ggttaattcc gataacgaac gagactctag cctgctaact agtcgcgtga
+     1441 catccttcgt gctgtcagcg atcacttttc ttcttagagg gacaggcggc atctagccgc
+     1501 acgagattga gcaataacag gtctgtgatg cccttagatg ttctgggccg cacgcgcgct
+     1561 acactgaagg aatcagcgtg tcttcctagt ccgaaaggtc ggggtaaccc gctgaacctc
+     1621 cttcgtgcta gggattgggg cttgcaattg ttccccatga acgaggaatt cccagtaagc
+     1681 gcgagtcata agctcgcgtt gattacgtcc ctgccctttg tacacaccgc ccgtcgctac
+     1741 taccgattga atgatttagt gaggtcttcg gactggtacg cggcatcgac tccgtcgttg
+     1801 ccgatgctac cggaaagatg accaaacttg atcatttaga ggaagtaaaa gtcgtaacaa
+     1861 ggtttccgta gg
+//
+
+

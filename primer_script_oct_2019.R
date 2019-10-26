@@ -2,9 +2,6 @@
 #download gb files
 
 #step1 - download
-
-###for dividning into steps need to reassess counts - write file each step I think
-
 if("step1" %in% stepstotake){
   
   message("RUNNING STEP1")
@@ -25,6 +22,15 @@ if("step2" %in% stepstotake){
   
   message("RUNNING STEP2")
   
+  #first remove files with empty result
+  a<-system2("grep",args = c("'Empty result - nothing to do'",list.files(pattern = "*.gb")),wait = T,
+             stderr = T,stdout = T)
+  unlink(gsub(":\t.*","",a))
+  a<-system2("grep",args = c("'Unable to obtain query'",list.files(pattern = "*.gb")),wait = T,
+             stderr = T,stdout = T)
+  unlink(gsub(":\t.*","",a))
+  
+  #extract gene
 for(i in 1:length(list.files(pattern = "*.gb"))){
   a<-list.files(pattern = "*.gb")[i]
   extract.gene.gb(gbfile = a,gene = gene)
