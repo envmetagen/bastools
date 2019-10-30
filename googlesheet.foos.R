@@ -23,3 +23,25 @@ google.read.master.url<-function(sheeturl,out=NULL){
   message(paste("file saved as",paste0(gsub(" ","_",ss_info$sheet_title),".txt")))}
   return(ss_data)
 }
+
+#read (and write) a processing sheet 
+google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
+master<-list()
+headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
+for(i in 1:length(sheeturls)){
+  master[[i]]<-google.read.master.url(sheeturls[i])
+  if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
+    stop (c("one of the following headers missing: ", paste(headers)))}
+  master[[i]]<-master[[i]][,headers]
+}
+
+#make a processing sheet
+experimentsheet<-as.data.frame(data.table::rbindlist(master))
+experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
+
+#write file
+write.table(experimentsheet,paste0(outDir,experiment_id,"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
+message(paste("file saved as",paste0(outDir,experiment_id,"_experiment_sheet.txt")))
+
+return(experimentsheet)
+}

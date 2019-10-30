@@ -89,9 +89,21 @@ ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length,out,buffer=N
   #remove comment lines to help data.table to read properly
   f<-process$new(command = "sed", args = c("-i","/^#/ d", out), echo_cmd = T)
   f$wait()
+  #remove weird hashes also
+  f<-process$new(command = "sed", args = c("-i","s/###//g", out), echo_cmd = T)
+  f$wait()
+  #and hashes within names
+  f<-process$new(command = "sed", args = c("-i","s/#/_/g", out), echo_cmd = T)
+  f$wait()
+  #remove quotes too
+  f<-process$new(command = "sed", args = c("-i",'s/"//g', out), echo_cmd = T)
+  f$wait()
+  #remove quotes too
+  f<-process$new(command = "sed", args = c("-i","s/'//g", out), echo_cmd = T)
+  f$wait()
   
   b<-data.table::fread(file = out,data.table = F,
-                       sep = "|",fill=T,
+                       sep = "|",
                        col.names = c("AC","seq_length","taxid","rank","species","species_name","genus",
                                       "genus_name","family","family_name","superkingdom","superkingdom_name",
                                     "strand","forward_match","forward_mismatch","forward_tm","reverse_match",

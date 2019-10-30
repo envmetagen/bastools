@@ -1,3 +1,15 @@
+setwd("/home/bastian.egeter/git_bastools/bastools/")
+file.sources<-c("add.taxids.fasta.BAS.R","building_dbs.R","manip_fasta.R","running_ecoTools.R","build_refs.R",
+                "mapTrim.R","primer_mistmatches.R","primer_matches_by_family.R","building_dbs4.R","ecopcr2refs.R",
+                "make.primer.bias.tables.R","make.primer.bias.tables.addfuncs.R",
+                "make.primer.bias.tables.famfuncs.R")
+sapply(file.sources,source)
+library(processx)
+library(dplyr)
+
+setwd(outDir)
+
+
 #assumes empty starting folder
 #download gb files
 
@@ -14,6 +26,7 @@ count.download<-as.data.frame(bascount.gb.recur("."))
 colnames(count.download)<-"count.download"
 write.table(count.download,stepcountfile,quote = F,sep = "\t",row.names = F)
 
+message("STEP1 COMPLETE")
 }
 
 #######################################################
@@ -45,6 +58,42 @@ system2("cat", args = c(list.files(pattern = "*.extract.fasta")), stdout = catte
 count.afterextract<-as.data.frame(bascount.fasta(catted_DLS))
 colnames(count.afterextract)<-"count.afterextract"
 write.table(count.afterextract,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
+
+message("STEP2 COMPLETE")
+}
+
+#######################################################
+#Step2a - extract genes
+if("step2a" %in% stepstotake){
+  
+  message("RUNNING STEP2a")
+  
+  #first remove files with empty result
+  a<-system2("grep",args = c("'Empty result - nothing to do'",list.files(pattern = "*.gb")),wait = T,
+             stderr = T,stdout = T)
+  unlink(gsub(":\t.*","",a))
+  a<-system2("grep",args = c("'Unable to obtain query'",list.files(pattern = "*.gb")),wait = T,
+             stderr = T,stdout = T)
+  unlink(gsub(":\t.*","",a))
+  
+  #convert to fasta
+  for(i in 1:length(list.files(pattern = "*.gb"))){
+    a<-list.files(pattern = "*.gb")[i]
+    gb2fasta(gbfile = a)
+  }
+  
+  #cat (assumes otherwise empty folder)
+  catted_DLS<-paste0(paste(groups,collapse = "_"),"_",paste(group.taxids,collapse = "_"),"_",gene,"_nuccore_",
+                     Sys.Date(),".fasta")
+  system2("cat", args = c(list.files(pattern = "*.fasta")), stdout = catted_DLS,wait = T)
+  
+  #count
+  count.afterextract<-as.data.frame(bascount.fasta(catted_DLS))
+  colnames(count.afterextract)<-"count.after.convert"
+  write.table(count.afterextract,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
+  
+  message("STEP2a COMPLETE")
+  
 }
 #######################################################
 #step 3 remove min L and add taxonomy
@@ -97,6 +146,8 @@ colnames(count.familes.after.rmNoFams)<-"count.familes.after.rmNoFams"
 write.table(count.after.rmNoFams,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
 write.table(count.familes.after.rmNoFams,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
 
+message("STEP3 COMPLETE")
+
 ############actually should derep within taxid, as I was doing before
 }
 #######################################################
@@ -140,6 +191,8 @@ mapping.reference<-as.data.frame(bascount.fasta("mapping.reference.fasta"))
 colnames(mapping.reference)<-"mapping.reference"
 write.table(mapping.reference,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
 
+message("STEP4 COMPLETE")
+
 }
 #######################################################
 #step 5 map to refdb and make final db
@@ -147,7 +200,6 @@ if("step5" %in% stepstotake){
   
   message("RUNNING STEP5")
   
-###########################################################################################
 #MAP ALL SEQUENCES AGAINST TARGET REFERENCE DATABASE
 map2targets(queries.to.map = "formatted.minL.lineage.goodfam.uid2.fasta",
             refs = "mapping.reference.fasta",out = "formatted.minL.lineage.goodfam.uid2.mapped.txt")
@@ -173,7 +225,9 @@ unlink(x = "final.ecopcrdb*")
 obiconvert.Bas(infile = "formatted.minL.lineage.goodfam.uid2.mapped.fasta",
                in_type = "fasta",out = "final.ecopcrdb",taxo = obitaxo,
                out_type = "--ecopcrdb-output")
-###########################################################################################
+
+message("STEP5 COMPLETE")
+
 }
 #######################################################
 #step 6 - run final ecopcr and do stats
@@ -184,10 +238,8 @@ if("step6" %in% stepstotake){
 #run final ecopcr without buffer option
 ecoPCR.Bas(Pf,Pr,ecopcrdb = "final.ecopcrdb",max_error = max_error_ecopcr,
            min_length,max_length,out = "final.ecopcr.hits.txt")
-###########################################################################################
 #convert final ecopcrdb to tab
 system2(command = "obitab", args=c("-o","final.ecopcrdb"), stdout="final.ecopcrdb.tab", wait = T)
-###########################################################################################
 #DO STATS
 make.primer.bias.tables(originaldbtab = "final.ecopcrdb.tab",ecopcrfile = "final.ecopcr.hits.txt",
                         out_bias_file = out_bias_file,
@@ -208,4 +260,8 @@ write.table(count.amped,stepcountfile,quote = F,sep = "\t",row.names = F,append 
 write.table(families.amped,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
 write.table(count.uniq.brcds.amped,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
 
+message("STEP6 COMPLETE")
+
 }
+
+warnings()

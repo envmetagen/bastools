@@ -54,38 +54,42 @@ MBC_otu_bin_blast_merge<-function(MBC_otutab, bin_blast_results,out){
 #'              primer_16S.uniq.l75L120.c20.TEST.taxon.table<-rma2info.BAS("primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6")
 #'              final.table<-merge.tab.taxon(obitab.txt = "primer_16S.uniq.l75L120.c20.tab",primer_16S.uniq.l75L120.c20.TEST.taxon.table)}
 #' @export
-obitab_bin_blast_merge_minion<-function(obitabfile,binfile,mastersheetfile=NA,experiment_id,used.obiuniq=F,out){
+otutab_bin_blast_merge_minion<-function(otutabfile,binfile,experimentsheetfile=NULL,experiment_id,hascount,out){
   
-  if(used.obiuniq==F){
-    obitab_input<-data.table::fread(obitabfile, sep = "\t")
-    taxon_input<-data.table::fread(file = binfile, sep = "\t")
-    #obitab_input$barcode<-gsub("barcode=","",do.call(rbind,stringr::str_split(obitab_input$definition," "))[,3])
-    taxon_input$path<-paste0(taxon_input$K,";",taxon_input$P,";",taxon_input$C,";",taxon_input$O,";",
-                             taxon_input$F,";",taxon_input$G,";",taxon_input$S)
-    
-    merged.table<-merge(taxon_input[,c("qseqid","path")],obitab_input[,c("id","barcode")],
-                        by.x = "qseqid",by.y = "id",all = TRUE)
-    merged.table$count<-1
+  otutab_input<-data.table::fread(otutabfile, sep = "\t",header = T)
+  
+  if(hascount) if(!"count" %in% colnames(otutab_input)) stop("no column named count in otutab")
+  if(hascount==F) otutab_input$count<-1
+  
+  taxon_input<-data.table::fread(file = binfile, sep = "\t")
+  
+  taxon_input$path<-paste0(taxon_input$K,";",taxon_input$P,";",taxon_input$C,";",taxon_input$O,";",
+                           taxon_input$F,";",taxon_input$G,";",taxon_input$S)
+  merged.table<-merge(taxon_input[,c("qseqid","path")],otutab_input[,c("id","barcode","count")],
+                      by.x = "qseqid",by.y = "id",all = TRUE)
     
     taxatable<-reshape2::dcast(merged.table[,c("path","barcode","count")],path~barcode,value.var = "count",
                     fun.aggregate = sum)
     taxatable$path[is.na(taxatable$path)]<-"No_hits"
     
-    if(!is.null(mastersheetfile)){
+    if(!is.null(experimentsheetfile)){
+    #read sheet
+    experimentsheet<-as.data.frame(read.table(paste0(outDir,experiment_id,"_experiment_sheet.txt"),header = T))
     #replace barcodes with sample_names
     final.barcodes<-as.data.frame(colnames(taxatable[,2:length(colnames(taxatable))]))
     colnames(final.barcodes)<-"barcode_id"
-    master<-data.table::fread(file = mastersheetfile, sep = "\t",data.table = F)
-    mapping.samples<-master[grep(experiment_id, master$experiment_id),c("barcode_id","ss_sample_id")]
+    mapping.samples<-experimentsheet[grep(experiment_id, experimentsheet$experiment_id),c("barcode_id","ss_sample_id")]
+    mapping.samples$barcode_id<-gsub("BC","barcode",mapping.samples$barcode_id)
     final.samples<-merge(final.barcodes,mapping.samples,by = "barcode_id",all.y = F,all.x = T)
-    colnames(taxatable)<-c("taxon",final.samples$ss_sample_id)
+    final.samples$barcode_id<-as.character(final.samples$barcode_id)
+    final.samples$ss_sample_id<-as.character(final.samples$ss_sample_id)
+    final.samples$ss_sample_id2<-do.call(pmax, c(final.samples, na.rm = TRUE))
+    colnames(taxatable)<-c("taxon",as.character(final.samples$ss_sample_id2))
     }
     
     write.table(x = taxatable,file = out,sep="\t",quote = F,row.names = F)
   }
-  
-  if(used.obiuniq==T) message("Havent writtent his yet!")
-}
+
 
 ######################################################################
 #SPLIT TAXATABLES

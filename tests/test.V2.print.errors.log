@@ -1,0 +1,873 @@
+nohup: ignoring input and appending output to 'nohup.out'
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+ncbiTaxDir /mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/October-2019/
+bastoolsDir /home/bastian.egeter/git_bastools/bastools/
+stepstotake step2
+gene 12S
+groups Chordata
+group.taxids 7711
+group.ranks phylum
+starting with just '12S' as search term, next check preoduct and gene info, before making extract function
+RUNNING STEP2
+If error message = 1 it just means nothing was found
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+LOCUS       JN082912                1549 bp    DNA     linear   INV 27-JUL-2011
+DEFINITION  Pseudoxenos sp. DPM-2011 18S small subunit ribosomal RNA gene,
+            partial sequence.
+ACCESSION   JN082912
+VERSION     JN082912.1
+KEYWORDS    .
+SOURCE      Pseudoxenos sp. DPM-2011
+  ORGANISM  Pseudoxenos sp. DPM-2011
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Pseudoxenos.
+REFERENCE   1  (bases 1 to 1549)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     The first molecular phylogeny of strepsiptera (insecta) reveals an
+            early burst of molecular evolution correlated with the transition
+            to endoparasitism
+  JOURNAL   PLoS ONE 6 (6), E21206 (2011)
+   PUBMED   21738621
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 1549)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-JUN-2011) Department of Zoology, University of
+            Oxford, South Parks Rd., Oxford OX1 3PS, UK
+FEATURES             Location/Qualifiers
+     source          1..1549
+                     /organism="Pseudoxenos sp. DPM-2011"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:1068834"
+     rRNA            <1..>1549
+                     /product="18S small subunit ribosomal RNA"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       JN082910                 997 bp    DNA     linear   INV 27-JUL-2011
+DEFINITION  Xenos sp. DPM-2011 18S small subunit ribosomal RNA gene, partial
+            sequence.
+ACCESSION   JN082910
+VERSION     JN082910.1
+KEYWORDS    .
+SOURCE      Xenos sp. DPM-2011
+  ORGANISM  Xenos sp. DPM-2011
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 997)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     The first molecular phylogeny of strepsiptera (insecta) reveals an
+            early burst of molecular evolution correlated with the transition
+            to endoparasitism
+  JOURNAL   PLoS ONE 6 (6), E21206 (2011)
+   PUBMED   21738621
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 997)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-JUN-2011) Department of Zoology, University of
+            Oxford, South Parks Rd., Oxford OX1 3PS, UK
+FEATURES             Location/Qualifiers
+     source          1..997
+                     /organism="Xenos sp. DPM-2011"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:1068841"
+     rRNA            <1..>997
+                     /product="18S small subunit ribosomal RNA"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       JN082909                1489 bp    DNA     linear   INV 27-JUL-2011
+DEFINITION  Xenos pecki 18S small subunit ribosomal RNA gene, partial sequence.
+ACCESSION   JN082909
+VERSION     JN082909.1
+KEYWORDS    .
+SOURCE      Xenos peckii
+  ORGANISM  Xenos peckii
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 1489)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     The first molecular phylogeny of strepsiptera (insecta) reveals an
+            early burst of molecular evolution correlated with the transition
+            to endoparasitism
+  JOURNAL   PLoS ONE 6 (6), E21206 (2011)
+   PUBMED   21738621
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 1489)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-JUN-2011) Department of Zoology, University of
+            Oxford, South Parks Rd., Oxford OX1 3PS, UK
+FEATURES             Location/Qualifiers
+     source          1..1489
+                     /organism="Xenos peckii"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:50526"
+     rRNA            <1..>1489
+                     /product="18S small subunit ribosomal RNA"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       JN082908                1807 bp    DNA     linear   INV 27-JUL-2011
+DEFINITION  Xenos vesparum 18S small subunit ribosomal RNA gene, partial
+            sequence.
+ACCESSION   JN082908
+VERSION     JN082908.1
+KEYWORDS    .
+SOURCE      Xenos vesparum
+  ORGANISM  Xenos vesparum
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 1807)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     The first molecular phylogeny of strepsiptera (insecta) reveals an
+            early burst of molecular evolution correlated with the transition
+            to endoparasitism
+  JOURNAL   PLoS ONE 6 (6), E21206 (2011)
+   PUBMED   21738621
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 1807)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-JUN-2011) Department of Zoology, University of
+            Oxford, South Parks Rd., Oxford OX1 3PS, UK
+FEATURES             Location/Qualifiers
+     source          1..1807
+                     /organism="Xenos vesparum"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:31928"
+     rRNA            <1..>1807
+                     /product="18S small subunit ribosomal RNA"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       JN082907                1886 bp    DNA     linear   INV 27-JUL-2011
+DEFINITION  Xenos moutoni 18S small subunit ribosomal RNA gene, partial
+            sequence.
+ACCESSION   JN082907
+VERSION     JN082907.1
+KEYWORDS    .
+SOURCE      Xenos moutoni
+  ORGANISM  Xenos moutoni
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 1886)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     The first molecular phylogeny of strepsiptera (insecta) reveals an
+            early burst of molecular evolution correlated with the transition
+            to endoparasitism
+  JOURNAL   PLoS ONE 6 (6), E21206 (2011)
+   PUBMED   21738621
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 1886)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-JUN-2011) Department of Zoology, University of
+            Oxford, South Parks Rd., Oxford OX1 3PS, UK
+FEATURES             Location/Qualifiers
+     source          1..1886
+                     /organism="Xenos moutoni"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:1068849"
+     rRNA            <1..>1886
+                     /product="18S small subunit ribosomal RNA"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       AY039107                 163 bp    DNA     linear   INV 30-DEC-2001
+DEFINITION  Xenos vesparum 18S ribosomal RNA gene, partial sequence.
+ACCESSION   AY039107
+VERSION     AY039107.1
+KEYWORDS    .
+SOURCE      Xenos vesparum
+  ORGANISM  Xenos vesparum
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 163)
+  AUTHORS   Johnston,J.S., Halbert,N.R., Ross,L.D., Kathirithamby,J. and
+            Woolley,J.
+  TITLE     Phylogenetic analysis as a means of species identification within
+            Myrmecolacidae (Insecta: Strepsiptera)
+  JOURNAL   Tijdschr. Entomol. (2001) In press
+REFERENCE   2  (bases 1 to 163)
+  AUTHORS   Johnston,J.S., Halbert,N.R., Ross,L.D., Kathirithamby,J. and
+            Woolley,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-JUN-2001) Entomology, Texas A&M University, Heep
+            Center, College Station, TX 77843, USA
+FEATURES             Location/Qualifiers
+     source          1..163
+                     /organism="Xenos vesparum"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:31928"
+     rRNA            <1..>163
+                     /product="18S ribosomal RNA"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       XPU65164                1573 bp    DNA     linear   INV 27-FEB-2002
+DEFINITION  Xenos pecki 18S ribosomal RNA gene, partial sequence.
+ACCESSION   U65164
+VERSION     U65164.1
+KEYWORDS    .
+SOURCE      Xenos peckii
+  ORGANISM  Xenos peckii
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 1573)
+  AUTHORS   Whiting,M.F., Carpenter,J.C., Wheeler,Q.D. and Wheeler,W.C.
+  TITLE     The Strepsiptera problem: phylogeny of the holometabolous insect
+            orders inferred from 18S and 28S ribosomal DNA sequences and
+            morphology
+  JOURNAL   Syst. Biol. 46 (1), 1-68 (1997)
+   PUBMED   11975347
+REFERENCE   2  (bases 1 to 1573)
+  AUTHORS   Whiting,M.F., Carpenter,J.C., Wheeler,Q.D. and Wheeler,W.C.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (25-JUL-1996) Entomology, American Museum of Natural
+            History, Central Park West at 79th Street, New York, NY 10024, USA
+FEATURES             Location/Qualifiers
+     source          1..1573
+                     /organism="Xenos peckii"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:50526"
+     rRNA            <1..>1573
+                     /product="18S ribosomal RNA"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       X77784                  3316 bp    DNA     linear   INV 18-JUL-1995
+DEFINITION  X.vesparum 18 rRNA gene.
+ACCESSION   X77784
+VERSION     X77784.1
+KEYWORDS    18S ribosomal RNA; 18S rRNA gene.
+SOURCE      Xenos vesparum
+  ORGANISM  Xenos vesparum
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1
+  AUTHORS   Chalwatzis,N., Baur,A., Stetzer,E., Kinzelbach,R. and
+            Zimmerman,F.K.
+  TITLE     Strongly expanded 18S rRNA genes correlated with a peculiar
+            morphology in the insect order of Strepsiptera
+  JOURNAL   Zoology (Jena) 98, 115-126 (1995)
+REFERENCE   2  (bases 1 to 3316)
+  AUTHORS   Chalwatzis,N.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (27-JAN-1994) N. Chalwatzis, Technische Hochschule
+            Darmstadt, Institut Mikrobiologie, Schnittspahnstr. 10, 64 287
+            Darmstadt, FRG
+FEATURES             Location/Qualifiers
+     source          1..3316
+                     /organism="Xenos vesparum"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:31928"
+                     /clone="pNC03Xv18S, pNC04Xv18S"
+                     /tissue_type="whole organism"
+                     /dev_stage="adult"
+     gene            1..3316
+                     /gene="18S rRNA"
+     rRNA            1..3316
+                     /gene="18S rRNA"
+                     /product="18S ribosomal RNA"
+     primer_bind     1..22
+                     /note="18SV0000"
+     primer_bind     3289..3316
+                     /note="18SR1900"
+ORIGIN      
+One record from Xenidae_41039_18S.gb failed and was excluded. Record:
+
+LOCUS       X74763                  2177 bp    DNA     linear   INV 11-OCT-1993
+DEFINITION  X.vesparum gene for 18S ribosomal RNA (partial).
+ACCESSION   X74763
+VERSION     X74763.1
+KEYWORDS    18S ribosomal RNA.
+SOURCE      Xenos vesparum
+  ORGANISM  Xenos vesparum
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1
+  AUTHORS   Chalwatzis,N., Baur,A. and Zimmermann,F.K.
+  TITLE     A 18S ribosomal RNA gene fragment from Xenos vesparum
+            (insecta,strepsiptera) leads to the longest ever known 18S rRNA
+            gene
+  JOURNAL   Unpublished
+REFERENCE   2  (bases 1 to 2177)
+  AUTHORS   Chalwatzis,N.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (20-AUG-1993) N. Chalwatzis, TH-Darmstadt, Inst. fuer
+            Mikrobiologie/Genetik, Schnittspahnstr. 10, 64287 Darmstadt, FRG
+FEATURES             Location/Qualifiers
+     source          1..2177
+                     /organism="Xenos vesparum"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:31928"
+                     /clone="pNCO3Xv18S"
+                     /dev_stage="adult"
+     rRNA            <1..>2177
+                     /product="18S ribosomal RNA"
+ORIGIN      
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+LOCUS       KM853179                 656 bp    DNA     linear   INV 18-APR-2015
+DEFINITION  Xyronotus aztecus 18S ribosomal RNA gene, partial sequence.
+ACCESSION   KM853179
+VERSION     KM853179.1
+KEYWORDS    .
+SOURCE      Xyronotus aztecus
+  ORGANISM  Xyronotus aztecus
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Polyneoptera; Orthoptera; Caelifera;
+            Acrididea; Acridomorpha; Pneumoroidea; Xyronotidae; Xyronotus.
+REFERENCE   1  (bases 1 to 656)
+  AUTHORS   Song,H., Amedegnato,C., Cigliano,M.M., Desutter-Grandcolas,L.,
+            Heads,S.W., Huang,Y., Otte,D. and Whiting,M.F.
+  TITLE     300 million years of diversification: elucidating the patterns of
+            orthopteran evolution based on comprehensive taxon and gene
+            sampling
+  JOURNAL   Cladistics (2015) In press
+  REMARK    Publication Status: Available-Online prior to print
+REFERENCE   2  (bases 1 to 656)
+  AUTHORS   Song,H., Amedegnato,C., Cigliano,M.M., Desutter-Grandcolas,L.,
+            Heads,S.W., Huang,Y., Otte,D. and Whiting,M.F.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-OCT-2014) Department of Biology, University of
+            Central Florida, 4000 Central Florida Blvd., Orlando, FL 32816, USA
+COMMENT     ##Assembly-Data-START##
+            Assembly Method       :: Sequencher v. 4.8
+            Sequencing Technology :: Sanger dideoxy sequencing
+            ##Assembly-Data-END##
+FEATURES             Location/Qualifiers
+     source          1..656
+                     /organism="Xyronotus aztecus"
+                     /mol_type="genomic DNA"
+                     /strain="OR1175"
+                     /specimen_voucher="BYU-IGC-OR1175"
+                     /db_xref="taxon:62797"
+     rRNA            <1..>656
+                     /product="18S ribosomal RNA"
+ORIGIN      
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+
+LOCUS       Z97588                  1872 bp    DNA     linear   INV 03-AUG-1999
+DEFINITION  Xyronotus aztecus nuclear 18S rRNA gene (partial).
+ACCESSION   Z97588
+VERSION     Z97588.1
+KEYWORDS    18S ribosomal RNA; 18S rRNA gene; small subunit ribosomal RNA.
+SOURCE      Xyronotus aztecus
+  ORGANISM  Xyronotus aztecus
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Polyneoptera; Orthoptera; Caelifera;
+            Acrididea; Acridomorpha; Pneumoroidea; Xyronotidae; Xyronotus.
+REFERENCE   1
+  AUTHORS   Flook,P.K. and Rowell,C.H.
+  TITLE     Inferences about orthopteroid phylogeny and molecular evolution
+            from small subunit nuclear ribosomal DNA sequences
+  JOURNAL   Insect Mol. Biol. 7 (2), 163-178 (1998)
+   PUBMED   9535161
+REFERENCE   2
+  AUTHORS   Flook,P.K., Klee,S. and Rowell,C.H.
+  TITLE     Combined molecular phylogenetic analysis of the Orthoptera
+            (Arthropoda, Insecta) and implications for their higher systematics
+  JOURNAL   Syst. Biol. 48 (2), 233-253 (1999)
+   PUBMED   12066707
+REFERENCE   3  (bases 1 to 1872)
+  AUTHORS   Flook,P.K.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (10-JUL-1997) Flook P.K., Zoology Institute, Rheinsprung
+            9, Basel-4051, SWITZERLAND
+FEATURES             Location/Qualifiers
+     source          1..1872
+                     /organism="Xyronotus aztecus"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:62797"
+     gene            <1..>1872
+                     /gene="18S rRNA"
+     rRNA            <1..>1872
+                     /gene="18S rRNA"
+                     /product="small subunit ribosomal RNA"
+ORIGIN      
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+Couldnt find ORIGIN to print output
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+
+LOCUS       JN082908                1807 bp    DNA     linear   INV 27-JUL-2011
+DEFINITION  Xenos vesparum 18S small subunit ribosomal RNA gene, partial
+            sequence.
+ACCESSION   JN082908
+VERSION     JN082908.1
+KEYWORDS    .
+SOURCE      Xenos vesparum
+  ORGANISM  Xenos vesparum
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 1807)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     The first molecular phylogeny of strepsiptera (insecta) reveals an
+            early burst of molecular evolution correlated with the transition
+            to endoparasitism
+  JOURNAL   PLoS ONE 6 (6), E21206 (2011)
+   PUBMED   21738621
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 1807)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-JUN-2011) Department of Zoology, University of
+            Oxford, South Parks Rd., Oxford OX1 3PS, UK
+FEATURES             Location/Qualifiers
+     source          1..1807
+                     /organism="Xenos vesparum"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:31928"
+     rRNA            <1..>1807
+                     /product="18S small subunit ribosomal RNA"
+ORIGIN      
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+
+LOCUS       JN082907                1886 bp    DNA     linear   INV 27-JUL-2011
+DEFINITION  Xenos moutoni 18S small subunit ribosomal RNA gene, partial
+            sequence.
+ACCESSION   JN082907
+VERSION     JN082907.1
+KEYWORDS    .
+SOURCE      Xenos moutoni
+  ORGANISM  Xenos moutoni
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 1886)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     The first molecular phylogeny of strepsiptera (insecta) reveals an
+            early burst of molecular evolution correlated with the transition
+            to endoparasitism
+  JOURNAL   PLoS ONE 6 (6), E21206 (2011)
+   PUBMED   21738621
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 1886)
+  AUTHORS   McMahon,D.P., Hayward,A. and Kathirithamby,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-JUN-2011) Department of Zoology, University of
+            Oxford, South Parks Rd., Oxford OX1 3PS, UK
+FEATURES             Location/Qualifiers
+     source          1..1886
+                     /organism="Xenos moutoni"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:1068849"
+     rRNA            <1..>1886
+                     /product="18S small subunit ribosomal RNA"
+ORIGIN      
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+
+LOCUS       AY039107                 163 bp    DNA     linear   INV 30-DEC-2001
+DEFINITION  Xenos vesparum 18S ribosomal RNA gene, partial sequence.
+ACCESSION   AY039107
+VERSION     AY039107.1
+KEYWORDS    .
+SOURCE      Xenos vesparum
+  ORGANISM  Xenos vesparum
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 163)
+  AUTHORS   Johnston,J.S., Halbert,N.R., Ross,L.D., Kathirithamby,J. and
+            Woolley,J.
+  TITLE     Phylogenetic analysis as a means of species identification within
+            Myrmecolacidae (Insecta: Strepsiptera)
+  JOURNAL   Tijdschr. Entomol. (2001) In press
+REFERENCE   2  (bases 1 to 163)
+  AUTHORS   Johnston,J.S., Halbert,N.R., Ross,L.D., Kathirithamby,J. and
+            Woolley,J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-JUN-2001) Entomology, Texas A&M University, Heep
+            Center, College Station, TX 77843, USA
+FEATURES             Location/Qualifiers
+     source          1..163
+                     /organism="Xenos vesparum"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:31928"
+     rRNA            <1..>163
+                     /product="18S ribosomal RNA"
+ORIGIN      
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+
+LOCUS       XPU65164                1573 bp    DNA     linear   INV 27-FEB-2002
+DEFINITION  Xenos pecki 18S ribosomal RNA gene, partial sequence.
+ACCESSION   U65164
+VERSION     U65164.1
+KEYWORDS    .
+SOURCE      Xenos peckii
+  ORGANISM  Xenos peckii
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1  (bases 1 to 1573)
+  AUTHORS   Whiting,M.F., Carpenter,J.C., Wheeler,Q.D. and Wheeler,W.C.
+  TITLE     The Strepsiptera problem: phylogeny of the holometabolous insect
+            orders inferred from 18S and 28S ribosomal DNA sequences and
+            morphology
+  JOURNAL   Syst. Biol. 46 (1), 1-68 (1997)
+   PUBMED   11975347
+REFERENCE   2  (bases 1 to 1573)
+  AUTHORS   Whiting,M.F., Carpenter,J.C., Wheeler,Q.D. and Wheeler,W.C.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (25-JUL-1996) Entomology, American Museum of Natural
+            History, Central Park West at 79th Street, New York, NY 10024, USA
+FEATURES             Location/Qualifiers
+     source          1..1573
+                     /organism="Xenos peckii"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:50526"
+     rRNA            <1..>1573
+                     /product="18S ribosomal RNA"
+ORIGIN      
+One record from Xyronotidae_62795_18S.gb failed and was excluded. Record:
+
+LOCUS       X77784                  3316 bp    DNA     linear   INV 18-JUL-1995
+DEFINITION  X.vesparum 18 rRNA gene.
+ACCESSION   X77784
+VERSION     X77784.1
+KEYWORDS    18S ribosomal RNA; 18S rRNA gene.
+SOURCE      Xenos vesparum
+  ORGANISM  Xenos vesparum
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Strepsiptera; Stylopidia;
+            Xenidae; Xenos.
+REFERENCE   1
+  AUTHORS   Chalwatzis,N., Baur,A., Stetzer,E., Kinzelbach,R. and
+            Zimmerman,F.K.
+  TITLE     Strongly expanded 18S rRNA genes correlated with a peculiar
+            morphology in the insect order of Strepsiptera
+  JOURNAL   Zoology (Jena) 98, 115-126 (1995)
+REFERENCE   2  (bases 1 to 3316)
+  AUTHORS   Chalwatzis,N.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (27-JAN-1994) N. Chalwatzis, Technische Hochschule
+            Darmstadt, Institut Mikrobiologie, Schnittspahnstr. 10, 64 287
+            Darmstadt, FRG
+FEATURES             Location/Qualifiers
+     source          1..3316
+                     /organism="Xenos vesparum"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:31928"
+                     /clone="pNC03Xv18S, pNC04Xv18S"
+                     /tissue_type="whole organism"
+                     /dev_stage="adult"
+     gene            1..3316
+                     /gene="18S rRNA"
+     rRNA            1..3316
+                     /gene="18S rRNA"
+                     /product="18S ribosomal RNA"
+     primer_bind     1..22
+                     /note="18SV0000"
+     primer_bind     3289..3316
+                     /note="18SR1900"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+LOCUS       AF221898                 526 bp    DNA     linear   VRT 04-OCT-2019
+DEFINITION  Zeus faber 16S ribosomal RNA gene, partial sequence.
+ACCESSION   AF221898
+VERSION     AF221898.1
+KEYWORDS    .
+SOURCE      Zeus faber (John dory)
+  ORGANISM  Zeus faber
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 526)
+  AUTHORS   Colgan,D.J., Zhang,C. and Paxton,J.R.
+  TITLE     Phylogenetic investigations of the stephanoberyciformes and
+            beryciformes, particularly whalefishes (Euteleostei: Cetomimidae),
+            based on partial 12S rDNA and 16S rDNA sequences
+  JOURNAL   Mol. Phylogenet. Evol. 17 (1), 15-25 (2000)
+   PUBMED   11020301
+REFERENCE   2  (bases 1 to 526)
+  AUTHORS   Colgan,D.J., Zhang,C.-G. and Paxton,J.R.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (06-JAN-2000) Evolutionary Biology Unit, Australian
+            Museum, 6 College St, Sydney, NSW 2010, Australia
+FEATURES             Location/Qualifiers
+     source          1..526
+                     /organism="Zeus faber"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:64108"
+                     /note="originally submitted as Rexea solandri"
+     rRNA            <1..>526
+                     /product="16S ribosomal RNA"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+
+LOCUS       DQ533327                 582 bp    DNA     linear   VRT 27-DEC-2012
+DEFINITION  Zeus faber 12S ribosomal RNA gene, partial sequence; tRNA-Val gene,
+            complete sequence; and 16S ribosomal RNA gene, partial sequence;
+            mitochondrial.
+ACCESSION   DQ533327
+VERSION     DQ533327.1
+KEYWORDS    .
+SOURCE      mitochondrion Zeus faber (John dory)
+  ORGANISM  Zeus faber
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 582)
+  AUTHORS   Smith,W.L. and Wheeler,W.C.
+  TITLE     Venom evolution widespread in fishes: a phylogenetic road map for
+            the bioprospecting of piscine venoms
+  JOURNAL   J. Hered. 97 (3), 206-217 (2006)
+   PUBMED   16740627
+REFERENCE   2  (bases 1 to 582)
+  AUTHORS   Smith,W.L. and Wheeler,W.C.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (08-MAY-2006) Ichthyology, American Museum of Natural
+            History, Central Park West at 79th Street, New York, NY 10024, USA
+FEATURES             Location/Qualifiers
+     source          1..582
+                     /organism="Zeus faber"
+                     /organelle="mitochondrion"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:64108"
+                     /country="USA: Mid-Atlantic Bight"
+     misc_feature    <1..>582
+                     /note="contains 12S ribosomal RNA, tRNA-Val and 16S
+                     ribosomal RNA"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+
+LOCUS       AF221896                 517 bp    DNA     linear   VRT 04-OCT-2019
+DEFINITION  Zeus faber specimen-voucher JapanB65 16S ribosomal RNA gene,
+            partial sequence.
+ACCESSION   AF221896
+VERSION     AF221896.1
+KEYWORDS    .
+SOURCE      Zeus faber (John dory)
+  ORGANISM  Zeus faber
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 517)
+  AUTHORS   Colgan,D.J., Zhang,C. and Paxton,J.R.
+  TITLE     Phylogenetic investigations of the stephanoberyciformes and
+            beryciformes, particularly whalefishes (Euteleostei: Cetomimidae),
+            based on partial 12S rDNA and 16S rDNA sequences
+  JOURNAL   Mol. Phylogenet. Evol. 17 (1), 15-25 (2000)
+   PUBMED   11020301
+REFERENCE   2  (bases 1 to 517)
+  AUTHORS   Colgan,D.J., Zhang,C.-G. and Paxton,J.R.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (06-JAN-2000) Evolutionary Biology Unit, Australian
+            Museum, 6 College St, Sydney, NSW 2010, Australia
+FEATURES             Location/Qualifiers
+     source          1..517
+                     /organism="Zeus faber"
+                     /mol_type="genomic DNA"
+                     /specimen_voucher="JapanB65"
+                     /db_xref="taxon:64108"
+     rRNA            <1..>517
+                     /product="16S ribosomal RNA"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+
+LOCUS       GU946631                 558 bp    DNA     linear   VRT 09-NOV-2011
+DEFINITION  Zeus capensis voucher DOIJ3 16S ribosomal RNA gene, partial
+            sequence; mitochondrial.
+ACCESSION   GU946631
+VERSION     GU946631.1
+KEYWORDS    .
+SOURCE      mitochondrion Zeus capensis (Cape dory)
+  ORGANISM  Zeus capensis
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 558)
+  AUTHORS   Cawthorn,D.M., Steinman,H.A. and Witthuhn,R.C.
+  TITLE     Evaluation of the 16S and 12S rRNA genes as universal markers for
+            the identification of commercial fish species in South Africa
+  JOURNAL   Gene 491 (1), 40-48 (2012)
+   PUBMED   21963445
+REFERENCE   2  (bases 1 to 558)
+  AUTHORS   Cawthorn,D.M., Witthuhn,C. and Steinman,H.A.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-MAR-2010) Food Science, University of Stellenbosch,
+            Corner of Hammanshand & Helshoogte Streets, Stellenbosch, Western
+            Cape 7600, South Africa
+FEATURES             Location/Qualifiers
+     source          1..558
+                     /organism="Zeus capensis"
+                     /organelle="mitochondrion"
+                     /mol_type="genomic DNA"
+                     /specimen_voucher="DOIJ3"
+                     /db_xref="taxon:741943"
+                     /tissue_type="muscle"
+                     /country="South Africa"
+                     /collection_date="2008"
+     rRNA            <1..>558
+                     /product="16S ribosomal RNA"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+
+LOCUS       GU946630                 558 bp    DNA     linear   VRT 09-NOV-2011
+DEFINITION  Zeus capensis voucher DOIJ2 16S ribosomal RNA gene, partial
+            sequence; mitochondrial.
+ACCESSION   GU946630
+VERSION     GU946630.1
+KEYWORDS    .
+SOURCE      mitochondrion Zeus capensis (Cape dory)
+  ORGANISM  Zeus capensis
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 558)
+  AUTHORS   Cawthorn,D.M., Steinman,H.A. and Witthuhn,R.C.
+  TITLE     Evaluation of the 16S and 12S rRNA genes as universal markers for
+            the identification of commercial fish species in South Africa
+  JOURNAL   Gene 491 (1), 40-48 (2012)
+   PUBMED   21963445
+REFERENCE   2  (bases 1 to 558)
+  AUTHORS   Cawthorn,D.M., Witthuhn,C. and Steinman,H.A.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-MAR-2010) Food Science, University of Stellenbosch,
+            Corner of Hammanshand & Helshoogte Streets, Stellenbosch, Western
+            Cape 7600, South Africa
+FEATURES             Location/Qualifiers
+     source          1..558
+                     /organism="Zeus capensis"
+                     /organelle="mitochondrion"
+                     /mol_type="genomic DNA"
+                     /specimen_voucher="DOIJ2"
+                     /db_xref="taxon:741943"
+                     /tissue_type="muscle"
+                     /country="South Africa"
+                     /collection_date="2008"
+     rRNA            <1..>558
+                     /product="16S ribosomal RNA"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+
+LOCUS       GU946629                 558 bp    DNA     linear   VRT 09-NOV-2011
+DEFINITION  Zeus capensis voucher DOIJ1 16S ribosomal RNA gene, partial
+            sequence; mitochondrial.
+ACCESSION   GU946629
+VERSION     GU946629.1
+KEYWORDS    .
+SOURCE      mitochondrion Zeus capensis (Cape dory)
+  ORGANISM  Zeus capensis
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 558)
+  AUTHORS   Cawthorn,D.M., Steinman,H.A. and Witthuhn,R.C.
+  TITLE     Evaluation of the 16S and 12S rRNA genes as universal markers for
+            the identification of commercial fish species in South Africa
+  JOURNAL   Gene 491 (1), 40-48 (2012)
+   PUBMED   21963445
+REFERENCE   2  (bases 1 to 558)
+  AUTHORS   Cawthorn,D.M., Witthuhn,C. and Steinman,H.A.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-MAR-2010) Food Science, University of Stellenbosch,
+            Corner of Hammanshand & Helshoogte Streets, Stellenbosch, Western
+            Cape 7600, South Africa
+FEATURES             Location/Qualifiers
+     source          1..558
+                     /organism="Zeus capensis"
+                     /organelle="mitochondrion"
+                     /mol_type="genomic DNA"
+                     /specimen_voucher="DOIJ1"
+                     /db_xref="taxon:741943"
+                     /tissue_type="muscle"
+                     /country="South Africa"
+                     /collection_date="2008"
+     rRNA            <1..>558
+                     /product="16S ribosomal RNA"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+
+LOCUS       AF221895                 537 bp    DNA     linear   VRT 04-OCT-2019
+DEFINITION  Zeus faber specimen-voucher NI1137 16S ribosomal RNA gene, partial
+            sequence.
+ACCESSION   AF221895
+VERSION     AF221895.1
+KEYWORDS    .
+SOURCE      Zeus faber (John dory)
+  ORGANISM  Zeus faber
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 537)
+  AUTHORS   Colgan,D.J., Zhang,C. and Paxton,J.R.
+  TITLE     Phylogenetic investigations of the stephanoberyciformes and
+            beryciformes, particularly whalefishes (Euteleostei: Cetomimidae),
+            based on partial 12S rDNA and 16S rDNA sequences
+  JOURNAL   Mol. Phylogenet. Evol. 17 (1), 15-25 (2000)
+   PUBMED   11020301
+REFERENCE   2  (bases 1 to 537)
+  AUTHORS   Colgan,D.J., Zhang,C.-G. and Paxton,J.R.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (06-JAN-2000) Evolutionary Biology Unit, Australian
+            Museum, 6 College St, Sydney, NSW 2010, Australia
+FEATURES             Location/Qualifiers
+     source          1..537
+                     /organism="Zeus faber"
+                     /mol_type="genomic DNA"
+                     /specimen_voucher="NI1137"
+                     /db_xref="taxon:64108"
+     rRNA            <1..>537
+                     /product="16S ribosomal RNA"
+ORIGIN      
+One record from Zeidae_31103_12S.gb failed and was excluded. Record:
+
+LOCUS       AF221894                 506 bp    DNA     linear   VRT 04-OCT-2019
+DEFINITION  Zeus faber specimen-voucher NI1090 16S ribosomal RNA gene, partial
+            sequence.
+ACCESSION   AF221894
+VERSION     AF221894.1
+KEYWORDS    .
+SOURCE      Zeus faber (John dory)
+  ORGANISM  Zeus faber
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Neoteleostei;
+            Acanthomorphata; Zeiogadaria; Zeariae; Zeiformes; Zeidae; Zeus.
+REFERENCE   1  (bases 1 to 506)
+  AUTHORS   Colgan,D.J., Zhang,C. and Paxton,J.R.
+  TITLE     Phylogenetic investigations of the stephanoberyciformes and
+            beryciformes, particularly whalefishes (Euteleostei: Cetomimidae),
+            based on partial 12S rDNA and 16S rDNA sequences
+  JOURNAL   Mol. Phylogenet. Evol. 17 (1), 15-25 (2000)
+   PUBMED   11020301
+REFERENCE   2  (bases 1 to 506)
+  AUTHORS   Colgan,D.J., Zhang,C.-G. and Paxton,J.R.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (06-JAN-2000) Evolutionary Biology Unit, Australian
+            Museum, 6 College St, Sydney, NSW 2010, Australia
+FEATURES             Location/Qualifiers
+     source          1..506
+                     /organism="Zeus faber"
+                     /mol_type="genomic DNA"
+                     /specimen_voucher="NI1090"
+                     /db_xref="taxon:64108"
+     rRNA            <1..>506
+                     /product="16S ribosomal RNA"
+ORIGIN      
+Warning messages:
+1: In system2("grep", args = c("'Empty result - nothing to do'", list.files(pattern = "*.gb")),  :
+  running command ''grep' 'Empty result - nothing to do' Xenidae_41039_18S.gb Xyronotidae_62795_18S.gb Zeidae_31103_12S.gb 2>&1' had status 1
+2: In system2("grep", args = c("'Unable to obtain query'", list.files(pattern = "*.gb")),  :
+  running command ''grep' 'Unable to obtain query' Xenidae_41039_18S.gb Xyronotidae_62795_18S.gb Zeidae_31103_12S.gb 2>&1' had status 1

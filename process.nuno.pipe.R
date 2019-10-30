@@ -4,16 +4,30 @@ library(mgsub)
 
 setwd("/home/bastian.egeter/git_bastools/bastools/")
 file.sources<-c("add.taxids.fasta.BAS.R","bin.blast.R","merge_MBC_otutab_with_bin_blast.R","blast.min.bas.R",
-                "taxatab.filter.R","do.count.R","googlesheet.foos.R")
+                "taxatab.filter.R","do.count.R","googlesheet.foos.R","plotting.R")
 sapply(file.sources,source)
 googlesheets::gs_auth()
 obitaxdb<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/obitaxdump/obitaxdb"
 ncbiTaxDir<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/October-2019/"
-#setwd("/mnt/Disk1/Minion_data/2019_August_002_Mussels/test_incr1/")
-setwd("/mnt/Disk1/Minion_data/2019_September_001/res/")
 filterpc<-0.1
-#out.taxatable<-"2019_August_002_Mussels_ALL_PRIMERS_nuno.then.bas.taxatable.tf.txt"
+
+
+#run7
+outDir<-"/mnt/Disk1/Minion_data/2019_August_002_Mussels/test_incr1/nuno.then.bas/"
+experiment_id="2019_August_002"
+setwd("/mnt/Disk1/Minion_data/2019_August_002_Mussels/test_incr1/")
+out.taxatable<-"2019_August_002_Mussels_ALL_PRIMERS_nuno.then.bas.taxatable.tf.txt"
+sheeturls<-"https://docs.google.com/spreadsheets/d/1k1mAGogWq9rXcwBKDyxG9oZ0OrWreBRRcSEUw0RGwyk/edit?ts=5d776492#gid=1377121809"
+
+
+#run 8
+outDir<-"/mnt/Disk1/Minion_data/2019_September_001/res/nuno.then.bas/"
+experiment_id="2019_September_001"
+setwd("/mnt/Disk1/Minion_data/2019_September_001/res/")
 out.taxatable<-"2019_September_001_ALL_PRIMERS_nuno.then.bas.taxatable.tf.txt"
+sheeturls<-c("https://docs.google.com/spreadsheets/d/1ddCk-h4joVznLELHRvvpGbMD1x6tnq6q9sREKgbUdOw/edit#gid=369169877",
+             "https://docs.google.com/spreadsheets/d/1k1mAGogWq9rXcwBKDyxG9oZ0OrWreBRRcSEUw0RGwyk/edit?ts=5d776492#gid=1377121809")
+
 
 
 #############################################################################
@@ -40,7 +54,7 @@ for(i in 1:length(files)){
   #1st order by pident
   nuno.res2<-nuno.res[order(-nuno.res$pident),]
   #then rm dup reads
-  nuno.res2<-nuno.res2[!duplicated(nuno.res2$read),]
+  nuno.res3<-nuno.res2[!duplicated(nuno.res2$read),]
 
 #next extract counts
   nuno.res2$count<-as.numeric(do.call(rbind,stringr::str_split(nuno.res2$read,":size="))[,3])
@@ -74,6 +88,30 @@ for(i in 1:length(files)){
   taxatable$taxon<-rownames(taxatable)
   taxatable<-taxatable[,c(length(colnames(taxatable)),1:(length(colnames(taxatable))-1))]
   write.table(taxatable,out.taxatable,row.names = F,quote = F,sep = "\t")
+  
+  #replace barcodes with samples
+    #read sheet
+    experimentsheet<-google.make.experiment.sheet(outDir,sheeturls,experiment_id)
+    #replace barcodes with sample_names
+    taxatable<-data.table::fread(paste0(outDir,out.taxatable),
+                                  sep = "\t",data.table = F)
+    final.barcodes<-as.data.frame(colnames(taxatable[,2:length(colnames(taxatable))]))
+    colnames(final.barcodes)<-"barcode_id"
+    mapping.samples<-experimentsheet[grep(experiment_id, experimentsheet$experiment_id),c("barcode_id","ss_sample_id")]
+    mapping.samples$barcode_id<-gsub("BC","barcode",mapping.samples$barcode_id)
+    final.samples<-merge(final.barcodes,mapping.samples,by = "barcode_id",all.y = F,all.x = T)
+    final.samples$barcode_id<-as.character(final.samples$barcode_id)
+    final.samples$ss_sample_id<-as.character(final.samples$ss_sample_id)
+    final.samples$ss_sample_id2<-do.call(pmax, c(final.samples, na.rm = TRUE))
+    colnames(taxatable)<-c("taxon",as.character(final.samples$ss_sample_id2))
+    
+    write.table(x = taxatable,gsub("taxatable.tf.txt","taxatable.tf.newnames.txt",out.taxatable),
+                row.names = F,quote = F,sep = "\t")
+    
+    #make krona plots
+    bas.krona.plot("2019_September_001_ALL_PRIMERS_nuno.then.bas.taxatable.tf.newnames.txt",
+                   KronaPath = "/home/bastian.egeter/Tools/Krona.install/bin/ktImportText")
+  
   
   
 filter.blast.nuno<-function(blastfile,ncbiTaxDir,out, max_evalue=0.001,top=1){
