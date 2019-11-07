@@ -42,9 +42,8 @@
 #' obitaxdb<-"/Documents/obitax_26-4-19"
 #' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="blast_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
 #' @export
-bin.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,obitaxdb,out,min_qcovs=70,
-                        max_evalue=0.001,top=1,
-                        spident=98,gpident=95,fpident=92,abspident=80){
+bin.blast1<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,obitaxdb,out,min_qcovs=70,
+                        max_evalue=0.001,top=1,spident=98,gpident=95,fpident=92,abspident=80){
   
   t1<-Sys.time()
 
@@ -317,7 +316,7 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
 }
 
 bin.blast2<-function(filtered_blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,
-                     obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80){
+                     obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,disabledTaxa=NULL){
 t1<-Sys.time()
 ###################################################
 #read in obitools taxonomy
@@ -332,9 +331,20 @@ qseqids<-as.data.frame(unique(btab$qseqid))
 qseqids$qseqid<-qseqids$`unique(btab$qseqid)`
 qseqids$`unique(btab$qseqid)`=NULL
 
+#remove disabled taxa
+if(!is.null(disabledTaxa)){
+#make note if disabled taxa do not exist
+if(sum(disabledTaxa %in% btab$taxids)!=length(disabledTaxa)) message(paste("
+                                                                           Note: taxid",
+                                                                           disabledTaxa[!disabledTaxa %in% btab$taxids],
+                                                                           "not in blast results
+                                                                           "))
+btab<-btab[!btab$taxids %in% disabledTaxa,]
+}
+
 #species-level assignments
 message("binning at species level")
-message("Removing species with sp., numbers or more than one space")
+message("Not considering species with 'sp.', numbers or more than one space")
 btabsp<-btab[btab$S!="unknown",]
 if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
 if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]
@@ -355,8 +365,10 @@ if(length(btabsp$taxids)>0){
 #genus-level assignments
 message("binning at genus level") ######for all the next steps I should only process qseqids that were not yet
 ######successful, wasting time at the moment
-btabg<-btab[btab$G!="unknown" & btab$S!="unknown",]
-btabg<-btabg[btabg$pident>gpident,]
+message("TEST MODE!!!!!!")
+
+btabgf<-btab[btab$G!="unknown" & btab$S!="unknown",]  ####line changed 
+btabg<-btabgf[btabgf$pident>gpident,] ####line changed 
 lcag = aggregate(btabg$taxids, by=list(btabg$qseqid),
                  function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
 rm(btabg)
@@ -366,9 +378,14 @@ lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
 colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
 
 #family-level assignments
-message("binning at family level")
-btabf<-btab[btab$F!="unknown" & btab$G!="unknown" & btab$S!="unknown",]
-btabf<-btabf[btabf$pident>fpident,]
+message("binning at family level") #not attempting to exclude family="unknown" because often ncbi
+#taxonomy does not have family-level assignation, leading to errors later
+#currently this says if genus and species is unknown , and passes fpident, then exclude
+#should be okbecause any remaining taxids correspond to etierh genus or species level
+#btabf<-btab[    ####line changed
+  #btab$F!="unknown" &     ####line changed
+  #  btab$G!="unknown" & btab$S!="unknown",]   ####line changed
+btabf<-btabgf[btabgf$pident>fpident,]
 lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid),
                  function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
 rm(btabf)

@@ -21,7 +21,7 @@ if("step0" %in% stepstotake){
   
   message("STEP0")
   
-  experimentsheet<-google.make.experiment.sheet(outDir,sheeturls,experiment_id) #in process, writes a sheet to file 
+  experimentsheet<-google.make.exp.sheet.illumina(outDir,sheeturls,experiment_id) #in process, writes a sheet to file 
   
   message("STEP0 complete")
   
@@ -35,11 +35,15 @@ if("step7" %in% stepstotake){
   message("STEP7")
   
   #BLASTING NT
+  if(class(startingfastas)=="data.frame"){
   blast.status<-blast.min.bas(infastas = as.character(startingfastas[,1]),refdb = refdb,blast_exec = blast_exec,
                               wait = T,taxidlimit = startingfastas[,2],taxidname = as.character(startingfastas[,3]),
                               ncbiTaxDir = ncbiTaxDir)
+  } else{blast.status<-blast.min.bas(infastas = startingfastas,refdb = refdb,blast_exec = blast_exec,
+                                     wait = T, ncbiTaxDir = ncbiTaxDir)
+  }
   
-  check.blasts(infastas = files,h = blast.status)
+  check.blasts(infastas = as.character(startingfastas[,1]),h = blast.status)
   
   message("STEP7 complete")
   
@@ -52,14 +56,14 @@ if("step8" %in% stepstotake){
   message("STEP8")
   
   #FILTER BLASTS
-  files<-paste0(outDir,list.files(path = outDir,pattern = ".blast.txt"))
+  files<-list.files(pattern = ".blast.txt")
                             
   
   for(i in 1:length(files)){
     message(paste("filtering blast results for",files[i]))
     blastfile = files[i]
     out<-gsub(".blast.txt",".blast.filt.txt",files[i])
-    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out)
+    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top)
   }
   message("STEP8 complete")
   
@@ -71,14 +75,14 @@ if("step9" %in% stepstotake){
   
   message("STEP9")
   
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".blast.filt.txt"),value = T))
+  files<-list.files(pattern = ".blast.filt.txt")
   
   for(i in 1:length(files)){
     message(paste("binning filtered blast results for",files[i]))
     filtered_blastfile<-files[i]
     binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
-               obitaxdb = obitaxdb,out = binfile)
+               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
   message("STEP9 complete")
   
@@ -91,17 +95,14 @@ if("step10" %in% stepstotake){
   
   message("STEP10")
   
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".tab$"),value = T))
-  binfiles<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".bins.txt$"),value = T))
+  files<-list.files(pattern = ".otutab.tsv$")
   
   for(i in 1:length(files)){
     otutabfile<-files[i]
-    binfile<-gsub(".tab",".bins.txt",files[i])
-    out<-gsub(".tab",".taxatable.txt",files[i])
+    binfile<-gsub(".otutab.tsv",".bins.txt",files[i])
+    out<-gsub(".otutab.tsv",".taxatable.txt",files[i])
     
-    otutab_bin_blast_merge_minion(otutabfile = otutabfile,binfile = binfile,experimentsheetfile = 
-                                    paste0(outDir,experiment_id,"_experiment_sheet.txt"),
-                                  hascount = hascount,  experiment_id = experiment_id,out=out)
+    MBC_otu_bin_blast_merge(MBC_otutab = otutabfile,bin_blast_results = binfile,out = out)
   }
   message("STEP10 complete")
   
@@ -114,7 +115,7 @@ if("step11" %in% stepstotake){
   
   message("STEP11")
   
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.txt$"),value = T))
+  files<-list.files(pattern = ".taxatable.txt$")
   
   taxon.filter.solo(files,filterpc)
   
@@ -129,7 +130,7 @@ if("step12" %in% stepstotake){
   
   message("STEP12")
   
-  files<-grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.tf.txt$"),value = T)
+  files<-list.files(pattern = ".taxatable.tf.txt$")
   splice.taxatables(files,mastersheet = paste0(outDir,experiment_id,"_experiment_sheet.txt"))
   
   message("STEP12 complete")
@@ -143,7 +144,7 @@ if("step13" %in% stepstotake){
   
   message("STEP13")
   
-  files<-grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.tf.spliced.txt$"),value = T)
+  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   
   #make contributor files
   for(i in 1:length(files)){
@@ -156,13 +157,12 @@ if("step13" %in% stepstotake){
     
     if(length(strsplit(files[i],"-")[[1]])>2) { 
       filtered_blastfile = list.files(pattern = gsub("taxatable.tf.spliced.txt","blast.filt.txt",
-                                                     paste(strsplit(files[i],"-")[[1]][2:length(strsplit(files[i],"-")[[1]])],collapse = "-")))
+                                                     paste(strsplit(files[i],"-")[[1]][2:length(strsplit(files[i],"-")[[1]])],
+                                                           collapse = "-")))
     }
     
-    #then get bin file names (accounting for extra dashes)
-    
     check.low.res.df(
-      filtered.taxatab = files[i],filtered_blastfile,
+      filtered.taxatab = files[i],filtered_blastfile = filtered_blastfile,
       binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile)))
   }
   message("STEP13 complete")
@@ -176,7 +176,7 @@ if("step14" %in% stepstotake){
   
   message("STEP14")
   
-  files<-grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.tf.spliced.txt$"),value = T)
+  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   for(i in 1:length(files)){
     bas.krona.plot(files[i],KronaPath = "/home/bastian.egeter/Tools/Krona.install/bin/ktImportText")
   }

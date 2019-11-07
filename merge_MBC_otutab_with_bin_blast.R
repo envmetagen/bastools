@@ -83,8 +83,8 @@ otutab_bin_blast_merge_minion<-function(otutabfile,binfile,experimentsheetfile=N
     final.samples<-merge(final.barcodes,mapping.samples,by = "barcode_id",all.y = F,all.x = T)
     final.samples$barcode_id<-as.character(final.samples$barcode_id)
     final.samples$ss_sample_id<-as.character(final.samples$ss_sample_id)
-    final.samples$ss_sample_id2<-do.call(pmax, c(final.samples, na.rm = TRUE))
-    colnames(taxatable)<-c("taxon",as.character(final.samples$ss_sample_id2))
+    #final.samples$ss_sample_id2<-do.call(pmax, c(final.samples, na.rm = TRUE))
+    colnames(taxatable)<-c("taxon",as.character(final.samples$ss_sample_id))
     }
     
     write.table(x = taxatable,file = out,sep="\t",quote = F,row.names = F)
@@ -94,6 +94,9 @@ otutab_bin_blast_merge_minion<-function(otutabfile,binfile,experimentsheetfile=N
 ######################################################################
 #SPLIT TAXATABLES
 splice.taxatables<-function(files,mastersheet){
+  
+  message("Note:sample names must contain project name with dash")
+  
 #read files
 taxatables<-list()
 for(i in 1:length(files)){
@@ -110,7 +113,8 @@ taxatablesplit2<-list()
 
 for(i in 1:length(taxatables)){
   for(j in 1:length(projectnames)){
-    taxatablesplit[[j]]<-taxatables[[i]][,grep(projectnames[j],colnames(taxatables[[i]]))]
+    taxatablesplit[[j]]<-as.data.frame(taxatables[[i]][,grep(projectnames[j],colnames(taxatables[[i]]))])
+    colnames(taxatablesplit[[j]])<-grep(projectnames[j],colnames(taxatables[[i]]),value = T) #to ovecome dfs with one sample only
     rownames(taxatablesplit[[j]])<-taxatables[[i]]$taxon
   }
   taxatablesplit2[[i]]<-taxatablesplit

@@ -28,7 +28,7 @@ barcodes.used<-unique(experimentsheet$barcode_id)
 barcodes.used <- barcodes.used[!is.na(barcodes.used)]
 barcodes.used<-gsub("BC","barcode",barcodes.used)
 
-#size select, for each fragment, I checked an seqs appear to have primers plus one base (at each end)
+#size select, for each fragment, I checked and seqs appear to have primers plus one base (at each end)
 experimentsheet$primer_combo<-paste0(experimentsheet$Primer_F,experimentsheet$Primer_R)
 primer_combo<-unique(experimentsheet$primer_combo)
 
@@ -110,7 +110,6 @@ if(in_folders) {
   unlink(paste0(outDir,list.files(path = outDir,pattern = "barcode[0-9][0-9].obi.fasta")))
   
   message("STEP1 complete")
-  
 }
 ####################################################
 #step 2 cat by frag
@@ -128,8 +127,6 @@ if("step2" %in% stepstotake){
     }
     
     message("STEP2 complete")
-    
-    
 }    
 ####################################################
 #step 3 size select
@@ -225,12 +222,19 @@ if("step7" %in% stepstotake){
   message("STEP7")
 
   #BLASTING NT
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".filtlen.wlen.obi.fasta"),value = T))
-  blast.status<-blast.min.bas(infastas = files,refdb = refdb,blast_exec = blast_exec) 
-  check.blasts(infastas = files,h = blast.status)
+  
+  
+  if(class(startingfastas)=="data.frame"){
+    blast.status<-blast.min.bas(infastas = as.character(startingfastas[,1]),refdb = refdb,blast_exec = blast_exec,
+                                wait = T,taxidlimit = startingfastas[,2],taxidname = as.character(startingfastas[,3]),
+                                ncbiTaxDir = ncbiTaxDir)
+  } else{blast.status<-blast.min.bas(infastas = startingfastas,refdb = refdb,blast_exec = blast_exec,
+                                     wait = T, ncbiTaxDir = ncbiTaxDir)
+  }
+  
+  check.blasts(infastas = as.character(startingfastas[,1]),h = blast.status)
   
   message("STEP7 complete")
-  
 }
  
 ####################################################
@@ -247,7 +251,7 @@ if("step8" %in% stepstotake){
     message(paste("filtering blast results for",files[i]))
     blastfile = files[i]
     out<-gsub(".blast.txt",".blast.filt.txt",files[i])
-    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out)
+    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out,top = top)
   }
   message("STEP8 complete")
   
@@ -266,7 +270,7 @@ if("step9" %in% stepstotake){
     filtered_blastfile<-files[i]
     binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
-               obitaxdb = obitaxdb,out = binfile)
+               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
   message("STEP9 complete")
   

@@ -8,10 +8,10 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   
   library(processx)
   
-  if(length(infastas)==1) threads<-8
-  if(length(infastas)==2 | length(infastas)==3) threads<-4
-  if(length(infastas)==4 | length(infastas)==5) threads<-2
-  if(length(infastas)>5) threads<-1
+  if(length(infastas)==1 | length(infastas)==2 | length(infastas)==3) threads<-8
+  if(length(infastas)==4 | length(infastas)==5 | length(infastas)==6) threads<-4
+  if(length(infastas)==7 | length(infastas)==8 | length(infastas)==9) threads<-2
+  if(length(infastas)>9) threads<-1
   
   continue<-data.frame("file"<-infastas,"response"="y")
   continue$response<-as.character(continue$response)
@@ -29,6 +29,8 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     h<-list()
     
     for(i in 1:length(infastas)){
+      if(length(list.files(pattern = paste0(taxidname[i],"_taxidlimit.txt")))==0){
+      
       system2(command = "taxonkit",args = c("list", "--ids", taxidlimit[i], "--indent", '""',"--data-dir",ncbiTaxDir)
               ,wait=T,stdout = paste0(taxidname[i],"_taxidlimit.temp.txt"))
       
@@ -37,13 +39,15 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
       write.table(taxidlist,paste0(taxidname[i],"_taxidlimit.txt"),row.names = F,quote = F,col.names = F)
       
       unlink(paste0(taxidname[i],"_taxidlimit.temp.txt"))
-      message(paste("taxidlist saved to",paste0(taxidname[i],"_taxidlist.txt")))
+      message(paste("taxidlist saved to",paste0(taxidname[i],"_taxidlimit.txt")))
+      }else{ message(paste("The file",paste0(taxidname[i],"_taxidlimit.txt"),"already exists. Using that file."))}
       
       h[[i]]<-process$new(command = blast_exec, 
                           args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
                                  "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-taxidlist", 
-                                 paste0(taxidname[i],"_taxidlist.txt"),"-max_target_seqs", "100", "-max_hsps","1", "-out",
-                                 paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),echo_cmd = T)
+                                 paste0(taxidname[i],"_taxidlimit.txt"),"-max_target_seqs", "100", "-max_hsps","1", "-out",
+                                 paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),echo_cmd = T,
+                                 stderr = paste0("blast.error.temp.processx.file",i))
     }
   }
   
@@ -58,7 +62,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
                                  "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-max_target_seqs", 
                                  "100", "-max_hsps","1", "-out",
                                  paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),
-                          echo_cmd = T)
+                                 echo_cmd = T,stderr = paste0("blast.error.temp.processx.file",i))
     }
   }
   
@@ -70,7 +74,10 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   }
   
   if(1 %in% exits){
-    message("There was a problem with ", infastas[match(1,exits)], ", aborting all blasts")
+    message("
+            ************
+            There was a problem with ", infastas[match(1,exits)], ", aborting all blasts
+            ************")
     for(i in 1:length(h)){
       h[[i]]$kill()
     }
@@ -79,6 +86,9 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   if(wait==T){
     for(i in 1:length(h)){
       h[[i]]$wait()
+      message(paste(infastas[i],"blast pid",h[[i]]$get_pid()))
+      message(readLines(paste0("blast.error.temp.processx.file",i)))
+      unlink(paste0("blast.error.temp.processx.file",i))
     }
   }
   
@@ -88,6 +98,16 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   message(c("All blasts complete in ",t3," mins."))
   
   return(h)
+}
+
+check.blasts<-function(infastas,h){
+  a<-list()
+  for(i in 1:length(h)){
+    message(infastas[i])
+    a[[i]]<-tryCatch(h[[i]]$get_status(),error=function(e) print("not running"))
+    if(nchar(a[[i]])!=11) message(gsub("sleeping","running",h[[i]]$get_status()))
+    message(paste0("exit status: ",h[[i]]$get_exit_status()))
+  }
 }
 
 
