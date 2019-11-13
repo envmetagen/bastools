@@ -135,8 +135,6 @@ if("step13" %in% stepstotake){
   
 }
 
-
-
 ####################################################
 #step 14 make krona plots
 
@@ -152,32 +150,7 @@ if("step14" %in% stepstotake){
   
 }
 
-####################################################
-#step 15 add notes on disabled taxa to conr table
 
-if("step15" %in% stepstotake){  
-  
-  message("STEP15")
-  
-  disabledTaxaDf<-read.table(disabledTaxaFile, header=T,sep = "\t")
-  if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
-  
-  disabledTaxa<-disabledTaxaDf$taxids
-  
-  contr.files<-list.files(pattern = "rebins.taxatable.tf.spliced.contr.txt$")
-  
-  for(i in 1:length(contr.files)){
-    message(paste("adding disabled taxa notes to", contr.files[i]))
-    contr.table<-data.table::fread(contr.files[i],sep = "\t",header = T,data.table = F)
-    contr.table$disabled<-contr.table$taxids %in% disabledTaxa
-    write.table(x = contr.table,contr.files[i], sep="\t",quote = F,row.names = F)
-    
-  }
-   
-    
-  message("STEP15 complete")
-  
-}
 
 
 

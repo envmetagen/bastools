@@ -36,14 +36,17 @@ if("step7" %in% stepstotake){
   
   #BLASTING NT
   if(class(startingfastas)=="data.frame"){
-  blast.status<-blast.min.bas(infastas = as.character(startingfastas[,1]),refdb = refdb,blast_exec = blast_exec,
+    blast.status<-blast.min.bas(infastas = as.character(startingfastas[,1]),refdb = refdb,blast_exec = blast_exec,
                               wait = T,taxidlimit = startingfastas[,2],taxidname = as.character(startingfastas[,3]),
                               ncbiTaxDir = ncbiTaxDir)
   } else{blast.status<-blast.min.bas(infastas = startingfastas,refdb = refdb,blast_exec = blast_exec,
                                      wait = T, ncbiTaxDir = ncbiTaxDir)
   }
   
-  check.blasts(infastas = as.character(startingfastas[,1]),h = blast.status)
+  if(class(startingfastas)=="data.frame"){
+    check.blasts(infastas = as.character(startingfastas[,1]),h = blast.status)
+  } else{check.blasts(infastas = startingfastas,h = blast.status)
+  }
   
   message("STEP7 complete")
   
@@ -56,7 +59,7 @@ if("step8" %in% stepstotake){
   message("STEP8")
   
   #FILTER BLASTS
-  files<-list.files(pattern = ".blast.txt")
+  files<-list.files(pattern = ".blast.txt$")
                             
   
   for(i in 1:length(files)){
@@ -131,7 +134,7 @@ if("step12" %in% stepstotake){
   message("STEP12")
   
   files<-list.files(pattern = ".taxatable.tf.txt$")
-  splice.taxatables(files,mastersheet = paste0(outDir,experiment_id,"_experiment_sheet.txt"))
+  splice.taxatables(files,mastersheet = paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt"))
   
   message("STEP12 complete")
   
@@ -163,7 +166,8 @@ if("step13" %in% stepstotake){
     
     check.low.res.df(
       filtered.taxatab = files[i],filtered_blastfile = filtered_blastfile,
-      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile)))
+      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile))
+      ,disabledTaxa = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
   message("STEP13 complete")
   

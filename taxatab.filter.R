@@ -16,6 +16,121 @@ taxon.filter.solo<-function(files,filterpc=0.1){
   }
 }
 
+taxon.filter.solo.df<-function(taxatab,taxonpc=0.1){
+  taxatab2<-taxatab[,-1]
+  a<-sum(taxatab2)
+  taxatab.PCS<-sweep(taxatab2, MARGIN = 1, STATS = rowSums(taxatab2), FUN = "/")*100
+  taxatab.PCS[taxatab.PCS<taxonpc]<-0 
+  taxatab2[taxatab.PCS==0]<-0
+  b<-sum(taxatab2)
+  taxatab3<-cbind(taxon=taxatab$taxon,taxatab2)
+  message(paste(a-b,"reads removed"))
+  taxatab4<-rm.0readtaxSam(taxatab3)
+}
+
+sample.filter.solo<-function(taxatab,samplepc=0.1){
+  message("Applying sample_pc filter. Note: this removes samples with no reads")
+  taxatab2<-taxatab[,2:length(colnames(taxatab))]
+  taxon<-taxatab$taxon
+  taxatab<-taxatab2[,!colSums(taxatab2)==0]
+  taxatab.PCS<-sweep(taxatab, MARGIN = 2, STATS = colSums(taxatab), FUN = "/")*100
+  taxatab.PCS[taxatab.PCS<samplepc]<-0
+  
+  a<-sum(taxatab)
+  taxatab[taxatab.PCS==0]<-0
+  b<-sum(taxatab)
+  message(paste(a-b,"reads removed"))
+  
+  taxatab.out<-cbind(taxon,taxatab)
+  taxatab.out<-rm.0readtaxSam(taxatab.out)
+}
+
+rm.0readtaxSam<-function(taxatab){
+  taxatab2<-taxatab[rowSums(taxatab[,-1])!=0,]
+  taxatab3<-cbind(taxon=taxatab2$taxon,taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
+}
+
+filter.dxns<-function(taxatab,filter_dxn=50){
+  taxatab2<-taxatab[,-1]
+  taxatab2[taxatab2<filter_dxn] <- 0
+  taxatab2<-cbind(taxon=taxatab$taxon,taxatab2)  
+  taxatab2<-rm.0readtaxSam(taxatab2)
+}
+
+count.dxns.by.taxon<-function(taxatab){
+  taxatab2<-taxatab[,-1]
+  return(data.frame(taxon=taxatab$taxon,n.samples=as.numeric(apply(taxatab2,1,function(x) sum(x>0)))))
+}
+
+range.dxns.by.taxon<-function(taxatab){
+  taxatab2<-taxatab[,-1]
+  taxatab2[taxatab2==0]<-NA
+  rangetab<-apply(taxatab2,1,function(x) range(x,na.rm = T))
+  return(data.frame(taxon=taxatab$taxon,low=rangetab[1,],high=rangetab[2,]))
+}
+
+summary.dxns.by.taxon<-function(taxatab){
+  taxatab2<-count.dxns.by.taxon(taxatab)
+  taxatab3<-range.dxns.by.taxon(taxatab)
+  taxatab4<-merge(taxatab2,taxatab3,by="taxon")
+  return(taxatab4)
+}
+
+write.taxatab<-function(taxatab,out){
+  write.table(taxatab,file = out,append = F,quote = F,sep = "\t",row.names = F)
+}
+
+#group taxa
+bas.group.taxa<-function(taxatab,taxon, jointo){
+  
+  taxontable1<-taxatab[taxatab$taxon==taxon,]
+  taxontable2<-taxatab[taxatab$taxon==jointo,]
+  taxontable3<-rbind(taxontable1,taxontable2)
+  taxontable4<-cbind(taxon=jointo,as.data.frame(t(colSums(taxontable3[,-1]))))
+  
+  taxatab<-taxatab[!taxatab$taxon==jointo,]
+  taxatab<-taxatab[!taxatab$taxon==taxon,]
+  
+  taxatab<-rbind(taxatab,taxontable4)
+}
+
+negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T){
+  message("Ignoring the following taxa: NA;NA;NA;NA;NA;NA;NA & no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits")
+  if(ex_hominidae) message(" & Hominidae")
+  
+  taxatab2<-taxatab[taxatab$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  taxatab2<-taxatab2[taxatab2$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+  if(ex_hominidae) taxatab2<-taxatab2[-grep("Hominidae",taxatab2$taxon),]
+  
+  #find negatives with reads
+  negs<-ms_ss[!ms_ss$Sample_Type %in% real,c("ss_sample_id","Sample_Type")]
+  reads.in.negs<-as.data.frame(colSums(taxatab2[colnames(taxatab2) %in% negs$ss_sample_id]))
+  colnames(reads.in.negs)<-"reads"
+  reads.in.negs$ss_sample_id<-rownames(reads.in.negs)
+  read.in.negs<-reads.in.negs[reads.in.negs$reads!=0,]
+  
+  #taxatable for negs
+  taxatab.negs<-cbind(taxon=taxatab2$taxon,taxatab2[colnames(taxatab2) %in% read.in.negs$ss_sample_id])
+  taxatab.negs<-taxatab.negs[rowSums(taxatab.negs[,-1,drop=FALSE])!=0,]
+  
+  #taxatab by sample type
+  taxatab.negs.list<-list()
+  for(i in 1:length(unique(negs$Sample_Type))){
+    taxatab.negs.list[[i]]<-cbind(taxon=taxatab.negs$taxon,taxatab.negs[colnames(taxatab.negs) %in% negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]])
+    taxatab.negs.list[[i]]<-taxatab.negs.list[[i]][rowSums(taxatab.negs.list[[i]][,-1,drop=FALSE])!=0,]
+    names(taxatab.negs.list)[i]<-unique(negs$Sample_Type)[i]
+  }
+  #summary sentence
+  for(i in 1:length(unique(negs$Sample_Type))){
+    message(paste("from",length(negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]), unique(negs$Sample_Type)[i],"samples", 
+                  length(colnames(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]]))-1, "contained reads"))
+    print(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]])
+  }
+  
+  return(taxatab.negs.list)
+}
+
+
 
 
 taxatab.filter<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=0,absolute_detection=100,
@@ -293,4 +408,3 @@ taxatab.filter2<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=60
   return(output)
 }
 
-  

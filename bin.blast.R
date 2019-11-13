@@ -228,7 +228,8 @@ check.low.res.results<-function(pathofinterest,bins,btab){
   return(contributors)
 }
 
-check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile){
+check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabledTaxa=NULL,
+                           spident=NULL,gpident=NULL,fpident=NULL,abspident=NULL){
 
 bins<-data.table::fread(binfile,sep = "\t",data.table = F)
 bins$path<-paste0(bins$K,";",bins$P,";",bins$C,";",bins$O,";",bins$F,";",bins$G,";",bins$S)
@@ -251,6 +252,49 @@ taxatab.tf$readcounts<-rowSums(taxatab.tf[,2:length(colnames(taxatab.tf))])
 taxatab.tf$n.samples<-rowSums(taxatab.tf[,2:(length(colnames(taxatab.tf))-1)]>0)
 contributordf<-merge(contributordf,taxatab.tf[,c("taxon","readcounts","n.samples")],
                       by.x = "pathofinterest",by.y = "taxon")
+
+#add disabled taxa column
+if(!is.null(disabledTaxa)){
+  contributordf$disabled<-contributordf$taxids %in% disabledTaxa
+} else {contributordf$disabled<-"FALSE"}
+
+#add rank
+temprank<-stringr::str_count(contributordf$pathofinterest,";NA")
+temprank<-gsub(0,"species",temprank)
+temprank<-gsub(1,"genus",temprank)
+temprank<-gsub(2,"family",temprank)
+temprank<-gsub(3,"above_family",temprank)
+
+contributordf$rank<-temprank
+
+if(!is.null(spident) & !is.null(gpident) & !is.null(fpident) & !is.null(abspident)){
+#add may_be_improved
+max_pidents<-aggregate(contributordf$high.pident,by=list(contributordf$pathofinterest),FUN=max)
+best_is_species<-max_pidents[max_pidents$x>spident,]
+if(length(best_is_species$Group.1)>0) best_is_species$best_possible<-"species"
+max_pidents<-max_pidents[!max_pidents$x>spident,]
+best_is_genus<-max_pidents[max_pidents$x>gpident,]
+if(length(best_is_genus$Group.1)>0) best_is_genus$best_possible<-"genus"
+max_pidents<-max_pidents[!max_pidents$x>gpident,]
+best_is_family<-max_pidents[max_pidents$x>fpident,]
+if(length(best_is_family$Group.1)>0) best_is_family$best_possible<-"family"
+max_pidents<-max_pidents[!max_pidents$x>fpident,]
+best_is_above_family<-max_pidents[max_pidents$x>abspident,]
+if(length(best_is_above_family$Group.1)>0) best_is_above_family$best_possible<-"above_family"
+
+best_all<-rbind(best_is_species,best_is_genus,best_is_family,best_is_above_family)
+colnames(best_all)[1]<-"pathofinterest"
+best_all$x=NULL
+
+contributordf<-merge(contributordf,best_all)
+contributordf$may_be_improved<-contributordf$rank!=contributordf$best_possible
+contributordf<-contributordf[contributordf$may_be_improved=="TRUE",]
+contributordf<-contributordf[!contributordf$high.pident<abspident,]
+
+}
+
+contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),]
+
 write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
             sep="\t",quote = F,row.names = F)
 }
@@ -315,7 +359,7 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
   
 }
 
-bin.blast2<-function(filtered_blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,
+bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
                      obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,disabledTaxa=NULL){
 t1<-Sys.time()
 ###################################################
@@ -353,46 +397,106 @@ btabsp<-btabsp[btabsp$pident>spident,]
 if(length(btabsp$taxids)>0){
   lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),
                     function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
-  rm(btabsp)
+  
   #get lca names
   colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
+  if(sum(is.na(lcasp$taxids))>0){
+    message("************
+ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
+*************")
+    problem.contributors<-btabsp[!duplicated(btabsp[lcasp[is.na(lcasp$taxids),1] %in% btabsp$qseqid,c("taxids","K","P","C","O","F","G","S")]),
+                                c("taxids","K","P","C","O","F","G","S")]
+    for(i in 1:length(problem.contributors$taxids)){
+      problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
+    }
+    print(problem.contributors[is.na(problem.contributors$validate),])
+  }
   lcasp<-add.lineage.df(df = lcasp,ncbiTaxDir)
   colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
 } else {
   lcasp<-data.frame(matrix(nrow=1,ncol = 10))
   colnames(lcasp)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
 }
+
+rm(btabsp)
+
 #genus-level assignments
 message("binning at genus level") ######for all the next steps I should only process qseqids that were not yet
 ######successful, wasting time at the moment
-message("TEST MODE!!!!!!")
 
-btabgf<-btab[btab$G!="unknown" & btab$S!="unknown",]  ####line changed 
-btabg<-btabgf[btabgf$pident>gpident,] ####line changed 
+
+btabg<-btab[btab$G!="unknown",]  ####line changed 
+#reason - can have g=unknown and s=known (e.g. Ranidae isolate), these should be removed
+#can have g=unknown and s=unknown (e.g. Ranidae), these should be removed
+#can have g=known and s=unknown (e.g. Leiopelma), these should be kept
+
+btabg<-btabg[btabg$pident>gpident,] ####line changed 
 lcag = aggregate(btabg$taxids, by=list(btabg$qseqid),
                  function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
-rm(btabg)
+
 #get lca names
 colnames(lcag)<-gsub("x","taxids",colnames(lcag))
+if(sum(is.na(lcag$taxids))>0){
+  message("************
+ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
+*************")
+  problem.contributors<-btabg[!duplicated(btabg[lcag[is.na(lcag$taxids),1] %in% btabg$qseqid,c("taxids","K","P","C","O","F","G","S")]),
+                              c("taxids","K","P","C","O","F","G","S")]
+  for(i in 1:length(problem.contributors$taxids)){
+    problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
+  }
+  print(problem.contributors[is.na(problem.contributors$validate),])
+}
 lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
 colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
 
+rm(btabg)
+
 #family-level assignments
-message("binning at family level") #not attempting to exclude family="unknown" because often ncbi
-#taxonomy does not have family-level assignation, leading to errors later
-#currently this says if genus and species is unknown , and passes fpident, then exclude
-#should be okbecause any remaining taxids correspond to etierh genus or species level
+message("binning at family level") 
+#can have f=known, g=unknown, s=unknown, these should be kept
+#can have f=unknown, g=known, s=known, these should be kept
+#can have f=unknown, g=known, s=unknown, these should be kept
+#can have f=known, g=known, s=unknown, these should be kept
+#can have f=known, g=known, s=known, these should be kept
+#can have f=unknown, g=known, s=unknown, these should be kept
+#can have f=known, g=unknown, s=known, these should be kept
+
+#can have f=unknown, g=unknown, s=known, these should be removed - 
+  #assumes that this case would be a weird entry (e.g. Ranidae isolate)
+
+#can have f=unknown, g=unknown, s=unknown, these should be removed
+
+btabf<-btab[!(btab$F=="unknown" & btab$G=="unknown" & btab$S=="unknown"),]  ####line changed 
+btabf<-btabf[!(btabf$F=="unknown" & btabf$G=="unknown"),] ####line changed 
+
+#this is ok, but when ncbi taxonomy does not have family-level assignment, we only get to order, stupid, or rather we do get to 
+#family or subfamily as lca, but final report puts it to "unknown"
+
 #btabf<-btab[    ####line changed
   #btab$F!="unknown" &     ####line changed
   #  btab$G!="unknown" & btab$S!="unknown",]   ####line changed
-btabf<-btabgf[btabgf$pident>fpident,]
+btabf<-btabf[btabf$pident>fpident,]
 lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid),
                  function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
-rm(btabf)
+
 #get lca names
 colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
+if(sum(is.na(lcaf$taxids))>0){
+  message("************
+ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
+*************")
+  problem.contributors<-btabf[!duplicated(btabf[lcaf[is.na(lcaf$taxids),1] %in% btabf$qseqid,c("taxids","K","P","C","O","F","G","S")]),
+                              c("taxids","K","P","C","O","F","G","S")]
+  for(i in 1:length(problem.contributors$taxids)){
+    problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
+  }
+  print(problem.contributors[is.na(problem.contributors$validate),])
+}
 lcaf<-add.lineage.df(df = lcaf,ncbiTaxDir)
 colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
+
+rm(btabf)
 
 #higher-than-family-level assignments
 message("binning at higher-than-family level")
@@ -400,11 +504,25 @@ btabhtf<-btab[btab$K!="unknown",]
 btabhtf<-btabhtf[btabhtf$pident>abspident,]
 lcahtf = aggregate(btabhtf$taxids, by=list(btabhtf$qseqid),
                    function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
-rm(btabhtf)
+
 #get lca names
 colnames(lcahtf)<-gsub("x","taxids",colnames(lcahtf))
+if(sum(is.na(lcahtf$taxids))>0){
+  message("************
+ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
+*************")
+  problem.contributors<-btabhtf[!duplicated(btabhtf[lcahtf[is.na(lcahtf$taxids),1] %in% btabhtf$qseqid,c("taxids","K","P","C","O","F","G","S")]),
+                              c("taxids","K","P","C","O","F","G","S")]
+  for(i in 1:length(problem.contributors$taxids)){
+    problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
+  }
+  print(problem.contributors[is.na(problem.contributors$validate),])
+}
+
 lcahtf<-add.lineage.df(df = lcahtf,ncbiTaxDir)
 colnames(lcahtf)<-gsub("Group.1","qseqid",colnames(lcahtf))
+
+rm(btabhtf)
 
 ###################################################
 #combine

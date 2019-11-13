@@ -360,3 +360,67 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
   unlink(list.files(pattern = "*krona.txt"))
 }
 
+taxatab.stackplot<-function(taxatab){
+  taxa<-do.call(rbind,str_split(taxatab$taxon,";"))
+  taxa<-cbind(taxa,do.call(rbind,str_split(taxa[,7]," ")))
+  taxa2<-as.data.frame(substr(taxa,start = 1,stop = 3))
+  taxatab$taxon<-apply(taxa2,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],".",x[9]))
+  
+  long<-reshape2::melt(taxatab)
+  long<-long[long$value>0,]
+  a<-ggplot2::ggplot(data=long , aes(y=value, x=variable, fill=taxon))+
+      geom_bar(stat = "identity")+
+      theme(legend.title = element_text(size=5), legend.text=element_text(size=10),axis.text.x=element_text(size=5,angle=45, hjust=1))+
+      scale_colour_manual(values = MyCols) 
+  a
+}
+
+
+#Plotting bray distance matrix PCA
+taxtab.pca.plot<-function(taxatab,master_sheet,factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
+  taxatab2<-binarise.taxatab(taxatab)
+  bray_matrix<-taxatab2bray(taxatab2)
+  
+  cmds<-cmdscale(bray_matrix,k=4, list. = T, eig = T)
+  cor.cmds<-cor(taxatab2,cmds$points)
+  VarExplainedPC1<-round(cor(vegan::vegdist(cmds$points[,1],method = "euclidean"),distance_matrix)^2,digits = 2)
+  VarExplainedPC2<-round(cor(vegan::vegdist(cmds$points[,2],method = "euclidean"),distance_matrix)^2,digits = 2)
+  
+  #create loadings for plotting
+  loadings<-as.data.frame(cor.cmds)
+  cmdspoints<-as.data.frame(cmds$points)
+  cmdspoints$ss_sample_id<-rownames(cmdspoints)
+  cmdspoints<-merge(cmdspoints,master_sheet,by="ss_sample_id",all.x = T)
+  
+  #plot
+  p<-ggplot(cmdspoints,aes(x=V1,y=V2))+
+    geom_point(aes(size=1,color=cmdspoints[,factor1]))+
+                   #,shape=cmdspoints[,"Sample_Type"]))+
+    xlab(bquote("Variance explained =" ~ .(VarExplainedPC1)))+
+    ylab(bquote("Variance explained =" ~ .(VarExplainedPC2))) +
+    theme_bw()+
+    labs(color = factor1)+
+    #labs(shape = "Sample_Type")+
+    guides(size = FALSE)
+  
+  if(lines){
+    p<- p +geom_segment(data = loadings, aes(x=0,y=0,xend=V1,yend=V2),arrow=arrow(length=unit(0.1,"cm")))
+    if(longnames) if(shortnames) stop("Can only use EITHER long OR short names")
+    if(!longnames) if(!shortnames) message("No names added")
+    if(longnames) if(!shortnames) p<- p + geom_text(data = loadings, aes(x=V1, y=V2, label=colnames(taxatab2)))
+    if(shortnames) if(!longnames){
+      taxa<-do.call(rbind,str_split(colnames(taxatab2),";"))
+      taxa<-cbind(taxa,do.call(rbind,str_split(taxa[,7]," ")))
+      taxa<-as.data.frame(substr(taxa,start = 1,stop = 3))
+      taxa<-apply(taxa,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],".",x[9]))
+      p<- p + geom_text(data = loadings, aes(x=V1, y=V2, label=taxa))
+    }
+  }
+  
+  if(ellipse){
+    p<- p +stat_ellipse(aes(color=cmdspoints[,"field_method"]),type = "norm", level=0.75)
+  }
+  
+  p
+}
+

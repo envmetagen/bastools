@@ -105,7 +105,7 @@ for(i in 1:length(files)){
 
 #split by project
 ssdf<-data.table::fread(file = mastersheet,sep = "\t")
-projectnames<-unique(do.call(rbind,stringr::str_split(string = ssdf$ss_sample_id,pattern = "-"))[,1])
+projectnames<-suppressWarnings(unique(do.call(rbind,stringr::str_split(string = ssdf$ss_sample_id,pattern = "-"))[,1]))
 projectnames<-paste0(projectnames,"-")
 
 taxatablesplit<-list()
@@ -137,6 +137,33 @@ for(i in 1:length(taxatablesplit2)){
     }
   }
 }
+}
+
+#merging taxatables 
+bas.merge.taxatables<-function(taxatabs){
+  
+  taxatabs.list<-list()
+  counts<-data.frame(file=taxatabs,reads=0)
+  for(i in 1:length(taxatabs)){
+    taxatabs.list[[i]]<-data.table::fread(taxatabs[i],sep = "\t",data.table = F)
+    counts[i,2]<-sum(taxatabs.list[[i]][,2:length(colnames(taxatabs.list[[i]]))])
+    message(counts[i,1])
+    message(counts[i,2])
+  }
+  
+  library(tidyverse)
+  all.taxatabs<-taxatabs.list %>% reduce(full_join, by = "taxon")
+  
+  #remove NAs
+  all.taxatabs[is.na(all.taxatabs)]<-0
+  
+  #check sums
+  a<-sum(all.taxatabs[,2:length(colnames(all.taxatabs))])
+  message(paste("merged taxatable",a))
+  if(a==sum(counts$reads)) message("Read counts all good") else stop("Read counts do not match")
+  
+  return(all.taxatabs)
+  
 }
 
 

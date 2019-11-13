@@ -22,8 +22,8 @@ getNCBItaxonomy<-function(path){
 #' Convert NCBI taxonomy to obitools taxonomy
 #' @title Convert NCBI taxonomy to obitools taxonomy.
 #' @param path Full path to directory containing the (unzipped) NCBI taxonomy files. If using current directory use \code{path="here"}
+#' @param out A new name to give the obitaxonomydb
 #' @return An obitools taxonomy
-#' @note This takes a long time.
 #' @examples
 #' NCBI2obitaxonomy("here","obitax_26-4-19")
 #' @export

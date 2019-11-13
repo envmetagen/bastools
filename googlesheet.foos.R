@@ -24,26 +24,26 @@ google.read.master.url<-function(sheeturl,out=NULL){
   return(ss_data)
 }
 
-#read (and write) a processing sheet 
+#read mastersheets and make a processing sheet 
 google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
-master<-list()
-headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
-for(i in 1:length(sheeturls)){
-  master[[i]]<-google.read.master.url(sheeturls[i])
-  if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
-    stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
-  master[[i]]<-master[[i]][,headers]
-}
+  master<-list()
+  headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
+  for(i in 1:length(sheeturls)){
+    master[[i]]<-google.read.master.url(sheeturls[i])
+    if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
+      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
+    master[[i]]<-master[[i]][,headers]
+    }
 
-#make a processing sheet
-experimentsheet<-as.data.frame(data.table::rbindlist(master))
-experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
+  #make a processing sheet
+  experimentsheet<-as.data.frame(data.table::rbindlist(master))
+  experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
 
-#write file
-write.table(experimentsheet,paste0(outDir,experiment_id,"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
-message(paste("file saved as",paste0(outDir,experiment_id,"_experiment_sheet.txt")))
+  #write file
+  write.table(experimentsheet,paste0(outDir,experiment_id,"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
+  message(paste("file saved as",paste0(outDir,experiment_id,"_experiment_sheet.txt")))
 
-return(experimentsheet)
+  return(experimentsheet)
 }
 
 #read (and write) a processing sheet 
@@ -59,11 +59,11 @@ google.make.exp.sheet.illumina<-function(outDir,sheeturls,experiment_id){
   
   #make a processing sheet
   experimentsheet<-as.data.frame(data.table::rbindlist(master))
-  experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
+  experimentsheet<-experimentsheet[experimentsheet$experiment_id %in% experiment_id,]
   
   #write file
-  write.table(experimentsheet,paste0(outDir,experiment_id,"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
-  message(paste("file saved as",paste0(outDir,experiment_id,"_experiment_sheet.txt")))
+  write.table(experimentsheet,paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
+  message(paste("file saved as",paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt")))
   
   return(experimentsheet)
 }
@@ -100,5 +100,36 @@ for(i in 1:length(primer_combo)){
   }}
   
 }
+
+#subset a mastersheet based on required values
+# e.g
+# ms_ss<-subset_mastersheet(master_sheet,
+#                           experiment_id=c("2018_02")
+#                           ,Primer_set=c("12SV5.2","12SV51"),
+#                           Sample_Type=c("Field"))
+subset_mastersheet<-function(master_sheet,...){
+  
+  a<-list(...)
+  print(a)
+  
+  m2<-master_sheet
+  
+  for(i in 1:length(a)){
+    coln<-grep(paste0(names(a)[i],"$"), colnames(m2))
+    m2<-m2[m2[,coln] %in% a[[i]],]
+  }
+  return(m2)
+}
+
+#do xtabs to 1) find levels in factors and 2) see counts
+master_xtabs<-function(master_sheet,columns){
+  
+  coln<-as.numeric(0)
+  for(i in 1:length(columns)){
+    coln[i]<-grep(paste0(columns[i],"$"), colnames(master_sheet))
+  }
+  
+  xtabs(data = master_sheet[,coln],addNA = T)
+}  
   
 
