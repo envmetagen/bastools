@@ -3,7 +3,7 @@ library(processx)
 library(dplyr)
 
 setwd(bastoolsDir)
-googlesheets::gs_auth() 
+if(use.google) googlesheets::gs_auth() 
 source("blast.min.bas.R")
 source("googlesheet.foos.R")
 source("bin.blast.R")
