@@ -50,6 +50,11 @@ rm.0readtaxSam<-function(taxatab){
   taxatab3<-cbind(taxon=taxatab2$taxon,taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
 }
 
+rm.0readOTUSam<-function(taxatab){
+  taxatab2<-taxatab[rowSums(taxatab[,-1])!=0,]
+  taxatab3<-cbind(OTU=taxatab2$OTU,taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
+}
+
 filter.dxns<-function(taxatab,filter_dxn=50){
   taxatab2<-taxatab[,-1]
   taxatab2[taxatab2<filter_dxn] <- 0
@@ -62,6 +67,12 @@ count.dxns.by.taxon<-function(taxatab){
   return(data.frame(taxon=taxatab$taxon,n.samples=as.numeric(apply(taxatab2,1,function(x) sum(x>0)))))
 }
 
+sum.reads.by.taxon<-function(taxatab){
+  taxatab2<-taxatab[,-1]
+  return(data.frame(taxon=taxatab$taxon,total.reads=as.numeric(apply(taxatab2,1,function(x) sum(x)))))
+}
+
+
 range.dxns.by.taxon<-function(taxatab){
   taxatab2<-taxatab[,-1]
   taxatab2[taxatab2==0]<-NA
@@ -72,8 +83,10 @@ range.dxns.by.taxon<-function(taxatab){
 summary.dxns.by.taxon<-function(taxatab){
   taxatab2<-count.dxns.by.taxon(taxatab)
   taxatab3<-range.dxns.by.taxon(taxatab)
-  taxatab4<-merge(taxatab2,taxatab3,by="taxon")
-  return(taxatab4)
+  taxatab4<-sum.reads.by.taxon(taxatab)
+  taxatab5<-merge(taxatab2,taxatab4,by="taxon")
+  taxatab6<-merge(taxatab5,taxatab3,by="taxon")
+  return(taxatab6)
 }
 
 write.taxatab<-function(taxatab,out){
@@ -109,25 +122,31 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T){
   reads.in.negs$ss_sample_id<-rownames(reads.in.negs)
   read.in.negs<-reads.in.negs[reads.in.negs$reads!=0,]
   
-  #taxatable for negs
-  taxatab.negs<-cbind(taxon=taxatab2$taxon,taxatab2[colnames(taxatab2) %in% read.in.negs$ss_sample_id])
-  taxatab.negs<-taxatab.negs[rowSums(taxatab.negs[,-1,drop=FALSE])!=0,]
-  
-  #taxatab by sample type
-  taxatab.negs.list<-list()
-  for(i in 1:length(unique(negs$Sample_Type))){
-    taxatab.negs.list[[i]]<-cbind(taxon=taxatab.negs$taxon,taxatab.negs[colnames(taxatab.negs) %in% negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]])
-    taxatab.negs.list[[i]]<-taxatab.negs.list[[i]][rowSums(taxatab.negs.list[[i]][,-1,drop=FALSE])!=0,]
-    names(taxatab.negs.list)[i]<-unique(negs$Sample_Type)[i]
+  if(length(reads.in.negs$ss_sample_id)>0){
+    
+    #taxatable for negs
+    taxatab.negs<-cbind(taxon=taxatab2$taxon,taxatab2[colnames(taxatab2) %in% read.in.negs$ss_sample_id])
+    taxatab.negs<-taxatab.negs[rowSums(taxatab.negs[,-1,drop=FALSE])!=0,]
+
+    #taxatab by sample type
+    taxatab.negs.list<-list()
+    for(i in 1:length(unique(negs$Sample_Type))){
+      taxatab.negs.list[[i]]<-cbind(taxon=taxatab.negs$taxon,taxatab.negs[colnames(taxatab.negs) %in% negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]])
+      taxatab.negs.list[[i]]<-taxatab.negs.list[[i]][rowSums(taxatab.negs.list[[i]][,-1,drop=FALSE])!=0,]
+      names(taxatab.negs.list)[i]<-unique(negs$Sample_Type)[i]
+    }
+    #summary sentence
+    for(i in 1:length(unique(negs$Sample_Type))){
+      message(gsub("-1","0",paste("from",length(negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]), unique(negs$Sample_Type)[i],"samples", 
+                length(colnames(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]]))-1, "contained reads")))
+      
+      if(length(colnames(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]]))>0){
+      print(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]])}
   }
-  #summary sentence
-  for(i in 1:length(unique(negs$Sample_Type))){
-    message(paste("from",length(negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]), unique(negs$Sample_Type)[i],"samples", 
-                  length(colnames(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]]))-1, "contained reads"))
-    print(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]])
-  }
-  
+
   return(taxatab.negs.list)
+  } else message("No negatives found with reads")
+  
 }
 
 
@@ -408,3 +427,67 @@ taxatab.filter2<-function(taxatab,taxa_pc=0.15,sample_pc=0.15,absolute_in_rep=60
   return(output)
 }
 
+#remove contaminant taxa from samples, based on occurrences in negatives
+remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code){
+  
+  totalstart<-sum(taxatab[,-1,drop=F])
+  
+  for(i in 1:length(negatives)){
+    
+    negdf<-negatives[[i]]
+    
+    negative_type<-names(negatives)[i]
+    
+    if(length(negdf)!=0){
+      
+      for(i in 2:length(colnames(negdf))){
+        neg<-colnames(negdf)[i]
+        negtaxa<-negdf[,c("taxon",neg)]
+        sumnegtaxa<-sum(negtaxa[,-1,drop=F])
+        negtaxa<-as.character(negtaxa[rowSums(negtaxa[,-1,drop=F])>0,"taxon"])
+        
+        
+        #get site of a sample
+        group.id<-master_sheet[grep(neg,master_sheet[,"ss_sample_id"]),group.code]
+        #get other samples in site
+        group.samples<-master_sheet[master_sheet[,group.code]==group.id,"ss_sample_id"]
+        group.samples<-group.samples[!is.na(group.samples)]
+        
+        #temp
+        #negtaxa<-as.character(taxatab$taxon)
+        
+        message(paste("Based on",negative_type,neg, ", Removing detections of"))
+        print(negtaxa)
+        message("from")
+        print(group.samples)
+        message(paste("which all belong to",group.code,":",group.id))
+        
+        sumb4<-sum(taxatab[,-1])
+        
+        #put taxon counts to 0
+        contaminations<-cbind(taxon=taxatab$taxon[taxatab$taxon %in% negtaxa],taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples])
+        contaminations<-cbind(taxon=contaminations$taxon,contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
+        taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples]<-0
+        
+        sumafter<-sum(taxatab[,-1])
+        
+        message(paste(sumb4-sumafter,"reads removed from",sum(contaminations[,-1,drop=F]>0),"detection(s) in",
+                      length(colnames(contaminations[,-1,drop=F])),"sample(s), of which",sumnegtaxa,"were in the negative. See table below for details:"))
+        print(contaminations)
+      }
+    }
+  }
+  taxatab<-rm.0readtaxSam(taxatab)
+  totalend<-sum(taxatab[,-1,drop=F])
+  message(paste("***********A total of", totalstart-totalend, "reads removed"))
+  return(taxatab)
+}
+
+#keep only species-level assignments
+keep.only.spL.assigns<-function(taxatab){
+  #if(level=="species"){
+  taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
+  taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
+  taxatab<-rm.0readtaxSam(taxatab)
+  return(taxatab)
+}

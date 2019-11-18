@@ -377,11 +377,11 @@ taxatab.stackplot<-function(taxatab){
 
 
 #Plotting bray distance matrix PCA
-taxtab.pca.plot<-function(taxatab,master_sheet,factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
+taxatab.pca.plot<-function(taxatab,master_sheet,factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
   taxatab2<-binarise.taxatab(taxatab)
-  bray_matrix<-taxatab2bray(taxatab2)
+  distance_matrix<-taxatab2bray(taxatab2)
   
-  cmds<-cmdscale(bray_matrix,k=4, list. = T, eig = T)
+  cmds<-cmdscale(distance_matrix,k=4, list. = T, eig = T)
   cor.cmds<-cor(taxatab2,cmds$points)
   VarExplainedPC1<-round(cor(vegan::vegdist(cmds$points[,1],method = "euclidean"),distance_matrix)^2,digits = 2)
   VarExplainedPC2<-round(cor(vegan::vegdist(cmds$points[,2],method = "euclidean"),distance_matrix)^2,digits = 2)
@@ -393,15 +393,28 @@ taxtab.pca.plot<-function(taxatab,master_sheet,factor1,lines=F,longnames=F,short
   cmdspoints<-merge(cmdspoints,master_sheet,by="ss_sample_id",all.x = T)
   
   #plot
+  # The palette with grey:
+  cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+  
   p<-ggplot(cmdspoints,aes(x=V1,y=V2))+
-    geom_point(aes(size=1,color=cmdspoints[,factor1]))+
-                   #,shape=cmdspoints[,"Sample_Type"]))+
+    geom_point(aes(size=1,shape=cmdspoints[,factor1]))+
+    #geom_jitter(position = )
+    scale_shape_manual(values=c(3, 4, 0,1,2,5,6))+
+    scale_color_manual(values = c(cbPalette))+
     xlab(bquote("Variance explained =" ~ .(VarExplainedPC1)))+
     ylab(bquote("Variance explained =" ~ .(VarExplainedPC2))) +
     theme_bw()+
-    labs(color = factor1)+
-    #labs(shape = "Sample_Type")+
-    guides(size = FALSE)
+    labs(shape = factor1)+
+    guides(size = FALSE)+
+    guides(shape=guide_legend(override.aes = list(size = 4)))+
+    theme(legend.title = element_blank())+
+    theme(legend.text=element_text(size=12))+
+    theme(legend.spacing.x = unit(0.2, 'cm'))+
+    theme(axis.title = element_text(size = 12))
+    
+  
+    
+  message("Principal Component Analysis plot of community simmilarity using Bray-Curtis distances")
   
   if(lines){
     p<- p +geom_segment(data = loadings, aes(x=0,y=0,xend=V1,yend=V2),arrow=arrow(length=unit(0.1,"cm")))
@@ -418,7 +431,12 @@ taxtab.pca.plot<-function(taxatab,master_sheet,factor1,lines=F,longnames=F,short
   }
   
   if(ellipse){
-    p<- p +stat_ellipse(aes(color=cmdspoints[,"field_method"]),type = "norm", level=0.75)
+    p<- p +stat_ellipse(aes(linetype=cmdspoints[,factor1]),type = "norm", level=0.90) #+
+    
+    #theme(legend.box = "horizontal")+
+    #guides(shape=guide_legend(override.aes = aes(label="")))+
+     # theme(legend.text = element_blank())
+    message("ellipses are drawn with a confidence level of 0.90")
   }
   
   p

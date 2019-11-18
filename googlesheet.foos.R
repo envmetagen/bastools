@@ -104,12 +104,13 @@ for(i in 1:length(primer_combo)){
 #subset a mastersheet based on required values
 # e.g
 # ms_ss<-subset_mastersheet(master_sheet,
-#                           experiment_id=c("2018_02")
+#                           list(experiment_id=c("2018_02")
 #                           ,Primer_set=c("12SV5.2","12SV51"),
-#                           Sample_Type=c("Field"))
+#                           Sample_Type=c("Field")))
 subset_mastersheet<-function(master_sheet,...){
   
-  a<-list(...)
+  a<-as.list(...)
+  
   print(a)
   
   m2<-master_sheet
@@ -131,5 +132,7 @@ master_xtabs<-function(master_sheet,columns){
   
   xtabs(data = master_sheet[,coln],addNA = T)
 }  
+
+
   
 
