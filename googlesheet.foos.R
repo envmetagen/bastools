@@ -16,16 +16,24 @@ google.read.master.url<-function(sheeturl,out=NULL,ws="Master_Samplesheet"){
   url2<-stringr::str_split(url2,"/")[[1]][1]
   ss_info<-googlesheets4::sheets_get(ss = url2)
   if(ws == "ENA_sample_data") {
-    ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,range = "A3:AZ") 
+    ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+    colnames(ss_data)<-ss_data[2,]
+    ss_data<-ss_data[3:length(ss_data$sample_alias),]
     ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
     } else{
-      ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws) 
+      if(ws == "ENA_library_data") { 
+      ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+      ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
+      } else{
+      ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
       ss_data<-as.data.frame(ss_data[!is.na(ss_data$Sample_Name),])
-  }
+      }
+    }
 
   if(!is.null(out)){
   write.table(ss_data,file = paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt"),quote = F,row.names = F,sep = "\t")
-  message(paste("file saved as",paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt")))}
+  message(paste("file saved as",paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt")))
+  }
   return(ss_data)
 }
 
