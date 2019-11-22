@@ -111,12 +111,14 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T){
   message("Ignoring the following taxa: NA;NA;NA;NA;NA;NA;NA & no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits")
   if(ex_hominidae) message(" & Hominidae")
   
+  if(is.null(ms_ss$sample_type)) stop("No column called sample_type")
+  
   taxatab2<-taxatab[taxatab$taxon!="NA;NA;NA;NA;NA;NA;NA",]
   taxatab2<-taxatab2[taxatab2$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
   if(ex_hominidae) taxatab2<-taxatab2[-grep("Hominidae",taxatab2$taxon),]
   
   #find negatives with reads
-  negs<-ms_ss[!ms_ss$Sample_Type %in% real,c("ss_sample_id","Sample_Type")]
+  negs<-ms_ss[!ms_ss$sample_type %in% real,c("ss_sample_id","sample_type")]
   reads.in.negs<-as.data.frame(colSums(taxatab2[colnames(taxatab2) %in% negs$ss_sample_id]))
   colnames(reads.in.negs)<-"reads"
   reads.in.negs$ss_sample_id<-rownames(reads.in.negs)
@@ -130,18 +132,18 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T){
 
     #taxatab by sample type
     taxatab.negs.list<-list()
-    for(i in 1:length(unique(negs$Sample_Type))){
-      taxatab.negs.list[[i]]<-cbind(taxon=taxatab.negs$taxon,taxatab.negs[colnames(taxatab.negs) %in% negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]])
+    for(i in 1:length(unique(negs$sample_type))){
+      taxatab.negs.list[[i]]<-cbind(taxon=taxatab.negs$taxon,taxatab.negs[colnames(taxatab.negs) %in% negs$ss_sample_id[negs$sample_type==unique(negs$sample_type)[i]]])
       taxatab.negs.list[[i]]<-taxatab.negs.list[[i]][rowSums(taxatab.negs.list[[i]][,-1,drop=FALSE])!=0,]
-      names(taxatab.negs.list)[i]<-unique(negs$Sample_Type)[i]
+      names(taxatab.negs.list)[i]<-unique(negs$sample_type)[i]
     }
     #summary sentence
-    for(i in 1:length(unique(negs$Sample_Type))){
-      message(gsub("-1","0",paste("from",length(negs$ss_sample_id[negs$Sample_Type==unique(negs$Sample_Type)[i]]), unique(negs$Sample_Type)[i],"samples", 
-                length(colnames(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]]))-1, "contained reads")))
+    for(i in 1:length(unique(negs$sample_type))){
+      message(gsub("-1","0",paste("from",length(negs$ss_sample_id[negs$sample_type==unique(negs$sample_type)[i]]), unique(negs$sample_type)[i],"samples", 
+                length(colnames(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]]))-1, "contained reads")))
       
-      if(length(colnames(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]]))>0){
-      print(taxatab.negs.list[grep(unique(negs$Sample_Type)[i],names(taxatab.negs.list))][[1]])}
+      if(length(colnames(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]]))>0){
+      print(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]])}
   }
 
   return(taxatab.negs.list)
@@ -490,4 +492,49 @@ keep.only.spL.assigns<-function(taxatab){
   taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
   taxatab<-rm.0readtaxSam(taxatab)
   return(taxatab)
+}
+
+sumreps<-function(taxatab,master_sheet){
+  #this gsub will not always work. e.g where sample names were chosen in google sheet, not exactly the same as sample
+  #DNA_samples<-unique(gsub("(.*)-(.*)-(.*)-(.*)$", "\\1", colnames(taxatab[,-1])))
+  
+  DNA_samples<-master_sheet[match(colnames(taxatab[,-1]),table = master_sheet[,"ss_sample_id"]),"Sample_Name"]
+  
+  taxatab2<-taxatab
+  colnames(taxatab2)<-c("taxon",DNA_samples)
+  
+  summed<-list()
+  for(i in 1:length(unique(DNA_samples))){
+    taxatab.temp<-as.data.frame(taxatab2[,grep(unique(DNA_samples)[i],colnames(taxatab2)),drop=F])
+    if(length(colnames(taxatab.temp))>1) taxatab.temp$sum<-rowSums(taxatab.temp) else taxatab.temp$sum<-taxatab.temp[,1]
+    
+    taxatab.temp2<-taxatab.temp[,"sum",drop=F]
+    
+    colnames(taxatab.temp2)<-gsub("sum",unique(DNA_samples)[i],colnames(taxatab.temp2))
+    
+    summed[[i]]<-taxatab.temp2
+  }
+    
+  taxatab.out<-cbind(taxatab$taxon,do.call(cbind, summed))
+}
+
+
+adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratum=NULL){
+  
+  taxatab2<-binarise.taxatab(taxatab)
+  distance_matrix<-taxatab2bray(taxatab2)
+  
+  if(samLevel=="ss_sample_id") master_sheet2<-master_sheet[master_sheet$ss_sample_id  %in% colnames(taxatab),]
+  
+  if(samLevel=="Sample_Name") master_sheet2<-master_sheet[master_sheet$Sample_Name  %in% colnames(taxatab),]
+  
+  if(!is.null(stratum)){
+    #model using adonis
+    vegan::adonis(distance_matrix~master_sheet2[,factor1],by="term",method="bray", data = master_sheet2,
+                  strata = master_sheet2[,stratum],permutations = 10000)
+  } else {
+    #model using adonis
+    vegan::adonis(distance_matrix~master_sheet2[,factor1],by="term",method="bray", data = master_sheet2,permutations = 10000)
+  }
+  
 }

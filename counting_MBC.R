@@ -47,16 +47,16 @@ otutab_C<-rm.0readOTUSam(taxatab = otutab_B)
 #OTUs.in.otutab<-length(otutab_C$OTU) #NOT REALLY NECESSARY
 after_size_select<-sum(otutab_C[,-1])
 
-# #import first taxa tab
-# taxatab_A<-data.table::fread(illumina_script_taxatab,data.table = F)
-# #subset 
-# taxatab_B<-cbind(taxon=taxatab_A$taxon,taxatab_A[,colnames(taxatab_A) %in% ms_ss$ss_sample_id])
-# #remove 0-read OTUs and samples
-# taxatab_C<-rm.0readtaxSam(taxatab = taxatab_B)
-# 
-# taxatab_pre_filter<-sum(taxatab_C[,-1])
-# 
-# #this is the same as otutab, so can exclude
+#import first taxa tab
+taxatab_A<-data.table::fread(illumina_script_taxatab,data.table = F)
+#subset
+taxatab_B<-cbind(taxon=taxatab_A$taxon,taxatab_A[,colnames(taxatab_A) %in% ms_ss$ss_sample_id])
+#remove 0-read OTUs and samples
+taxatab_C<-rm.0readtaxSam(taxatab = taxatab_B)
+##this is the same as otutab
+
+after_blast<-sum(taxatab_C[taxatab_C$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",-1])
+after_blast_filt<-after_blast-sum(taxatab_C[taxatab_C$taxon=="NA;NA;NA;NA;NA;NA;NA",-1])
 
 #import filtered taxa tab
 taxatab_A<-data.table::fread(illumina_script_taxatab_tf,data.table = F)
@@ -64,22 +64,19 @@ taxatab_A<-data.table::fread(illumina_script_taxatab_tf,data.table = F)
 taxatab_B<-cbind(taxon=taxatab_A$taxon,taxatab_A[,colnames(taxatab_A) %in% ms_ss$ss_sample_id])
 #remove 0-read OTUs and samples
 taxatab_C<-rm.0readtaxSam(taxatab = taxatab_B)
+#remove no hits and NA
+taxatab_D<-taxatab_C[taxatab_C$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+taxatab_D<-taxatab_D[taxatab_D$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+after.taxon.filter<-sum(taxatab_D[,-1])
 
-after.taxon.filter<-sum(taxatab_C[,-1])
-
-blast.no.hits<-sum(taxatab_C[taxatab_C$taxon=="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",-1])
-post.blast.filter.loss<-sum(taxatab_C[taxatab_C$taxon=="NA;NA;NA;NA;NA;NA;NA",-1])
-
-after_blast<-after.taxon.filter-blast.no.hits
-after_blast_filt<-after_blast-post.blast.filter.loss
 
 out<-data.frame("Demuliplexed files"=demuliplexed_files,
                 "After paired end alignment"=after_paired_end,
                 "After primer trimming"=after_cutadapt,
                 "After size selection"=after_size_select,
-                "After initial taxon filter"=after.taxon.filter,
                 "After blast"=after_blast,
-                "After blast filters"=after_blast_filt)
+                "After blast filters"=after_blast_filt,
+                "After initial taxon filter"=after.taxon.filter)
 
 colnames(out)<-gsub("\\."," ",colnames(out))
 
