@@ -515,7 +515,7 @@ sumreps<-function(taxatab,master_sheet){
     summed[[i]]<-taxatab.temp2
   }
     
-  taxatab.out<-cbind(taxatab$taxon,do.call(cbind, summed))
+  taxatab.out<-cbind(taxon=taxatab$taxon,do.call(cbind, summed))
 }
 
 
@@ -526,7 +526,11 @@ adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratu
   
   if(samLevel=="ss_sample_id") master_sheet2<-master_sheet[master_sheet$ss_sample_id  %in% colnames(taxatab),]
   
-  if(samLevel=="Sample_Name") master_sheet2<-master_sheet[master_sheet$Sample_Name  %in% colnames(taxatab),]
+  if(samLevel=="Sample_Name") {
+    master_sheet2<-master_sheet[master_sheet$Sample_Name  %in% colnames(taxatab),]
+    master_sheet2<-master_sheet2[!duplicated(master_sheet2$Sample_Name),]
+  }
+  
   
   if(!is.null(stratum)){
     #model using adonis

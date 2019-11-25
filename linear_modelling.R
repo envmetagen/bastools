@@ -13,7 +13,7 @@ interp.glm.bin<- function(model){
   for (i in 2:length(summary(model)$coefficients[,1])){
     print(paste0("for each increase of 1 unit ", rownames(summary(model)$coefficients)[i], ", ",
                  strsplit(as.character(summary(model)$call[2])," ~")[[1]][1]," increases ",
-                 round(exp(summary(model)$coefficients[i,"Estimate"]),digits = 2),
+                 round(exp(summary(model)$coefficients[i,"Estimate"]),digits = 4),
                  "times (p=",round(summary(model)$coefficients[i,"Pr(>|z|)"],digits=4),")"))
   }}
 
@@ -31,6 +31,18 @@ interp.lm <- function(model){
   for (i in 2:length(summary(model)$coefficients[,1])){
     print(paste0("for each increase of 1 unit ", rownames(summary(model)$coefficients)[i],", ",
                  strsplit(as.character(summary(model)$call[2])," ~")[[1]][1]," increases ",
-                 round(summary(model)$coefficients[i,"Estimate"],digits = 2),
+                 round(summary(model)$coefficients[i,"Estimate"],digits = 4),
                  " units (p=",round(summary(model)$coefficients[i,"Pr(>|t|)"],digits=4),")"))
   }}
+
+
+# plot.model<-function(model=a,df=sal_reads3[sal_reads3$field_method=="Capsule",],x="clarity",y="volume_filtered_L"){
+#   
+#   predicted_df <- data.frame(preds = predict(model, df),df[,x]) 
+#   
+#   ggplot(df,aes(df[,x],df[,y]))+
+#     geom_point()+
+#     geom_line(color='black',data = predicted_df, aes(y=preds, x=df...x.))
+#                              
+#   
+# }
