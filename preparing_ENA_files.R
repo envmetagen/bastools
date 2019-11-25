@@ -1,7 +1,8 @@
 #uploading ENA data via Aspera
 
 #CONFIG
-bastoolsDir<-"/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/git-bastools/bastools/"
+#bastoolsDir<-"/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/git-bastools/bastools/"
+bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
 
 #filturb datasheet
 sheeturl<-"https://docs.google.com/spreadsheets/d/1FUSaeVaYzms2EOGUoCAB4jaRKzguD3AKTsC8lYwaKP4/edit?ts=5dae01be#gid=1531090624"
@@ -19,7 +20,7 @@ email="basegeter@gmail.com"
 fileDir<-"/mnt/Disk2/MISEQ_RUNS/2018_07_FILTURB_IRANVERTS/FASTQ_GENERATION_3_18/"
 
 #outdir ENA upload sheets will be saved here
-outdir<-"/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/FILTURB/ENA/"
+outdir<-"/mnt/Disk2/MISEQ_RUNS/2018_07_FILTURB_IRANVERTS/FASTQ_GENERATION_3_18/"
 
 #final sample sheet filename
 sample_sheet_name<-"FILTURB_NORTH_ENA_SAMPLE_SHEET.txt"
@@ -52,7 +53,8 @@ sub_sample_sheet<-subset_mastersheet(sample_sheet, sample.subsetlist)
 #check again to see the subset made sense
 master_xtabs(sub_sample_sheet,columns=c("sample_type",names(sample.subsetlist)))
 
-#write - Needed here?
+#write 
+setwd(outdir)
 write.table(data.frame(V1=c("#checklist_accession","#unique_name_prefix"),V2=c("ERC000011","")),
             file = sample_sheet_name,quote = F,row.names = F,sep = "\t",col.names = F)
 write.table(sub_sample_sheet,file = sample_sheet_name,quote = F,row.names = F,sep = "\t",append = T)
@@ -76,6 +78,7 @@ write.table(x = library_sheet,file = library_sheet_name,quote = F,row.names = F,
 
 ########################################UPLOAD SEQUENCES
 #get filenames and check they exist
+setwd(fileDir)
 files<-c(library_sheet$forward_file_name,library_sheet$reverse_file_name)
 message(paste(sum(files %in% list.files()), "of", length(files), "files found, of which",files[duplicated(files)], "are duplicates"))
 
