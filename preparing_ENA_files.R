@@ -1,40 +1,31 @@
-#uploading ENA data via Aspera
+#making sample sheet, library sheet (adding md5sums), file list and password file
 
 #CONFIG
 #bastoolsDir<-"/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/git-bastools/bastools/"
 bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
-
 #filturb datasheet
 sheeturl<-"https://docs.google.com/spreadsheets/d/1FUSaeVaYzms2EOGUoCAB4jaRKzguD3AKTsC8lYwaKP4/edit?ts=5dae01be#gid=1531090624"
-
 #options for subsetting sample sheet 
 sample.subsetlist<-list(study=c("North"))
-
 #options for subsetting library sheet 
 library.subsetlist<-list(experiment_id=c("2018_07"), Primer_set=c("12SV51"), study=c("North"))
-
 #email
 email="basegeter@gmail.com"
-
 #directory with files for upload
 fileDir<-"/mnt/Disk2/MISEQ_RUNS/2018_07_FILTURB_IRANVERTS/FASTQ_GENERATION_3_18/"
-
 #outdir ENA upload sheets will be saved here
 outdir<-"/mnt/Disk2/MISEQ_RUNS/2018_07_FILTURB_IRANVERTS/FASTQ_GENERATION_3_18/"
-
 #final sample sheet filename
 sample_sheet_name<-"FILTURB_NORTH_ENA_SAMPLE_SHEET.txt"
-
 #final library sheet filename
 library_sheet_name<-"FILTURB_NORTH_ENA_LIBRARY_SHEET.txt"
-
 #name to give list of files
 filelist<-"FILTURB_NORTH_ENA_FILES.txt"
+#ENA passwor
+passwd<-"your_password"
 
-#make md5 files?
-makemd5s=T
 
-#CODE
+########################################CODE
 
 setwd(bastoolsDir)
 googlesheets4::sheets_auth(email = email)
@@ -78,7 +69,7 @@ library_sheet<-library_sheet[library_sheet$library_name %in% sub_master_sheet$li
 
 
 
-########################################UPLOAD SEQUENCES
+########################################FILE LIST 
 #get filenames and check they exist
 setwd(fileDir)
 files<-c(library_sheet$forward_file_name,library_sheet$reverse_file_name)
@@ -88,10 +79,8 @@ message(paste(sum(files %in% list.files()), "of", length(files), "files found, o
 write.table(files,file = filelist,quote = F,row.names = F,sep = "\t",col.names = F)
 
 
-#creating md5s
-if(makemd5s){
-  
-  checksum<-data.frame(md5=rep(0,length(files)))
+########################################MD5SUMS
+checksum<-data.frame(md5=rep(0,length(files)))
   
 for(i in 1:length(files)){
   checksum[i,1]<-system2("md5sum", args=files[i],stdout = T)
@@ -106,13 +95,13 @@ for(i in 1:length(files)){
 library_sheet$forward_file_md5<-checksum2$V1[1:length(library_sheet$forward_file_name)]
 library_sheet$reverse_file_md5<-checksum2$V1[length(library_sheet$reverse_file_name)+1:
                                                 length(library_sheet$reverse_file_name)]
-}
 
-#write 
+
+#write livrary sheet
 write.table(x = library_sheet,file = library_sheet_name,quote = F,row.names = F,sep = "\t",col.names = T)
 
-
-write.table("tigress33",file = "ENA_password.txt",quote = F,row.names = F,sep = "\t",col.names = F)
+#write password file
+write.table(passwd,file = "ENA_password.txt",quote = F,row.names = F,sep = "\t",col.names = F)
 
 #run from terminal
 #emg_ena_upload.sh -l filelist -u Webin-51203 -p ENA_password.txt
