@@ -31,6 +31,9 @@ library_sheet_name<-"FILTURB_NORTH_ENA_LIBRARY_SHEET.txt"
 #name to give list of files
 filelist<-"FILTURB_NORTH_ENA_FILES.txt"
 
+#make md5 files?
+makemd5s=T
+
 #CODE
 
 setwd(bastoolsDir)
@@ -73,16 +76,48 @@ library_sheet<-google.read.master.url(sheeturl,ws = "ENA_library_data")
 #subset by sample sheet
 library_sheet<-library_sheet[library_sheet$library_name %in% sub_master_sheet$library_name,]
 
-#write - Needed here?
-write.table(x = library_sheet,file = library_sheet_name,quote = F,row.names = F,sep = "\t",col.names = T)
+
 
 ########################################UPLOAD SEQUENCES
 #get filenames and check they exist
 setwd(fileDir)
 files<-c(library_sheet$forward_file_name,library_sheet$reverse_file_name)
-message(paste(sum(files %in% list.files()), "of", length(files), "files found, of which",files[duplicated(files)], "are duplicates"))
+message(paste(sum(files %in% list.files()), "of", length(files), "files found, of which",
+              length(files[duplicated(files)]), "are duplicates", files[duplicated(files)]))
 
 write.table(files,file = filelist,quote = F,row.names = F,sep = "\t",col.names = F)
 
 
-            
+#creating md5s
+if(makemd5s){
+  
+  checksum<-data.frame(md5=rep(0,length(files)))
+  
+for(i in 1:length(files)){
+  checksum[i,1]<-system2("md5sum", args=files[i],stdout = T)
+  #a<-read.table(paste0(files[i],".md5"))
+  #a$V2=NULL
+  #write.table(a,file = paste0(files[i],".md5"),quote = F,row.names = F,sep = "\t",col.names = F)
+}
+  checksum2<-as.data.frame(do.call(rbind,stringr::str_split(checksum$md5," ")))
+  checksum2$V2<-NULL
+
+#add md5 to library data
+library_sheet$forward_file_md5<-checksum2$V1[1:length(library_sheet$forward_file_name)]
+library_sheet$reverse_file_md5<-checksum2$V1[length(library_sheet$reverse_file_name)+1:
+                                                length(library_sheet$reverse_file_name)]
+}
+
+#write 
+write.table(x = library_sheet,file = library_sheet_name,quote = F,row.names = F,sep = "\t",col.names = T)
+
+
+write.table("tigress33",file = "ENA_password.txt",quote = F,row.names = F,sep = "\t",col.names = F)
+
+#run from terminal
+#emg_ena_upload.sh -l filelist -u Webin-51203 -p ENA_password.txt
+        
+#go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
+#or here for real https://www.ebi.ac.uk/ena/submit/sra/
+
+####need to see if can upload md5s directly to google sheet
