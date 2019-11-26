@@ -23,7 +23,7 @@ library_sheet_name<-"GUELTA1_ENA_LIBRARY_SHEET.txt"
 #name to give list of files
 filelist<-"GUELTA1_ENA_FILES.txt"
 #ENA password
-passwd<-"tigress33"
+passwd<-"your_password"
 
 
 ########################################CODE
