@@ -63,7 +63,7 @@ message("STEP2 COMPLETE")
 }
 
 #######################################################
-#Step2a - extract genes
+#Step2a - not extracting genes
 if("step2a" %in% stepstotake){
   
   message("RUNNING STEP2a")
