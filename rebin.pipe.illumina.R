@@ -17,17 +17,17 @@ setwd(outDir)
 ####################################################
 #step1 check unknown fams
 
-if("step1" %in% stepstotake){  
-  
-  message("STEP1")
-  for(i in 1:length(contr.files)){
-  
-  message(paste("checking unknown families for",contr.files[i]))
-  
-  report.unknown.fams.blast.filt(contr.file = contr.files[i])        
-    
-  }
-}
+# if("step1" %in% stepstotake){  
+#   
+#   message("STEP1")
+#   for(i in 1:length(contr.files)){
+#   
+#   message(paste("checking unknown families for",contr.files[i]))
+#   
+#   report.unknown.fams.blast.filt(contr.file = contr.files[i])        
+#     
+#   }
+# }
 
 ####################################################
 #step9 rebin
@@ -36,10 +36,10 @@ if("step9" %in% stepstotake){
   
   message("STEP9")
   
-  disabledTaxaDf<-read.table(disabledTaxaFile, header=T,sep = "\t")
-  if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
-  
-  disabledTaxa<-disabledTaxaDf$taxids
+  # disabledTaxaDf<-read.table(disabledTaxaFile, header=T,sep = "\t")
+  # if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
+  # 
+  # disabledTaxa<-disabledTaxaDf$taxids
   
   for(i in 1:length(files)){
     message(paste("binning filtered blast results for",files[i]))
@@ -48,7 +48,7 @@ if("step9" %in% stepstotake){
                                 stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
                obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,
-               abspident = abspident,disabledTaxa = disabledTaxa)
+               abspident = abspident,disabledTaxaFiles = disabledTaxaFiles,disabledTaxaOut = disabledTaxaOut)
   }
   
   message("STEP9 complete")
@@ -129,7 +129,8 @@ if("step13" %in% stepstotake){
     check.low.res.df(
       filtered.taxatab = filtered.taxatab,filtered_blastfile = files[i],
       binfile<-paste0(experiment_id[i],"_",gsub(".blast.filt.txt",".rebins.txt",
-                    stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])])))
+                    stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
+      ,disabledTaxaFile = disabledTaxaFile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
   message("STEP13 complete")
   

@@ -167,7 +167,7 @@ if("step13" %in% stepstotake){
     check.low.res.df(
       filtered.taxatab = files[i],filtered_blastfile = filtered_blastfile,
       binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile))
-      ,disabledTaxa = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
+      ,disabledTaxaFile = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
   message("STEP13 complete")
   
