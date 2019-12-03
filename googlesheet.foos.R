@@ -25,10 +25,16 @@ google.read.master.url<-function(sheeturl,out=NULL,ws="Master_Samplesheet"){
       ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
       ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
       } else{
-      ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
-      ss_data<-as.data.frame(ss_data[!is.na(ss_data$Sample_Name),])
-      }
+        if(ws == "Library_data") { 
+          ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+          ss_data<-as.data.frame(ss_data[!is.na(ss_data$run_alias),])
+        } else{
+          ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+          ss_data<-as.data.frame(ss_data[!is.na(ss_data$Sample_Name),])
+          }
+        }
     }
+
 
   if(!is.null(out)){
   write.table(ss_data,file = paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt"),quote = F,row.names = F,sep = "\t")

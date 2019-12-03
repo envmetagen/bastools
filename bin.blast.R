@@ -493,6 +493,27 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
   
   if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
   
+  #check that if genus disabled, species within that genus also should be 
+  temp<-disabledTaxaDF[(disabledTaxaDF$disable_genus==T & disabledTaxaDF$disable_species==F),"contributors"]
+    if(length(temp)>0) {
+      print(temp)
+      stop("Genus was disabled for this contributor, but species was not")
+    }
+  
+  #check that if family disabled, species within that family also should be 
+  temp<-disabledTaxaDF[(disabledTaxaDF$disable_family==T & disabledTaxaDF$disable_species==F),"contributors"]
+  if(length(temp)>0) {
+    print(temp)
+    stop("Family was disabled for this contributor, but species was not")
+  }
+  
+  #check that if family disabled, genus within that family also should be 
+  temp<-disabledTaxaDF[(disabledTaxaDF$disable_family==T & disabledTaxaDF$disable_genus==F),"contributors"]
+  if(length(temp)>0) {
+    print(temp)
+    stop("Family was disabled for this contributor, but genus was not")
+  }
+    
   write.table(disabledTaxaDF,disabledTaxaOut,col.names = T,row.names = F,quote = F,sep = "\t")
   
   return(disabledTaxaDF)
