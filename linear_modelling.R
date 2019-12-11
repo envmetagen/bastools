@@ -36,13 +36,3 @@ interp.lm <- function(model){
   }}
 
 
-# plot.model<-function(model=a,df=sal_reads3[sal_reads3$field_method=="Capsule",],x="clarity",y="volume_filtered_L"){
-#   
-#   predicted_df <- data.frame(preds = predict(model, df),df[,x]) 
-#   
-#   ggplot(df,aes(df[,x],df[,y]))+
-#     geom_point()+
-#     geom_line(color='black',data = predicted_df, aes(y=preds, x=df...x.))
-#                              
-#   
-# }

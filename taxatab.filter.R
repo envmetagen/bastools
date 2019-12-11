@@ -47,7 +47,7 @@ sample.filter.solo<-function(taxatab,samplepc=0.1){
 
 rm.0readtaxSam<-function(taxatab){
   taxatab2<-taxatab[rowSums(taxatab[,-1])!=0,]
-  taxatab3<-cbind(taxon=taxatab2$taxon,taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
+  taxatab3<-cbind(taxon=taxatab2[,1],taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
 }
 
 rm.0readOTUSam<-function(taxatab){
@@ -55,11 +55,37 @@ rm.0readOTUSam<-function(taxatab){
   taxatab3<-cbind(OTU=taxatab2$OTU,taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
 }
 
+merge.taxatabs<-function(taxatabs.list){
+  if(!is.list(taxatabs.list)) stop("taxatabs must be in a list")
+  if(length(taxatabs.list)>2) stop("Can only merge two taxatabs at a time")
+  require(dplyr)
+  merged.taxatab<-taxatabs.list %>% purrr::reduce(full_join, by = "taxon")
+  merged.taxatab[is.na(merged.taxatab)]<-0
+  count1<-sum(taxatabs.list[[1]][,-1])
+  count2<-sum(taxatabs.list[[2]][,-1])
+  count3<-sum(merged.taxatab[,-1])
+  message(paste("Merged", count1, "reads from taxatab1 with",count2, "reads from taxatab2 to produce merged table with",count3, "reads."))
+  if(count3==count1+count2) message("Read counts all good")
+  if(count3!=count1+count2) message("Something went wrong with reads counts")
+  message(paste("Merged", length(taxatabs.list[[1]][,1]), "taxa from taxatab1 with" , length(taxatabs.list[[2]][,1]),
+         "taxa from taxatab2 to make final list of",length(merged.taxatab[,1])))
+  message(paste("Merged", length(colnames(taxatabs.list[[1]][,-1])), "samples from taxatab1 with" , length(colnames(taxatabs.list[[2]][,-1])),
+                "samples from taxatab2 to make final list of",length(colnames(merged.taxatab[,-1]))))
+  return(merged.taxatab)
+  }
+
+
 filter.dxns<-function(taxatab,filter_dxn=50){
   taxatab2<-taxatab[,-1]
+  reads1<-sum(taxatab2)
+  dxns1<-sum(taxatab2>0)
   taxatab2[taxatab2<filter_dxn] <- 0
+  reads2<-sum(taxatab2)
+  dxns2<-sum(taxatab2>0)
   taxatab2<-cbind(taxon=taxatab$taxon,taxatab2)  
   taxatab2<-rm.0readtaxSam(taxatab2)
+  message(paste("reads removed:",reads1-reads2,"from",reads1, "; detections removed:",dxns1-dxns2,"from",dxns1))
+  return(taxatab2)
 }
 
 count.dxns.by.taxon<-function(taxatab){
@@ -468,7 +494,7 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code){
         
         #put taxon counts to 0
         contaminations<-cbind(taxon=taxatab$taxon[taxatab$taxon %in% negtaxa],taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples])
-        contaminations<-cbind(taxon=contaminations$taxon,contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
+        contaminations<-cbind(taxon=contaminations[,1],contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
         taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples]<-0
         
         sumafter<-sum(taxatab[,-1])

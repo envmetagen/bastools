@@ -1,18 +1,18 @@
-#' Some colours I like to use for plots (n=29)
-#'@export
-MyCols <- c("dodgerblue2","#E31A1C", # red
-            "green4",
-            "#6A3D9A", # purple
-            "#FF7F00", # orange
-            "black","gold1",
-            "skyblue2","#FB9A99", # lt pink
-            "palegreen2",
-            "#CAB2D6", # lt purple
-            "#FDBF6F", # lt orange
-            "gray70", "khaki2",
-            "maroon","orchid1","deeppink1","blue1","steelblue4",
-            "darkturquoise","green1","yellow4","yellow3",
-            "darkorange4","brown","chartreuse2","coral4","darkslategray1","mediumseagreen")
+#' #' Some colours I like to use for plots (n=29)
+#' #'@export
+#' MyCols <- c("dodgerblue2","#E31A1C", # red
+#'             "green4",
+#'             "#6A3D9A", # purple
+#'             "#FF7F00", # orange
+#'             "black","gold1",
+#'             "skyblue2","#FB9A99", # lt pink
+#'             "palegreen2",
+#'             "#CAB2D6", # lt purple
+#'             "#FDBF6F", # lt orange
+#'             "gray70", "khaki2",
+#'             "maroon","orchid1","deeppink1","blue1","steelblue4",
+#'             "darkturquoise","green1","yellow4","yellow3",
+#'             "darkorange4","brown","chartreuse2","coral4","darkslategray1","mediumseagreen")
 
 #
 #' Plot output from function ecopcr.hit.table

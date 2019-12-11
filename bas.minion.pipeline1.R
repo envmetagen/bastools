@@ -21,7 +21,7 @@ if("step0" %in% stepstotake){
   
   message("STEP0")
   
-experimentsheet<-google.make.experiment.sheet(outDir,sheeturls,experiment_id) #in process, writes a sheet to file 
+experimentsheet<-google.read.master.url(sheeturl = sheeturl,out = T) #in process, writes a sheet to file 
 
 #get barcodes used  
 barcodes.used<-unique(experimentsheet$barcode_id)
@@ -45,15 +45,15 @@ for(i in 1:length(primer_combo)){
 message("size calc includes primer lengths at the moment")
 minlength<-list()
 for(i in 1:length(primer_combo)){
-  minlength[[i]]<-sum(experimentsheet[experimentsheet$primer_combo==primer_combo[i],
-                                      "Min_length"][1],nchar(primer_combo[i]))
+  minlength[[i]]<-sum(as.integer(experimentsheet[experimentsheet$primer_combo==primer_combo[i],
+                                      "Min_length"][1]),nchar(primer_combo[i]))
   names(minlength[[i]])<-names(primer_combo.bcs[[i]][1])
 }
 
 maxlength<-list()
 for(i in 1:length(primer_combo)){
-  maxlength[[i]]<-sum(experimentsheet[experimentsheet$primer_combo==primer_combo[i],
-                                      "Max_length"][1],nchar(primer_combo[i]))
+  maxlength[[i]]<-sum(as.integer(experimentsheet[experimentsheet$primer_combo==primer_combo[i],
+                                      "Max_length"][1]),nchar(primer_combo[i]))
   names(maxlength[[i]])<-names(primer_combo.bcs[[i]][1])
 }
 
@@ -157,7 +157,7 @@ if("step3" %in% stepstotake){
 
 
 ####################################################
-#step 4 demultiplex
+#step 4 dereplicate
 if("step4" %in% stepstotake){
   
   message("STEP4")
@@ -177,7 +177,7 @@ if("step5" %in% stepstotake){
   
   message("STEP5")
   
-  if("step5" %in% stepstotake) {
+  if("step4" %in% stepstotake) {
     files<-list.files(path = outDir,pattern="*.uniq.filtlen.wlen.obi.fasta")} else {
       files<-list.files(path = outDir,pattern="*.filtlen.wlen.obi.fasta")
     }
@@ -232,7 +232,9 @@ if("step7" %in% stepstotake){
                                      wait = T, ncbiTaxDir = ncbiTaxDir)
   }
   
+  if(class(startingfastas)=="data.frame"){
   check.blasts(infastas = as.character(startingfastas[,1]),h = blast.status)
+  } else {check.blasts(infastas = as.character(startingfastas),h = blast.status)}
   
   message("STEP7 complete")
 }

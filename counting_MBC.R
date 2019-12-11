@@ -3,6 +3,7 @@
 count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_script_taxatab_tf){
 ##########################################
   message("Currently set up for one run, one primer, modify later if needed")
+  if(!"ss_sample_id" %in% colnames(ms_ss)) stop("No column in ms_ss called ss_sample_id")
 #import counts step1
 step1<-data.table::fread(paste0(MBCtsvDir,"step1_stats.tsv"),data.table = F)
 step1$ss_sample_id<-gsub(".none.*$","",step1$Stats)
@@ -43,7 +44,7 @@ otutab_A<-data.table::fread(otutab,data.table = F)
 #subset 
 otutab_B<-cbind(OTU=otutab_A$`#OTU ID`,otutab_A[,colnames(otutab_A) %in% ms_ss$ss_sample_id])
 #remove 0-read OTUs and samples
-otutab_C<-rm.0readOTUSam(taxatab = otutab_B)
+otutab_C<-rm.0readtaxSam(taxatab = otutab_B)
 #OTUs.in.otutab<-length(otutab_C$OTU) #NOT REALLY NECESSARY
 after_size_select<-sum(otutab_C[,-1])
 
@@ -73,7 +74,7 @@ after.taxon.filter<-sum(taxatab_D[,-1])
 out<-data.frame("Demuliplexed files"=demuliplexed_files,
                 "After paired end alignment"=after_paired_end,
                 "After primer trimming"=after_cutadapt,
-                "After size selection"=after_size_select,
+                "After size selection and singleton removal"=after_size_select,
                 "After blast"=after_blast,
                 "After blast filters"=after_blast_filt,
                 "After initial taxon filter"=after.taxon.filter)
