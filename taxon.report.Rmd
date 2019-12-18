@@ -1,0 +1,181 @@
+---
+title: "Processing a taxatable post MBC and illumina_post_MBC_script2.R"
+html_notebook: default
+subtitle: ''
+classoption: portrait
+output: html_document
+fig_crop: no
+
+---
+## things this script should do  
+
+```{r, eval=TRUE, results='hide'}
+#load taxatable(s)
+#load single mastersheet
+#subset the mastersheet if desired
+##if using subset mastersheet, use only subset taxatable (or merged taxatable if >1 supplied)
+#show summary: taxa list, sum of reads, min and max reads in a sample, no. samples
+#apply taxonpc and samplepc 
+#apply detection filter
+
+```
+
+## settings 
+```{r, eval=TRUE}
+#if multiple, will be merged
+taxatabs<-c("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/FILTURB_12S_BLAST/FILTURB-2018_07_12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.taxatable.tf.spliced.txt")
+
+#filturb datasheet
+ss_url<-"https://docs.google.com/spreadsheets/d/1FUSaeVaYzms2EOGUoCAB4jaRKzguD3AKTsC8lYwaKP4/edit?ts=5dae01be#gid=1531090624"
+
+#options for subsetting master sheet 
+subsetlist<-list(experiment_id=c("2018_07"), Primer_set=c("12SV5.2"),study=c("South"))
+
+#taxon and sample filters (0.1=0.1%)
+taxonpc=0.1
+samplepc=0.1
+
+#detection filter (detection less than this will be removed)
+filter_dxn=100
+
+bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
+
+#sample_type for "real" samples (not negatives)
+real=c("Field")
+
+#columns in master sheet to make barplots of
+columns=c("biomaterial","sample_type","Site")
+
+#print taxon tables for negatives (even if not printed, plots will still be made)
+printnegs=F
+
+#print taxon tables for removal of contaminants
+printcontaminations=F
+
+#group code to remove contaminants based on negatives. e.g. for water field negatives, group code is probably site or something similar. For extraction negatives it is probably extraction batch etc. This should be improved to handle multiple codes
+group.code="Site"
+
+```
+
+## load functions
+```{r, eval=TRUE, results='hide'}
+setwd(bastoolsDir)
+source("master_functions.R")
+library(ggplot2)
+library(googlesheets4)
+sheets_auth(email = "basegeter@gmail.com")
+options(httr_oob_default = TRUE)
+```
+
+## organise mastersheet
+```{r, eval=TRUE,echo=F}
+master_sheet<-google.read.master.url(ss_url)
+
+#check on number of samples in each category
+message("Showing xtabs for entire datasheet, including Sample_Type by default")
+master_xtabs(master_sheet,columns=c("sample_type",names(subsetlist)))
+
+#subset master sheet for this study
+message("Subsetting datasheet, check output to see if it made sense")
+ms_ss<-subset_mastersheet(master_sheet, subsetlist)
+
+#check again to see the subset made sense
+master_xtabs(ms_ss,columns=c("sample_type",names(subsetlist)))
+```
+
+## import taxtabs and subset
+```{r, eval=TRUE,echo=F}
+#import taxtabs
+all.taxatabs<-bas.merge.taxatabs(taxatabs)
+```
+
+## make new taxa table based on subsetted master sheet
+```{r, eval=TRUE,echo=F}
+all.taxatabs.ss<-cbind(taxon=all.taxatabs$taxon,all.taxatabs[colnames(all.taxatabs) %in% ms_ss$ss_sample_id])
+
+#remove samples/taxa with 0 reads
+message("Removing taxa/samples with 0 reads")
+all.taxatabs.ss<-rm.0readtaxSam(all.taxatabs.ss)
+
+#summary
+message("Showing summary of detections")
+a<-summary.dxns.by.taxon(all.taxatabs.ss)
+DT::datatable(a, rownames = FALSE, options = list(pageLength = 50, scrollX=T,scrollX=T))
+
+b<-ggplot(a, aes(x="", y=total.reads, fill=taxon))+
+geom_bar(width = 1, stat = "identity")+ coord_polar("y", start=0)
+
+if(length(a$taxon)<29) b<-b+scale_fill_manual(values = MyCols)
+
+print(b)
+```
+
+## apply taxon and sample filters 
+```{r, eval=TRUE,echo=F}
+#Filter samples before removing the NAs and no_hits
+all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
+all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=samplepc)
+```
+
+## remove the NAs and no_hits
+```{r, eval=TRUE,echo=F}
+count1<-sum(all.taxatabs.ss[,-1])
+all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+count2<-sum(all.taxatabs.ss[,-1])
+message(paste(count1-count2, "'NA' reads removed"))
+all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+count3<-sum(all.taxatabs.ss[,-1])
+message(paste(count2-count3, "'No_hits' reads removed"))
+```
+
+## stack plots
+```{r, eval=TRUE,echo=F}
+message("Plotting taxatable according to selected master sheet columns, values=reads, plotted as %")
+for(i in 1:length(columns)){
+  a<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = columns[i],as.percent = T,as.dxns = F,hidelegend = T)
+  print(a[[1]])
+}
+
+message("Plotting taxatable according to selected master sheet columns, values=reads, plotted as raw")
+for(i in 1:length(columns)){
+  a<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = columns[i],as.percent = T,as.dxns = F,hidelegend = T)
+  print(a[[1]])
+}
+
+message("Plotting taxatable according to selected master sheet columns, values=detections,plotted as raw")
+for(i in 1:length(columns)){
+  a<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = columns[i],as.percent = F,as.dxns = T,hidelegend = T)
+  print(a[[1]])
+}
+
+print(a[[2]])
+
+```
+
+
+## check negatives
+```{r, eval=TRUE,echo=F}
+#check negatives
+if(printnegs==F) message("Hiding tabular output of negatives")
+
+negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F,printnegs = printnegs)
+
+for(i in 1:length(negatives)){
+  message(paste("Plotting", names(negatives)[i]))
+  if(length(negatives[[i]])>0) print(taxatab.stackplot(negatives[[i]]))
+}
+```
+
+## test removing contaminants blindly
+```{r, eval=TRUE,echo=F}
+#just to look:
+all.taxatabs.ss.rmcons<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.code = group.code,printcontaminations = printcontaminations)
+#note - if I have PCR or extraction negs, need to think about the group carefully
+
+```
+
+## check with removing detections 
+```{r, eval=TRUE,echo=F}
+message("Applying detection filter")
+all.taxatabs.ss.dxnfilter<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
+```

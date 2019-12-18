@@ -80,7 +80,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   
   if(!is.null(disabledTaxaFiles)){
     message("disabling the following taxa at species level:")
-    print(disabledSpecies$contributors)
+    print(unique(disabledSpecies$contributors))
     btabsp<-btabsp[!btabsp$taxids %in% disabledSpecies$taxids,]
   }
   
@@ -124,7 +124,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   
   if(!is.null(disabledTaxaFiles)){
     message("disabling the following taxa at genus level:")
-    print(disabledGenus$contributors)
+    print(unique(disabledGenus$contributors))
     btabg<-btabg[!btabg$taxids %in% disabledGenus$taxids,]
   }
   
@@ -173,7 +173,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   
   if(!is.null(disabledTaxaFiles)){
     message("disabling the following taxa at family level:")
-    print(disabledFamily$contributors)
+    print(unique(disabledFamily$contributors))
     btabf<-btabf[!btabf$taxids %in% disabledFamily$taxids,]
   }
   
@@ -475,6 +475,7 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
     if(!"contributors" %in% colnames(disabledTaxaDFList[[i]])) stop(paste("No column called 'contributors' in", disabledTaxaFiles[i]))
     
     disabledTaxaDFList[[i]]<-disabledTaxaDFList[[i]][,c("contributors","taxids","disable_species","disable_genus","disable_family")]
+    disabledTaxaDFList[[i]]$file<-disabledTaxaFiles[i]
   }
   
   disabledTaxaDF<-do.call(rbind,disabledTaxaDFList)
@@ -484,7 +485,7 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
   shouldstop<-list()
   for(i in 1:length(unique(disabledTaxaDF$contributors))){
     temp<-disabledTaxaDF[disabledTaxaDF$contributors==unique(disabledTaxaDF$contributors)[i],]
-    if(length(temp$contributors)>1) if(sum(duplicated(temp[,c(-1,-2)]))!=length(temp$contributors)-1) {
+    if(length(temp$contributors)>1) if(sum(duplicated(temp[,c(-1,-2,-6)]))!=length(temp$contributors)-1) {
       message("inconsistent disabling detected")
       print(temp)
       shouldstop[[i]]<-temp

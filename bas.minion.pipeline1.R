@@ -4,14 +4,8 @@ library(dplyr)
 
 setwd(bastoolsDir)
 googlesheets::gs_auth() 
-source("blast.min.bas.R")
-source("googlesheet.foos.R")
+source("master_functions.R")
 source("bin.blast.R")
-source("add.taxids.fasta.BAS.R")
-source("taxatab.filter.R")
-source("merge_MBC_otutab_with_bin_blast.R")
-source("plotting.R")
-
 setwd(outDir)
 
 ####################################################
@@ -21,7 +15,7 @@ if("step0" %in% stepstotake){
   
   message("STEP0")
   
-experimentsheet<-google.read.master.url(sheeturl = sheeturl,out = T) #in process, writes a sheet to file 
+experimentsheet<-google.make.experiment.sheet(outDir,sheeturls,experiment_id)#in process, writes a sheet to file 
 
 #get barcodes used  
 barcodes.used<-unique(experimentsheet$barcode_id)
@@ -148,7 +142,7 @@ if("step3" %in% stepstotake){
   for(i in 1:length(minlength)){
     file<-paste0(outDir,grep(names(minlength[[i]]),files,value = T))
     system2(command = "obigrep",args = c("-l",minlength[[i]],"-L",maxlength[[i]], file),wait = T,
-              stdout =  gsub(".wlen.obi.fasta",".filtlen.wlen.obi.fasta",file ))
+               stdout =  gsub(".wlen.obi.fasta",".filtlen.wlen.obi.fasta",file ))
   }
   
   message("STEP3 complete")
@@ -310,7 +304,7 @@ if("step11" %in% stepstotake){
   
   files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.txt$"),value = T))
   
-  taxon.filter.solo(files,filterpc)
+  taxon.filter.solo(files = files,filterpc = filterpc)
   
   message("STEP11 complete")
   
@@ -324,7 +318,7 @@ if("step12" %in% stepstotake){
   message("STEP12")
   
   files<-grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.tf.txt$"),value = T)
-  splice.taxatables(files,mastersheet = paste0(outDir,experiment_id,"_experiment_sheet.txt"))
+  splice.taxatables(files = files,mastersheet = paste0(outDir,experiment_id,"_experiment_sheet.txt"))
   
   message("STEP12 complete")
   
@@ -357,8 +351,9 @@ if("step13" %in% stepstotake){
     
     check.low.res.df(
       filtered.taxatab = files[i],filtered_blastfile,
-      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile)))
-  }
+      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile)),
+      spident = spident, gpident = gpident,fpident = fpident,abspident = abspident)
+    }
   message("STEP13 complete")
   
 }

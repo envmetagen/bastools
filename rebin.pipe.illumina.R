@@ -4,30 +4,9 @@ library(dplyr)
 
 setwd(bastoolsDir)
 googlesheets::gs_auth() 
-source("blast.min.bas.R")
-source("googlesheet.foos.R")
+source("master_functions.R")
 source("bin.blast.R")
-source("add.taxids.fasta.BAS.R")
-source("taxatab.filter.R")
-source("merge_MBC_otutab_with_bin_blast.R")
-source("plotting.R")
-
 setwd(outDir)
-
-####################################################
-#step1 check unknown fams
-
-# if("step1" %in% stepstotake){  
-#   
-#   message("STEP1")
-#   for(i in 1:length(contr.files)){
-#   
-#   message(paste("checking unknown families for",contr.files[i]))
-#   
-#   report.unknown.fams.blast.filt(contr.file = contr.files[i])        
-#     
-#   }
-# }
 
 ####################################################
 #step9 rebin
@@ -35,11 +14,6 @@ setwd(outDir)
 if("step9" %in% stepstotake){  
   
   message("STEP9")
-  
-  # disabledTaxaDf<-read.table(disabledTaxaFile, header=T,sep = "\t")
-  # if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
-  # 
-  # disabledTaxa<-disabledTaxaDf$taxids
   
   for(i in 1:length(files)){
     message(paste("binning filtered blast results for",files[i]))
@@ -130,7 +104,7 @@ if("step13" %in% stepstotake){
       filtered.taxatab = filtered.taxatab,filtered_blastfile = files[i],
       binfile<-paste0(experiment_id[i],"_",gsub(".blast.filt.txt",".rebins.txt",
                     stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
-      ,disabledTaxaFile = disabledTaxaFile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
+      ,disabledTaxaFile = disabledTaxaOut,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
   message("STEP13 complete")
   
@@ -150,8 +124,3 @@ if("step14" %in% stepstotake){
   message("STEP14 complete")
   
 }
-
-
-
-
-

@@ -17,6 +17,7 @@ taxon.filter.solo<-function(files,filterpc=0.1){
 }
 
 taxon.filter.solo.df<-function(taxatab,taxonpc=0.1){
+  message("Applying taxon_pc filter.")
   taxatab2<-taxatab[,-1]
   a<-sum(taxatab2)
   taxatab.PCS<-sweep(taxatab2, MARGIN = 1, STATS = rowSums(taxatab2), FUN = "/")*100
@@ -144,7 +145,7 @@ bas.group.taxa<-function(taxatab,taxon, jointo){
   taxatab<-rbind(taxatab,taxontable4)
 }
 
-negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T){
+negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T,printnegs=T){
   message("Ignoring the following taxa: NA;NA;NA;NA;NA;NA;NA & no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits")
   if(ex_hominidae) message(" & Hominidae")
   
@@ -179,8 +180,11 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T){
       message(gsub("-1","0",paste("from",length(negs$ss_sample_id[negs$sample_type==unique(negs$sample_type)[i]]), unique(negs$sample_type)[i],"samples", 
                                   length(colnames(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]]))-1, "contained reads")))
       
+      if(printnegs==T){
       if(length(colnames(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]]))>0){
-        print(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]])}
+        print(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]])
+        }
+      }
     }
     
     return(taxatab.negs.list)
@@ -189,7 +193,7 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T){
 }
 
 #remove contaminant taxa from samples, based on occurrences in negatives
-remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code){
+remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code,printcontaminations=T){
   
   totalstart<-sum(taxatab[,-1,drop=F])
   
@@ -234,8 +238,10 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code){
         
         message(paste(sumb4-sumafter,"reads removed from",sum(contaminations[,-1,drop=F]>0),"detection(s) in",
                       length(colnames(contaminations[,-1,drop=F])),"sample(s), of which",sumnegtaxa,"were in the negative. See table below for details:"))
-        print(contaminations)
-      }
+        if(printcontaminations==T) {
+          print(contaminations)
+          }else(message("Not printing contamination table"))
+        }
     }
   }
   taxatab<-rm.0readtaxSam(taxatab)
@@ -254,13 +260,17 @@ keep.only.spL.assigns<-function(taxatab){
 }
 
 adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratum=NULL){
-  
+  taxatab<-rm.0readtaxSam(taxatab)
   taxatab2<-binarise.taxatab(taxatab)
   distance_matrix<-taxatab2bray(taxatab2)
   
-  if(samLevel=="ss_sample_id") master_sheet2<-master_sheet[master_sheet$ss_sample_id  %in% colnames(taxatab),]
+  if(samLevel=="ss_sample_id") {
+    if(!"ss_sample_id" %in% colnames(master_sheet)) stop("No column called ss_sample_id")
+    master_sheet2<-master_sheet[master_sheet$ss_sample_id  %in% colnames(taxatab),]
+  }
   
   if(samLevel=="Sample_Name") {
+    if(!"Sample_Name" %in% colnames(master_sheet)) stop("No column called ss_sample_id")
     master_sheet2<-master_sheet[master_sheet$Sample_Name  %in% colnames(taxatab),]
     master_sheet2<-master_sheet2[!duplicated(master_sheet2$Sample_Name),]
   }
@@ -385,7 +395,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
       continue[i,2]<-readline(paste0("The following file already exists, Overwrite? (y/n):", "
                                      ",gsub(x = infastas[i],pattern = ".fasta",replacement = ".blast.txt")))
     }
-    }
+  }
   
   if("n" %in% continue$response) stop("Abandoned blast due to overwrite conflict")
   
@@ -597,7 +607,7 @@ interp.glm.bin<- function(model){
     print(paste0("for each increase of 1 unit ", rownames(summary(model)$coefficients)[i], ", ",
                  strsplit(as.character(summary(model)$call[2])," ~")[[1]][1]," increases ",
                  round(exp(summary(model)$coefficients[i,"Estimate"]),digits = 4),
-                 "times (p=",round(summary(model)$coefficients[i,"Pr(>|z|)"],digits=4),")"))
+                 " times (p=",round(summary(model)$coefficients[i,"Pr(>|z|)"],digits=4),")"))
   }}
 
 #' Interpret lm(er)
@@ -879,27 +889,39 @@ otutab_bin_blast_merge_minion<-function(otutabfile,binfile,experimentsheetfile=N
   
   taxon_input$path<-paste0(taxon_input$K,";",taxon_input$P,";",taxon_input$C,";",taxon_input$O,";",
                            taxon_input$F,";",taxon_input$G,";",taxon_input$S)
-  merged.table<-merge(taxon_input[,c("qseqid","path")],otutab_input[,c("id","barcode","count")],
-                      by.x = "qseqid",by.y = "id",all = TRUE)
-  
-  taxatable<-reshape2::dcast(merged.table[,c("path","barcode","count")],path~barcode,value.var = "count",
-                             fun.aggregate = sum)
-  taxatable$path[is.na(taxatable$path)]<-"No_hits"
-  
-  if(!is.null(experimentsheetfile)){
-    #read sheet
-    experimentsheet<-as.data.frame(read.table(paste0(outDir,experiment_id,"_experiment_sheet.txt"),header = T))
-    #replace barcodes with sample_names
-    final.barcodes<-as.data.frame(colnames(taxatable[,2:length(colnames(taxatable))]))
-    colnames(final.barcodes)<-"barcode_id"
-    mapping.samples<-experimentsheet[grep(experiment_id, experimentsheet$experiment_id),c("barcode_id","ss_sample_id")]
-    mapping.samples$barcode_id<-gsub("BC","barcode",mapping.samples$barcode_id)
-    final.samples<-merge(final.barcodes,mapping.samples,by = "barcode_id",all.y = F,all.x = T)
-    final.samples$barcode_id<-as.character(final.samples$barcode_id)
-    final.samples$ss_sample_id<-as.character(final.samples$ss_sample_id)
-    #final.samples$ss_sample_id2<-do.call(pmax, c(final.samples, na.rm = TRUE))
-    colnames(taxatable)<-c("taxon",as.character(final.samples$ss_sample_id))
+  if("barcode" %in% colnames(otutab_input)){
+    merged.table<-merge(taxon_input[,c("qseqid","path")],otutab_input[,c("id","barcode","count")],
+                        by.x = "qseqid",by.y = "id",all = TRUE)
+    
+    taxatable<-reshape2::dcast(merged.table[,c("path","barcode","count")],path~barcode,value.var = "count",
+                               fun.aggregate = sum)
+    
+    if(!is.null(experimentsheetfile)){
+      #read sheet
+      experimentsheet<-as.data.frame(read.table(paste0(outDir,experiment_id,"_experiment_sheet.txt"),header = T))
+      #replace barcodes with sample_names
+      final.barcodes<-as.data.frame(colnames(taxatable[,2:length(colnames(taxatable))]))
+      colnames(final.barcodes)<-"barcode_id"
+      mapping.samples<-experimentsheet[grep(experiment_id, experimentsheet$experiment_id),c("barcode_id","ss_sample_id")]
+      mapping.samples$barcode_id<-gsub("BC","barcode",mapping.samples$barcode_id)
+      final.samples<-merge(final.barcodes,mapping.samples,by = "barcode_id",all.y = F,all.x = T)
+      final.samples$barcode_id<-as.character(final.samples$barcode_id)
+      final.samples$ss_sample_id<-as.character(final.samples$ss_sample_id)
+      #final.samples$ss_sample_id2<-do.call(pmax, c(final.samples, na.rm = TRUE))
+      colnames(taxatable)<-c("taxon",as.character(final.samples$ss_sample_id))
+    }
+    
+  } else {
+    merged.table<-merge(taxon_input[,c("qseqid","path")],otutab_input[,c("id","ss_sample_id","count")],
+                        by.x = "qseqid",by.y = "id",all = TRUE)
+    
+    taxatable<-reshape2::dcast(merged.table[,c("path","ss_sample_id","count")],path~ss_sample_id,value.var = "count",
+                               fun.aggregate = sum)
+    colnames(taxatable)<-gsub("path","taxon",colnames(taxatable))
   }
+  
+  
+  taxatable$taxon[is.na(taxatable$taxon)]<-"No_hits"
   
   write.table(x = taxatable,file = out,sep="\t",quote = F,row.names = F)
 }
@@ -979,7 +1001,7 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
   unlink(list.files(pattern = "*krona.txt"))
 }
 
-taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F){
+taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F){
   taxa<-do.call(rbind,str_split(taxatab$taxon,";"))
   taxa<-cbind(taxa,do.call(rbind,str_split(taxa[,7]," ")))
   taxa2<-as.data.frame(substr(taxa,start = 1,stop = 3))
@@ -991,25 +1013,47 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   long<-long[long$value>0,]
   
   if(!is.null(master_sheet)) {
-    long<-merge(x = long,y = master_sheet[,c(grep("ss_sample_id",colnames(master_sheet)),grep(column,colnames(master_sheet)))],
-                 by.x="variable",by.y="ss_sample_id")
+    long<-merge(x = long,y = master_sheet[,c(grep("ss_sample_id",colnames(master_sheet)),
+                                             grep(column,colnames(master_sheet)))],
+                by.x="variable",by.y="ss_sample_id")
+    
+    if(!is.null(facetcol)){
+      long<-merge(x = long,y = master_sheet[,c(grep("ss_sample_id",colnames(master_sheet)),
+                                               grep(facetcol,colnames(master_sheet)))],
+                  by.x="variable",by.y="ss_sample_id")
+    }
+    
     long$variable<-long[,grep(column,colnames(long))]
+    
   } else message("No master_sheet or column specified, making default plot")
   
-  if(as.dxns==T) long<-long[!duplicated(long),]
+  #long<-long[order(long$taxon),]
+  
+  if(as.dxns) long<-long[!duplicated(long),]
   
   a<-ggplot2::ggplot(data=long , aes(y=value, x=variable, fill=taxon))+
-    theme(legend.title = element_text(size=5), legend.text=element_text(size=10),axis.text.x=element_text(size=8,angle=45, hjust=1))+
-    scale_fill_manual(values = MyCols) 
+    theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
+          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical")
   
-  if(as.percent==T) {a<-a+geom_bar(position="fill", stat="identity")} else {a<-a+geom_bar(stat = "identity")}
+  if(length(unique(long$taxon))<29)  a<-a+scale_fill_manual(values = MyCols) 
   
-  a
+  if(as.percent) {a<-a+geom_bar(position="fill", stat="identity")} else {a<-a+geom_bar(stat = "identity")}
+  
+  if(!is.null(facetcol))  a<-a+facet_wrap(as.formula(paste0("~",facetcol)))
+  
+  if(hidelegend) {
+    message("Outputting as a list where first element is plot and second is legend")
+    plotlist<-list()
+    plotlist[[1]]<-a+theme(legend.position="none")
+    plotlist[[2]]<-ggpubr::as_ggplot(cowplot::get_legend(a))
+    return(plotlist)
+  }else return(a)
 }
 
 
 #Plotting bray distance matrix PCA
 taxatab.pca.plot<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
+  taxatab<-rm.0readtaxSam(taxatab)
   taxatab2<-binarise.taxatab(taxatab)
   distance_matrix<-taxatab2bray(taxatab2)
   
@@ -1024,27 +1068,17 @@ taxatab.pca.plot<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,
   cmdspoints$ss_sample_id<-rownames(cmdspoints)
   cmdspoints<-merge(cmdspoints,master_sheet,by=MS_colID,all.x = T)
   
-  #plot
-  # The palette with grey:
-  cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-  
   p<-ggplot(cmdspoints,aes(x=V1,y=V2))+
-    geom_point(aes(size=1,shape=cmdspoints[,factor1]))+
+    geom_point(aes(size=1,colour=cmdspoints[,factor1]))+
     #geom_jitter(position = )
-    scale_shape_manual(values=c(3, 4, 0,1,2,5,6))+
-    scale_color_manual(values = c(cbPalette))+
     xlab(bquote("Variance explained =" ~ .(VarExplainedPC1)))+
     ylab(bquote("Variance explained =" ~ .(VarExplainedPC2))) +
     theme_bw()+
-    labs(shape = factor1)+
     guides(size = FALSE)+
-    guides(shape=guide_legend(override.aes = list(size = 4)))+
     theme(legend.title = element_blank())+
     theme(legend.text=element_text(size=12))+
     theme(legend.spacing.x = unit(0.2, 'cm'))+
     theme(axis.title = element_text(size = 12))
-  
-  
   
   message("Principal Component Analysis plot of community similarity using Bray-Curtis distances")
   
@@ -1063,11 +1097,7 @@ taxatab.pca.plot<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,
   }
   
   if(ellipse){
-    p<- p +stat_ellipse(aes(linetype=cmdspoints[,factor1]),type = "norm", level=0.90) #+
-    
-    #theme(legend.box = "horizontal")+
-    #guides(shape=guide_legend(override.aes = aes(label="")))+
-    # theme(legend.text = element_blank())
+    p<- p +stat_ellipse(aes(linetype=cmdspoints[,factor1]),type = "norm", level=0.90) 
     message("ellipses are drawn with a confidence level of 0.90")
   }
   
@@ -1076,6 +1106,7 @@ taxatab.pca.plot<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,
 
 #Plotting bray distance matrix PCA
 taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
+  taxatab<-rm.0readtaxSam(taxatab)
   taxatab2<-binarise.taxatab(taxatab)
   distance_matrix<-taxatab2bray(taxatab2)
   
@@ -1109,7 +1140,6 @@ taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",fact
     theme(legend.text=element_text(size=12))+
     theme(legend.spacing.x = unit(0.2, 'cm'))+
     theme(axis.title = element_text(size = 12))
-  
   
   message("Principal Component Analysis plot of community simmilarity using Bray-Curtis distances")
   
@@ -1421,4 +1451,277 @@ subset_mastersheet<-function(master_sheet,...){
     m2<-m2[m2[,coln] %in% a[[i]],]
   }
   return(m2)
+}
+
+check.low.res.results<-function(pathofinterest,bins,btab){
+  #first query otus that contributed to pathofinterest
+  bins<-bins[bins$path==pathofinterest,"qseqid"]
+  
+  #next, query otus in btab
+  btab<-btab[btab$qseqid %in% bins,]
+  
+  #find average pident for each contributor taxon
+  contributors<-do.call(data.frame,aggregate(x = btab$pident,by=list(btab$path),
+                                             FUN=function(x) c(mn = mean(x), n = range(x) )))
+  colnames(contributors)<-c("contributors","mean.pident","low.pident","high.pident")
+  
+  #add pathofinterest for reference
+  contributors$pathofinterest<-pathofinterest
+  
+  #add taxid for later
+  btab2<-btab[!duplicated(btab$path),]
+  btab3<-btab2[,c("taxids","path")]
+  contributors<-merge(contributors,btab3,by.x = "contributors",by.y = "path")
+  
+  return(contributors)
+}
+
+check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabledTaxaFile=NULL,
+                           spident=NULL,gpident=NULL,fpident=NULL,abspident=NULL){
+  
+  bins<-data.table::fread(binfile,sep = "\t",data.table = F)
+  bins$path<-paste0(bins$K,";",bins$P,";",bins$C,";",bins$O,";",bins$F,";",bins$G,";",bins$S)
+  taxatab.tf<-data.table::fread(filtered.taxatab,sep = "\t",data.table = F)
+  taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+  taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="No_hits",]
+  taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  btab<-data.table::fread(file = filtered_blastfile,sep = "\t",data.table = F)
+  btab$path<-paste0(btab$K,";",btab$P,";",btab$C,";",btab$O,";",btab$F,";",btab$G,";",btab$S)
+  
+  contributorlist<-list()
+  for(i in 1:length(taxatab.tf$taxon)){
+    contributorlist[[i]]<-check.low.res.results(pathofinterest = taxatab.tf$taxon[i],bins = bins,btab = btab)
+  }
+  
+  contributordf<-do.call(rbind,contributorlist)
+  
+  #add number of reads and no. of "pcrs" pathofinterest
+  taxatab.tf$readcounts<-rowSums(taxatab.tf[,2:length(colnames(taxatab.tf))])
+  taxatab.tf$n.samples<-rowSums(taxatab.tf[,2:(length(colnames(taxatab.tf))-1)]>0)
+  contributordf<-merge(contributordf,taxatab.tf[,c("taxon","readcounts","n.samples")],
+                       by.x = "pathofinterest",by.y = "taxon")
+  
+  #add disabled taxa columns
+  if(!is.null(disabledTaxaFile)){
+    disabledTaxaDf<-read.table(disabledTaxaFile, header=T,sep = "\t")
+    if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
+    if(!"disable_species" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_species'")
+    if(!"disable_genus" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_genus'")
+    if(!"disable_family" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_family'")
+    
+    disabledSpecies<-disabledTaxaDf[disabledTaxaDf$disable_species==T,"taxids"]
+    disabledSpecies<-disabledSpecies[!is.na(disabledSpecies)]
+    
+    disabledGenus<-disabledTaxaDf[disabledTaxaDf$disable_genus==T,"taxids"]
+    disabledGenus<-disabledGenus[!is.na(disabledGenus)]
+    
+    disabledFamily<-disabledTaxaDf[disabledTaxaDf$disable_family==T,"taxids"]
+    disabledFamily<-disabledFamily[!is.na(disabledFamily)]
+    
+    contributordf$species_disabled<-contributordf$taxids %in% disabledSpecies
+    contributordf$genus_disabled<-contributordf$taxids %in% disabledGenus
+    contributordf$family_disabled<-contributordf$taxids %in% disabledFamily
+    
+  } else {contributordf$species_disabled<-"FALSE"
+  contributordf$genus_disabled<-"FALSE"
+  contributordf$family_disabled<-"FALSE"
+  }
+  
+  #add rank
+  temprank<-stringr::str_count(contributordf$pathofinterest,";NA")
+  temprank<-gsub(0,"species",temprank)
+  temprank<-gsub(1,"genus",temprank)
+  temprank<-gsub(2,"family",temprank)
+  temprank<-gsub(3,"above_family",temprank)
+  
+  contributordf$rank<-temprank
+  
+  if(!is.null(spident) & !is.null(gpident) & !is.null(fpident) & !is.null(abspident)){
+    #add may_be_improved
+    max_pidents<-aggregate(contributordf$high.pident,by=list(contributordf$pathofinterest),FUN=max)
+    best_is_species<-max_pidents[max_pidents$x>spident,]
+    if(length(best_is_species$Group.1)>0) best_is_species$best_possible<-"species"
+    max_pidents<-max_pidents[!max_pidents$x>spident,]
+    best_is_genus<-max_pidents[max_pidents$x>gpident,]
+    if(length(best_is_genus$Group.1)>0) best_is_genus$best_possible<-"genus"
+    max_pidents<-max_pidents[!max_pidents$x>gpident,]
+    best_is_family<-max_pidents[max_pidents$x>fpident,]
+    if(length(best_is_family$Group.1)>0) best_is_family$best_possible<-"family"
+    max_pidents<-max_pidents[!max_pidents$x>fpident,]
+    best_is_above_family<-max_pidents[max_pidents$x>abspident,]
+    if(length(best_is_above_family$Group.1)>0) best_is_above_family$best_possible<-"above_family"
+    
+    best_all<-rbind(best_is_species,best_is_genus,best_is_family,best_is_above_family)
+    colnames(best_all)[1]<-"pathofinterest"
+    best_all$x=NULL
+    
+    contributordf<-merge(contributordf,best_all)
+    contributordf$may_be_improved<-contributordf$rank!=contributordf$best_possible
+    contributordf<-contributordf[contributordf$may_be_improved=="TRUE",]
+    contributordf<-contributordf[!contributordf$high.pident<abspident,]
+    
+  } else {(message("Not adding 'May be improved' column as no pidents provided"))}
+  
+  
+  #if pathofinterest at genus level, dont output contributors from diferent genera
+  contributordf$contributors<-as.character(contributordf$contributors)
+  
+  #1. make column to see whether genera match
+  contributordf$contrGenus<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,6]
+  contributordf$pathGenus<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,6]
+  contributordf$contr.path.genus.match<-contributordf$contrGenus==contributordf$pathGenus
+  
+  #2. If rank=genus, and columns dont match, then remove
+  contributordf<-contributordf[!(contributordf$rank=="genus" & contributordf$contr.path.genus.match==FALSE),]
+  
+  #if pathofinterest at family level, dont output contributors from different families
+  
+  #1. make column to see whether families match
+  contributordf$contrFam<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,5]
+  contributordf$pathFam<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,5]
+  contributordf$contr.path.fam.match<-contributordf$contrFam==contributordf$pathFam
+  
+  #2. If rank=family, and columns dont match, then remove
+  contributordf<-contributordf[!(contributordf$rank=="family" & contributordf$contr.path.fam.match==FALSE),]
+  
+  contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:14]
+  
+  write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
+              sep="\t",quote = F,row.names = F)
+}
+
+
+#read mastersheets and make a processing sheet 
+google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
+  master<-list()
+  headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
+  for(i in 1:length(sheeturls)){
+    master[[i]]<-google.read.master.url(sheeturls[i])
+    if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
+      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
+    master[[i]]<-master[[i]][,headers]
+  }
+  
+  #make a processing sheet
+  experimentsheet<-as.data.frame(data.table::rbindlist(master))
+  experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
+  
+  #write file
+  write.table(experimentsheet,paste0(outDir,experiment_id,"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
+  message(paste("file saved as",paste0(outDir,experiment_id,"_experiment_sheet.txt")))
+  
+  return(experimentsheet)
+}
+
+
+filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,out,min_qcovs=70,
+                       max_evalue=0.001,top=1){
+  
+  if(length(grep("qcovs",headers))<1) stop("qcovs not in headers")
+  if(length(grep("evalue",headers))<1) stop("evalue not in headers")
+  if(length(grep("qseqid",headers))<1) stop("qseqid not in headers")
+  if(length(grep("pident",headers))<1) stop("pident not in headers")
+  if(length(grep("staxid",headers))<1) stop("staxid not in headers")
+  
+  if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
+  if(is.null(obitaxdb)) stop("obitaxdb not specified")
+  if(is.null(out)) stop("out not specified")
+  
+  message("reading blast results")
+  btab<-as.data.frame(data.table::fread(file = blastfile,sep = "\t"))
+  colnames(btab)<-strsplit(headers,split = " ")[[1]]
+  
+  message("applying global min_qcovs threshold")
+  btab<-btab[btab$qcovs>min_qcovs,]
+  message("applying global max_evalue threshold")
+  btab<-btab[btab$evalue<max_evalue,]
+  message("applying global top threshold")
+  if(length(btab[,1])==0) stop("No hits passing min_qcovs and max_evalue thresholds")
+  topdf<-aggregate(x = btab[,colnames(btab) %in% c("qseqid","pident")],by=list(btab$qseqid),FUN = max)
+  topdf$min_pident<-topdf$pident-topdf$pident*top/100
+  btab<-merge(btab,topdf[,c(2,4)],by = "qseqid", all.y = T) #can definitely do this differently and faster
+  btab<-btab[btab$pident>btab$min_pident,]
+  
+  #add lineage to results
+  message("adding taxonomic lineages")
+  btab$taxids<-btab$staxid #add.lineage.df requires this colname
+  btab<-add.lineage.df(btab,ncbiTaxDir)
+  
+  #remove crappy hits 
+  #1. btab$S contains uncultured
+  message("Removing species containing the terms: uncultured, environmental, 
+          unidentified,fungal, eukaryote or unclassified")
+  if(length(grep("uncultured",btab$S,ignore.case = T))>0) {
+    btab<-btab[-grep("uncultured",btab$S,ignore.case = T),]}
+  #2. btab$S contains environmental
+  if(length(grep("environmental",btab$S,ignore.case = T))>0) {
+    btab<-btab[-grep("environmental",btab$S,ignore.case = T),]}
+  #3. btab$S contains unclassified
+  if(length(grep("unclassified",btab$S,ignore.case = T))>0) {
+    btab<-btab[-grep("unclassified",btab$S,ignore.case = T),]}
+  #4. btab$S contains "unidentified"
+  if(length(grep("unidentified",btab$S,ignore.case = T))>0) {
+    btab<-btab[-grep("unidentified",btab$S,ignore.case = T),]}
+  #5. btab$S contains "fungal "
+  if(length(grep("fungal ",btab$S,ignore.case = T))>0) {
+    btab<-btab[-grep("fungal ",btab$S,ignore.case = T),]}
+  #6. btab$S contains "eukaryote"
+  if(length(grep("eukaryote",btab$S,ignore.case = T))>0) {
+    btab<-btab[-grep("eukaryote",btab$S,ignore.case = T),]}
+  
+  write.table(x = btab,file = out,sep="\t",quote = F,row.names = F)
+  
+}
+
+
+#loop glm by taxon
+loop.glm<-function(taxatab, master_sheet,factor,grouping,summaries=F){
+  if(!"ss_sample_id" %in% colnames(master_sheet)) stop("No column called ss_sample_id")
+  message("Currently, response is binary detections in PCR reps.
+          For each model, only PCR replicates belonging to a 
+          group that had at least one taxon detection are included")
+  taxatab<-rm.0readtaxSam(taxatab)
+  master_sheet2<-master_sheet[master_sheet$ss_sample_id %in% colnames(taxatab[,-1]),]
+  #should only run models for levels in group that had taxon
+  
+  model.list<-list()
+  for(i in 1:length(taxatab$taxon)){
+    taxatab2<-taxatab[taxatab$taxon==taxatab$taxon[i],]
+    taxatab3<-binarise.taxatab(taxatab2)
+    taxatab3$ss_sample_id<-rownames(taxatab3)
+    taxatab4<-merge(taxatab3,master_sheet2[,c("ss_sample_id",factor,grouping)],by="ss_sample_id")
+    
+    #find groups with dxns
+    pos.groups<-aggregate(taxatab4[,as.character(taxatab$taxon[i])],by=list(taxatab4[,grouping]),FUN=sum)
+    pos.groups<-pos.groups[pos.groups$x>0,]
+    
+    taxatab4<-taxatab4[taxatab4[,grouping] %in% pos.groups$Group.1,]
+    
+    species<-stringr::str_split(taxatab$taxon[i],";")[[1]][7]
+    
+    message(paste("Running glm with",factor,"as predictor and binary detection of",species,  "as response"))
+    
+    message(paste0("number of ",factor,"s where taxon was detected at least once = ",length(unique(taxatab4[,factor]))))
+    if(length(unique(taxatab4[,factor]))<2) {
+      model.list[[i]]<-"Cannot run this model as there are less than two groups"
+      names(model.list)[i]<-species 
+      message("Cannot run this model as there are less than two groups")
+    } else{
+      message("number of PCRs in model = ",length(taxatab4$ss_sample_id))
+      
+      model1<-glm(taxatab4[,as.character(taxatab$taxon[i])]~taxatab4[,factor], family = "binomial")
+      if(summaries) print(summary(model1))
+      a<-capture.output(interp.glm.bin(model1))
+      b<-gsub("taxatab4\\[, factor\\]",factor,a)
+      message(gsub("taxatab4\\[, as.character\\(taxatab\\$taxon\\[i\\]\\)\\]",species,b))
+      
+      print(aggregate(taxatab4[,as.character(taxatab$taxon[i])],by=list(taxatab4[,factor]),FUN=sum))
+      
+      model.list[[i]]<-model1
+      names(model.list)[i]<-species
+    }
+  }
+  
+  return(model.list)
+  
 }
