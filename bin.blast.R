@@ -87,14 +87,29 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
     disabledFamily$taxids<-disabledFamily$F
     childrenF<-get.children.taxonkit(disabledFamily) 
     
-    childrenAll<-unique(c(childrenS,childrenG,childrenF))
-    childrenAlldf<-as.data.frame(childrenAll)
+    message("The following taxa are disabled at species level")
+    childrenAlldf<-as.data.frame(unique(c(childrenS,childrenG,childrenF)))
     colnames(childrenAlldf)<-"taxids"
     childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
-    
-    message("The following taxa are disabled")
-    
     childrenNames$pathString<-paste("Family",childrenNames$F,childrenNames$G,childrenNames$S,sep = "/")
+    childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
+    disabledtree <- data.tree::as.Node(childrenNames)
+    print(disabledtree,limit = NULL)
+    
+    message("The following taxa are disabled at genus level")
+    childrenAlldf<-as.data.frame(unique(c(childrenG,childrenF)))
+    colnames(childrenAlldf)<-"taxids"
+    childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
+    childrenNames$pathString<-paste("Family",childrenNames$F,childrenNames$G,sep = "/")
+    childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
+    disabledtree <- data.tree::as.Node(childrenNames)
+    print(disabledtree,limit = NULL)
+    
+    message("The following taxa are disabled at family level")
+    childrenAlldf<-as.data.frame(unique(c(childrenF)))
+    colnames(childrenAlldf)<-"taxids"
+    childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
+    childrenNames$pathString<-paste("Family",childrenNames$F,sep = "/")
     childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
     disabledtree <- data.tree::as.Node(childrenNames)
     print(disabledtree,limit = NULL)
@@ -106,7 +121,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   btabsp<-btab[btab$S!="unknown",]
   
   if(!is.null(disabledTaxaFiles)){
-    btabsp<-btabsp[!btabsp$taxids %in% childrenAll,]
+    btabsp<-btabsp[!btabsp$taxids %in% unique(c(childrenS,childrenG,childrenF)),]
   }
   
   if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
@@ -114,8 +129,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   if(length(grep("[0-9]",btabsp$S))>0) btabsp<-btabsp[-grep("[0-9]",btabsp$S),]
   btabsp<-btabsp[btabsp$pident>spident,]
   if(length(btabsp$taxids)>0){
-    lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),
-                      function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+    lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
     
     #get lca names
     colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
@@ -148,12 +162,11 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #can have g=known and s=unknown (e.g. Leiopelma), these should be kept
   
   if(!is.null(disabledTaxaFiles)){
-    btabg<-btabg[!btabg$taxids %in% childrenAll,]
+    btabg<-btabg[!btabg$taxids %in% unique(c(childrenG,childrenF)),]
   }
   
   btabg<-btabg[btabg$pident>gpident,] ####line changed 
-  lcag = aggregate(btabg$taxids, by=list(btabg$qseqid),
-                   function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+  lcag = aggregate(btabg$taxids, by=list(btabg$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   
   #get lca names
   colnames(lcag)<-gsub("x","taxids",colnames(lcag))
@@ -195,12 +208,11 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #family or subfamily as lca, but final report puts it to "unknown"
   
   if(!is.null(disabledTaxaFiles)){
-    btabf<-btabf[!btabf$taxids %in% childrenAll,]
+    btabf<-btabf[!btabf$taxids %in% unique(c(childrenF)),]
   }
   
   btabf<-btabf[btabf$pident>fpident,]
-  lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid),
-                   function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+  lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   
   #get lca names
   colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
@@ -224,9 +236,9 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   message("binning at higher-than-family level")
   btabhtf<-btab[btab$K!="unknown",]
   
-  if(!is.null(disabledTaxaFiles)){
-    btabhtf<-btabhtf[!btabhtf$taxids %in% childrenAll,]
-  }
+  # if(!is.null(disabledTaxaFiles)){
+  #   btabhtf<-btabhtf[!btabhtf$taxids %in% childrenAll,]
+  # }
   
   btabhtf<-btabhtf[btabhtf$pident>abspident,]
   lcahtf = aggregate(btabhtf$taxids, by=list(btabhtf$qseqid),
@@ -507,18 +519,63 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
   disabledTaxaDF<-do.call(rbind,disabledTaxaDFList)
   disabledTaxaDF[,c(-1,-2)][is.na(disabledTaxaDF[,c(-1,-2)])]<-FALSE
   
-  #check that identical taxids have not been treated differently
-  shouldstop<-list()
+  disabledTaxaDF<-add.lineage.df(disabledTaxaDF,ncbiTaxDir,as.taxids = T)
+  
+  #check that identical paths have not been treated differently
+  shouldstop1<-list()
   for(i in 1:length(unique(disabledTaxaDF$contributors))){
     temp<-disabledTaxaDF[disabledTaxaDF$contributors==unique(disabledTaxaDF$contributors)[i],]
-    if(length(temp$contributors)>1) if(sum(duplicated(temp[,c(-1,-2,-6)]))!=length(temp$contributors)-1) {
-      message("inconsistent disabling detected")
+    if(length(temp$contributors)>1) if(sum(duplicated(temp[,c("disable_species","disable_genus","disable_family")]))!=
+                                       length(temp$contributors)-1) {
+      message("inconsistent taxid disabling detected")
       print(temp)
-      shouldstop[[i]]<-temp
+      shouldstop1[[i]]<-temp
     }
   }
   
-  if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
+  #if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
+  
+  #check that identical families have not been treated differently
+  shouldstop2<-list()
+  for(i in 1:length(unique(disabledTaxaDF$F))){
+    temp<-disabledTaxaDF[disabledTaxaDF$F==unique(disabledTaxaDF$F)[i],]
+    if(length(temp$contributors)>1) if(sum(duplicated(temp[,"disable_family"]))!=length(temp$contributors)-1) {
+      message("inconsistent family disabling detected")
+      print(temp)
+      shouldstop2[[i]]<-temp
+    }
+  }
+  
+  #if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
+  
+  #check that identical genera have not been treated differently
+  shouldstop3<-list()
+  for(i in 1:length(unique(disabledTaxaDF$G))){
+    temp<-disabledTaxaDF[disabledTaxaDF$G==unique(disabledTaxaDF$G)[i],]
+    if(length(temp$contributors)>1) if(sum(duplicated(temp[,"disable_genus"]))!=length(temp$contributors)-1) {
+      message("inconsistent genus disabling detected")
+      print(temp)
+      shouldstop3[[i]]<-temp
+    }
+  }
+  
+  #if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
+  
+  #check that identical species have not been treated differently
+  shouldstop4<-list()
+  for(i in 1:length(unique(disabledTaxaDF$S))){
+    temp<-disabledTaxaDF[disabledTaxaDF$S==unique(disabledTaxaDF$S)[i],]
+    if(length(temp$contributors)>1) if(sum(duplicated(temp[,"disable_species"]))!=length(temp$contributors)-1) {
+      message("inconsistent species disabling detected")
+      print(temp)
+      shouldstop4[[i]]<-temp
+    }
+  }
+  
+  if(length(shouldstop1)>0) for(i in 1:length(shouldstop1)) if(!is.null(shouldstop1[[i]])) stop("fix inconsistencies")
+  if(length(shouldstop2)>0) for(i in 1:length(shouldstop2)) if(!is.null(shouldstop2[[i]])) stop("fix inconsistencies")
+  if(length(shouldstop3)>0) for(i in 1:length(shouldstop3)) if(!is.null(shouldstop3[[i]])) stop("fix inconsistencies")
+  if(length(shouldstop4)>0) for(i in 1:length(shouldstop4)) if(!is.null(shouldstop4[[i]])) stop("fix inconsistencies")
   
   #check that if genus disabled, species within that genus also should be 
   temp<-disabledTaxaDF[(disabledTaxaDF$disable_genus==T & disabledTaxaDF$disable_species==F),"contributors"]

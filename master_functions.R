@@ -83,6 +83,8 @@ bas.merge.taxatabs<-function(taxatabs){
   message("merged taxatable")
   message(paste0("reads: ",a,", taxa: ",length(all.taxatabs[,1]),", samples: ",length(colnames(all.taxatabs[,-1]))))
   
+  all.taxatabs<-all.taxatabs[order(all.taxatabs$taxon),]
+  
   return(all.taxatabs)
 }
 
