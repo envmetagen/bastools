@@ -45,6 +45,9 @@
 bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
                      obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,disabledTaxaFiles=NULL,disabledTaxaOut=NULL){
   t1<-Sys.time()
+  
+  require(treemap)
+  
   ###################################################
   #read in obitools taxonomy
   obitaxdb2=ROBITaxonomy::read.taxonomy(obitaxdb)
@@ -63,14 +66,38 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
     
     disabledTaxaDf<-merge.and.check.disabled.taxa.files(disabledTaxaFiles,disabledTaxaOut)
     
+    #get taxids at 7 levels
+    disabledTaxaDf<-add.lineage.df(disabledTaxaDf,ncbiTaxDir,as.taxids = T)
+    
     disabledSpecies<-disabledTaxaDf[disabledTaxaDf$disable_species==T,]
     disabledSpecies<-disabledSpecies[!is.na(disabledSpecies$taxids),]
+    #get children of all disabled species
+    disabledSpecies$taxids<-disabledSpecies$S
+    childrenS<-get.children.taxonkit(disabledSpecies) 
     
     disabledGenus<-disabledTaxaDf[disabledTaxaDf$disable_genus==T,]
     disabledGenus<-disabledGenus[!is.na(disabledGenus$taxids),]
+    #get children of all disabled genera
+    disabledGenus$taxids<-disabledGenus$G
+    childrenG<-get.children.taxonkit(disabledGenus) 
     
     disabledFamily<-disabledTaxaDf[disabledTaxaDf$disable_family==T,]
     disabledFamily<-disabledFamily[!is.na(disabledFamily$taxids),]
+    #get children of all disabled families
+    disabledFamily$taxids<-disabledFamily$F
+    childrenF<-get.children.taxonkit(disabledFamily) 
+    
+    childrenAll<-unique(c(childrenS,childrenG,childrenF))
+    childrenAlldf<-as.data.frame(childrenAll)
+    colnames(childrenAlldf)<-"taxids"
+    childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
+    
+    message("The following taxa are disabled")
+    
+    childrenNames$pathString<-paste("Family",childrenNames$F,childrenNames$G,childrenNames$S,sep = "/")
+    childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
+    disabledtree <- data.tree::as.Node(childrenNames)
+    print(disabledtree,limit = NULL)
   }
   
   #species-level assignments
@@ -79,9 +106,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   btabsp<-btab[btab$S!="unknown",]
   
   if(!is.null(disabledTaxaFiles)){
-    message("disabling the following taxa at species level:")
-    print(unique(disabledSpecies$contributors))
-    btabsp<-btabsp[!btabsp$taxids %in% disabledSpecies$taxids,]
+    btabsp<-btabsp[!btabsp$taxids %in% childrenAll,]
   }
   
   if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
@@ -123,9 +148,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #can have g=known and s=unknown (e.g. Leiopelma), these should be kept
   
   if(!is.null(disabledTaxaFiles)){
-    message("disabling the following taxa at genus level:")
-    print(unique(disabledGenus$contributors))
-    btabg<-btabg[!btabg$taxids %in% disabledGenus$taxids,]
+    btabg<-btabg[!btabg$taxids %in% childrenAll,]
   }
   
   btabg<-btabg[btabg$pident>gpident,] ####line changed 
@@ -172,9 +195,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #family or subfamily as lca, but final report puts it to "unknown"
   
   if(!is.null(disabledTaxaFiles)){
-    message("disabling the following taxa at family level:")
-    print(unique(disabledFamily$contributors))
-    btabf<-btabf[!btabf$taxids %in% disabledFamily$taxids,]
+    btabf<-btabf[!btabf$taxids %in% childrenAll,]
   }
   
   btabf<-btabf[btabf$pident>fpident,]
@@ -202,6 +223,11 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #higher-than-family-level assignments
   message("binning at higher-than-family level")
   btabhtf<-btab[btab$K!="unknown",]
+  
+  if(!is.null(disabledTaxaFiles)){
+    btabhtf<-btabhtf[!btabhtf$taxids %in% childrenAll,]
+  }
+  
   btabhtf<-btabhtf[btabhtf$pident>abspident,]
   lcahtf = aggregate(btabhtf$taxids, by=list(btabhtf$qseqid),
                      function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))

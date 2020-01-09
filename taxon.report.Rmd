@@ -5,6 +5,8 @@ subtitle: ''
 classoption: portrait
 output: html_document
 fig_crop: no
+fig_width: 6 
+fig_height: 4 
 
 ---
 ## things this script should do  
@@ -15,8 +17,7 @@ fig_crop: no
 #subset the mastersheet if desired
 ##if using subset mastersheet, use only subset taxatable (or merged taxatable if >1 supplied)
 #show summary: taxa list, sum of reads, min and max reads in a sample, no. samples
-#apply taxonpc and samplepc 
-#apply detection filter
+
 
 ```
 
@@ -30,13 +31,6 @@ ss_url<-"https://docs.google.com/spreadsheets/d/1FUSaeVaYzms2EOGUoCAB4jaRKzguD3A
 
 #options for subsetting master sheet 
 subsetlist<-list(experiment_id=c("2018_07"), Primer_set=c("12SV5.2"),study=c("South"))
-
-#taxon and sample filters (0.1=0.1%)
-taxonpc=0.1
-samplepc=0.1
-
-#detection filter (detection less than this will be removed)
-filter_dxn=100
 
 bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
 
@@ -93,29 +87,18 @@ all.taxatabs<-bas.merge.taxatabs(taxatabs)
 ```{r, eval=TRUE,echo=F}
 all.taxatabs.ss<-cbind(taxon=all.taxatabs$taxon,all.taxatabs[colnames(all.taxatabs) %in% ms_ss$ss_sample_id])
 
-#remove samples/taxa with 0 reads
 message("Removing taxa/samples with 0 reads")
 all.taxatabs.ss<-rm.0readtaxSam(all.taxatabs.ss)
 
 #summary
 message("Showing summary of detections")
 a<-summary.dxns.by.taxon(all.taxatabs.ss)
-DT::datatable(a, rownames = FALSE, options = list(pageLength = 50, scrollX=T,scrollX=T))
+DT::datatable(a, rownames = FALSE, options = list(pageLength = 50, scrollX=T))
 
-b<-ggplot(a, aes(x="", y=total.reads, fill=taxon))+
-geom_bar(width = 1, stat = "identity")+ coord_polar("y", start=0)
-
-if(length(a$taxon)<29) b<-b+scale_fill_manual(values = MyCols)
-
-print(b)
+taxatab.pieplot(all.taxatabs.ss)
 ```
 
-## apply taxon and sample filters 
-```{r, eval=TRUE,echo=F}
-#Filter samples before removing the NAs and no_hits
-all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
-all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=samplepc)
-```
+
 
 ## remove the NAs and no_hits
 ```{r, eval=TRUE,echo=F}
@@ -126,9 +109,38 @@ message(paste(count1-count2, "'NA' reads removed"))
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 count3<-sum(all.taxatabs.ss[,-1])
 message(paste(count2-count3, "'No_hits' reads removed"))
+
+taxatab.pieplot(all.taxatabs.ss,hidelegend = T)
 ```
 
-## stack plots
+## reads & dxns by rank
+```{r, eval=TRUE,echo=F}
+reads.by.rank(all.taxatabs.ss)
+dxns.by.rank(all.taxatabs.ss)
+```
+
+## detection distribution
+```{r, eval=TRUE,echo=F}
+long<-reshape2::melt(all.taxatabs.ss)
+long$reads<-long$value
+long<-long[long$value>0,]
+ggplot(long, aes(x=reads)) + geom_histogram() +theme(legend.position = "none") 
+
+long2<-long[long$value<500,]
+ggplot(long2, aes(x=reads)) + geom_histogram(binwidth = 20)
+```
+
+## krona plot
+```{r, echo=FALSE,results="asis"}
+#bas.krona.plot(taxatabs,KronaPath = "/home/bastian.egeter/Tools/Krona.install/bin/ktImportText")
+#htmltools::includeHTML("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/FILTURB_12S_BLAST/FILTURB-2018_07_12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.taxatable.tf.spliced.krona.html")
+
+#shiny::includeHTML("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/FILTURB_12S_BLAST/FILTURB-2018_07_12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.taxatable.tf.spliced.krona.html")
+
+xfun::embed_file("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/FILTURB_12S_BLAST/FILTURB-2018_07_12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.taxatable.tf.spliced.krona.html")
+```
+
+## stack plots (select top 30 taxa?)
 ```{r, eval=TRUE,echo=F}
 message("Plotting taxatable according to selected master sheet columns, values=reads, plotted as %")
 for(i in 1:length(columns)){
@@ -136,11 +148,15 @@ for(i in 1:length(columns)){
   print(a[[1]])
 }
 
+print(a[[2]])
+
 message("Plotting taxatable according to selected master sheet columns, values=reads, plotted as raw")
 for(i in 1:length(columns)){
   a<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = columns[i],as.percent = T,as.dxns = F,hidelegend = T)
   print(a[[1]])
 }
+
+print(a[[2]])
 
 message("Plotting taxatable according to selected master sheet columns, values=detections,plotted as raw")
 for(i in 1:length(columns)){
@@ -174,8 +190,3 @@ all.taxatabs.ss.rmcons<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master
 
 ```
 
-## check with removing detections 
-```{r, eval=TRUE,echo=F}
-message("Applying detection filter")
-all.taxatabs.ss.dxnfilter<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
-```

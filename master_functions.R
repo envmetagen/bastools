@@ -287,7 +287,7 @@ adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratu
   
 }
 
-add.lineage.df<-function(df,ncbiTaxDir){
+add.lineage.df<-function(df,ncbiTaxDir,as.taxids=F){
   if(is.null(df$taxids)) {stop("No column called taxids")}
   df$taxids<-as.integer(as.character(df$taxids)) 
   #write taxids to file
@@ -299,36 +299,68 @@ add.lineage.df<-function(df,ncbiTaxDir){
   system2(command = "taxonkit",args =  c("lineage","-r",taxids_fileA,"-c","--data-dir",ncbiTaxDir)
           ,stdout = taxids_fileB,stderr = "",wait = T)
   taxids_fileC<-paste0("taxids",as.numeric(Sys.time()),".txt")
-  system2(command = "taxonkit",args =  c("reformat",taxids_fileB,"-i",3,"--data-dir",ncbiTaxDir)
+  if(as.taxids==F){
+    system2(command = "taxonkit",args =  c("reformat",taxids_fileB,"-i",3,"--data-dir",ncbiTaxDir)
           ,stdout = taxids_fileC,stderr = "",wait = T)
+  } else {
+    system2(command = "taxonkit",args =  c("reformat","-t", taxids_fileB,"-i",3,"--data-dir",ncbiTaxDir)
+            ,stdout = taxids_fileC,stderr = "",wait = T)
+  }
   lineage<-as.data.frame(data.table::fread(file = taxids_fileC,sep = "\t"))
   colnames(lineage)<-gsub("V1","taxids",colnames(lineage))
   colnames(lineage)<-gsub("V2","new_taxids",colnames(lineage))
-  colnames(lineage)<-gsub("V5","path",colnames(lineage))
-  
+  if(as.taxids==F){
+    colnames(lineage)<-gsub("V5","path",colnames(lineage))
+  } else {
+    colnames(lineage)<-gsub("V6","path",colnames(lineage))
+  }
+
   #merge with df
   message("replacing taxids with updated taxids. Saving old taxids in old_taxids.")
-  df<-merge(df,lineage[,c(1,2,5)],by = "taxids")
+  df<-merge(df,lineage[,c("taxids","new_taxids","path")],by = "taxids")
   df$old_taxids<-df$taxids
   df$taxids<-df$new_taxids
   df$new_taxids=NULL
   df<-cbind(df,do.call(rbind, stringr::str_split(df$path,";")))
   colnames(df)[(length(df)-6):length(df)]<-c("K","P","C","O","F","G","S")
-  df$K<-as.character(df$K)
-  df$P<-as.character(df$P)
-  df$C<-as.character(df$C)
-  df$O<-as.character(df$O)
-  df$F<-as.character(df$F)
-  df$G<-as.character(df$G)
-  df$S<-as.character(df$S)
-  #not sure why the following command wasnt working
-  #df[,(length(df)-6):length(df)] <- sapply(df[,(length(df)-6):length(df)],as.character)
+  if(as.taxids==F){
+    df$K<-as.character(df$K)
+    df$P<-as.character(df$P)
+    df$C<-as.character(df$C)
+    df$O<-as.character(df$O)
+    df$F<-as.character(df$F)
+    df$G<-as.character(df$G)
+    df$S<-as.character(df$S)
+  
+  #change empty cells to "unknown"
   df[,(length(df)-6):length(df)][df[,(length(df)-6):length(df)]==""]<- "unknown"
+  }
+  
   df$path=NULL
   unlink(taxids_fileA)
   unlink(taxids_fileB)
   unlink(taxids_fileC)
   return(df)
+}
+
+get.children.taxonkit<-function(df,column){
+  if(is.null(df$taxids)) {stop("No column called taxids")}
+  df$taxids<-as.integer(as.character(df$taxids)) 
+  #write taxids to file
+  taxids_fileA<-paste0("taxids",as.numeric(Sys.time()),".txt")
+  write.table(unique(df$taxids),file = taxids_fileA,row.names = F,col.names = F,quote = F)
+  
+  #get children 
+  taxids_fileB<-paste0("taxids",as.numeric(Sys.time()),".txt")
+  system2(command = "taxonkit",args =  c("list","--ids",paste(as.character(df$taxids),collapse = ","),"--indent", "''","--data-dir",ncbiTaxDir)
+          ,stdout = taxids_fileB,stderr = "",wait = T)
+  
+  children<-data.table::fread(file = taxids_fileB,sep = "\t",data.table = F)
+  children<-children[!is.na(children$V1),]
+  
+  unlink(taxids_fileA)
+  unlink(taxids_fileB)
+  return(children)
 }
 
 add.lineage.fasta.BAS<-function(infasta,ncbiTaxDir,out,taxids=T){
@@ -532,7 +564,10 @@ count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
   ##this is the same as otutab
   
   after_blast<-sum(taxatab_C[taxatab_C$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",-1])
-  after_blast_filt<-after_blast-sum(taxatab_C[taxatab_C$taxon=="NA;NA;NA;NA;NA;NA;NA",-1])
+  if("NA;NA;NA;NA;NA;NA;NA" %in% taxatab_C$taxon){
+    sumNAs<-sum(taxatab_C[taxatab_C$taxon=="NA;NA;NA;NA;NA;NA;NA",-1])
+  } else {sumNAs<-0}
+  after_blast_filt<-after_blast-sumNAs
   
   #import filtered taxa tab
   taxatab_A<-data.table::fread(illumina_script_taxatab_tf,data.table = F)
@@ -1724,4 +1759,102 @@ loop.glm<-function(taxatab, master_sheet,factor,grouping,summaries=F){
   
   return(model.list)
   
+}
+
+taxatab.pieplot<-function(taxatab,hidelegend=F){
+  require(plotly)
+  a<-summary.dxns.by.taxon(taxatab)
+  
+  b<-plotly::plot_ly(a, labels = ~taxon, values = ~total.reads, type = 'pie',textposition = 'outside',textinfo = 'label+percent')%>%
+       layout(showlegend = FALSE)
+
+  # b<-ggplot(a, aes(x="", y=total.reads, fill=taxon))+
+  #   geom_bar(width = 1, stat = "identity")+ coord_polar("y", start=0)
+  # 
+  # if(nrow(a)<29) b <- b+scale_fill_manual(values = MyCols)
+  # 
+  # b+ggrepel::geom_text_repel(aes(x = 1.4, y = 1.4, label = taxon), 
+  #                   nudge_x = .3, 
+  #                   segment.size = .7, 
+  #                   show.legend = FALSE) 
+  # 
+  # if(hidelegend) {
+  #   message("Outputting as a list where first element is plot and second is legend")
+  #   plotlist<-list()
+  #   plotlist[[1]]<-b+theme(legend.position="none")
+  #   plotlist[[2]]<-ggpubr::as_ggplot(cowplot::get_legend(b))
+  #   return(plotlist)
+  # }else return(b)
+  b
+}
+
+
+reads.by.rank<-function(taxatab){
+  a<-summary.dxns.by.taxon(taxatab)
+  a<-a[a$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  a<-a[a$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+  
+  #add rank
+  temprank<-stringr::str_count(a$taxon,";NA")
+  temprank<-gsub(0,"species",temprank)
+  temprank<-gsub(1,"genus",temprank)
+  temprank<-gsub(2,"family",temprank)
+  temprank<-gsub(3,"above_family",temprank)
+  
+  a$rank<-temprank
+  
+  d<-aggregate(a$total.reads,by=list(a$rank),FUN=sum)
+  
+  colnames(d)<-c("rank","reads")
+  
+  d$percent<-round(d$reads/sum(d$reads)*100,digits = 1)
+  
+  return(d)
+}
+
+dxns.by.rank<-function(taxatab){
+  a<-summary.dxns.by.taxon(taxatab)
+  a<-a[a$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  a<-a[a$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+  
+  #add rank
+  temprank<-stringr::str_count(a$taxon,";NA")
+  temprank<-gsub(0,"species",temprank)
+  temprank<-gsub(1,"genus",temprank)
+  temprank<-gsub(2,"family",temprank)
+  temprank<-gsub(3,"above_family",temprank)
+  
+  a$rank<-temprank
+  
+  d<-aggregate(a$n.samples,by=list(a$rank),FUN=sum)
+  
+  colnames(d)<-c("rank","dxns")
+  
+  d$percent<-round(d$dxns/sum(d$dxns)*100,digits = 1)
+  
+  return(d)
+}
+
+sumreps<-function(taxatab,master_sheet){
+  #this gsub will not always work. e.g where sample names were chosen in google sheet, not exactly the same as sample
+  #DNA_samples<-unique(gsub("(.*)-(.*)-(.*)-(.*)$", "\\1", colnames(taxatab[,-1])))
+  
+  DNA_samples<-master_sheet[match(colnames(taxatab[,-1]),table = master_sheet[,"ss_sample_id"]),"Sample_Name"]
+  
+  taxatab2<-taxatab
+  colnames(taxatab2)<-c("taxon",DNA_samples)
+  
+  summed<-list()
+  for(i in 1:length(unique(DNA_samples))){
+    taxatab.temp<-as.data.frame(taxatab2[,grep(unique(DNA_samples)[i],colnames(taxatab2)),drop=F])
+    if(length(colnames(taxatab.temp))>1) taxatab.temp$sum<-rowSums(taxatab.temp) else taxatab.temp$sum<-taxatab.temp[,1]
+    
+    taxatab.temp2<-taxatab.temp[,"sum",drop=F]
+    
+    colnames(taxatab.temp2)<-gsub("sum",unique(DNA_samples)[i],colnames(taxatab.temp2))
+    
+    summed[[i]]<-taxatab.temp2
+  }
+  
+  taxatab.out<-cbind(taxon=taxatab$taxon,do.call(cbind, summed))
 }
