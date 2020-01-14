@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# depends on cutadapt and revseq
 
 function pinfo {
     echo "$*"  > /dev/stderr
