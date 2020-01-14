@@ -1,3 +1,4 @@
+####
 setwd("/home/bastian.egeter/git_bastools/bastools/")
 file.sources<-c("add.taxids.fasta.BAS.R","building_dbs.R","manip_fasta.R","running_ecoTools.R","build_refs.R",
                 "mapTrim.R","primer_mistmatches.R","primer_matches_by_family.R","building_dbs4.R","ecopcr2refs.R",
@@ -9,99 +10,12 @@ library(dplyr)
 
 setwd(outDir)
 
-#assumes empty starting folder
-#download gb files
-
-#step1 - download
-if("step1" %in% stepstotake){
-  
-  message("RUNNING STEP1")
-  
-  for(i in 1:length(group.taxids)){
-    DL.nuccore.gb(group.taxid = group.taxids[i],gene = gene,ncbiTaxDir = ncbiTaxDir,rank_req = "family")
-  }
-  
-  count.download<-as.data.frame(bascount.gb.recur("."))
-  colnames(count.download)<-"count.download"
-  write.table(count.download,stepcountfile,quote = F,sep = "\t",row.names = F)
-  
-  message("STEP1 COMPLETE")
-}
-
-#######################################################
-#Step2 - extract genes
-if("step2" %in% stepstotake){
-  
-  message("RUNNING STEP2")
-  
-  #first remove files with empty result
-  a<-system2("grep",args = c("'Empty result - nothing to do'",list.files(pattern = "*.gb")),wait = T,
-             stderr = T,stdout = T)
-  unlink(gsub(":\t.*","",a))
-  a<-system2("grep",args = c("'Unable to obtain query'",list.files(pattern = "*.gb")),wait = T,
-             stderr = T,stdout = T)
-  unlink(gsub(":\t.*","",a))
-  
-  #extract gene
-for(i in 1:length(list.files(pattern = "*.gb"))){
-  a<-list.files(pattern = "*.gb")[i]
-  extract.gene.gb(gbfile = a,gene = gene)
-}
-
-#cat (assumes otherwise empty folder)
-catted_DLS<-paste0(paste(groups,collapse = "_"),"_",paste(group.taxids,collapse = "_"),"_",gene,"_nuccore_",
-  Sys.Date(),".fasta")
-system2("cat", args = c(list.files(pattern = "*.extract.fasta")), stdout = catted_DLS,wait = T)
-
-#count
-count.afterextract<-as.data.frame(bascount.fasta(catted_DLS))
-colnames(count.afterextract)<-"count.afterextract"
-write.table(count.afterextract,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-
-message("STEP2 COMPLETE")
-}
-
-#######################################################
-#Step2a - not extracting genes
-if("step2a" %in% stepstotake){
-  
-  message("RUNNING STEP2a")
-  
-  #first remove files with empty result
-  a<-system2("grep",args = c("'Empty result - nothing to do'",list.files(pattern = "*.gb")),wait = T,
-             stderr = T,stdout = T)
-  unlink(gsub(":\t.*","",a))
-  a<-system2("grep",args = c("'Unable to obtain query'",list.files(pattern = "*.gb")),wait = T,
-             stderr = T,stdout = T)
-  unlink(gsub(":\t.*","",a))
-  
-  #convert to fasta
-  for(i in 1:length(list.files(pattern = "*.gb"))){
-    a<-list.files(pattern = "*.gb")[i]
-    gb2fasta(gbfile = a)
-  }
-  
-  #cat (assumes otherwise empty folder)
-  catted_DLS<-paste0(paste(groups,collapse = "_"),"_",paste(group.taxids,collapse = "_"),"_",gene,"_nuccore_",
-                     Sys.Date(),".fasta")
-  system2("cat", args = c(list.files(pattern = "*.fasta")), stdout = catted_DLS,wait = T)
-  
-  #count
-  count.afterextract<-as.data.frame(bascount.fasta(catted_DLS))
-  colnames(count.afterextract)<-"count.after.convert"
-  write.table(count.afterextract,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-  
-  message("STEP2a COMPLETE")
-  
-}
 #######################################################
 #step 3 remove min L and add taxonomy
 if("step3" %in% stepstotake){
   
   message("RUNNING STEP3")
   
-  catted_DLS<- list.files(pattern = paste0(paste(groups,collapse = "_")))
-    
   #remove any seqs less than minimum required length
   f<-process$new(command = "obigrep", 
                  args = c("-l",sum(min_length,nchar(Pf),nchar(Pr),buffer,buffer), catted_DLS), echo_cmd = T,
@@ -128,11 +42,6 @@ if("step3" %in% stepstotake){
   if(length(grep("family=unknown",fastatemp$seq.name))>0){
     fastatemp<-fastatemp[-grep("family=unknown",fastatemp$seq.name),]}
   
-  
-  ####################COME BACK TO THIS
-  #3. do all sequences belong to expected group
-  # if(length(grep(paste0(group.rank,"=",group),fastatemp$seq.name))>0){
-  #   fastatemp<-fastatemp[grep(paste0(group.rank,"=",group),fastatemp$seq.name),]}
   
   phylotools::dat2fasta(fastatemp,gsub(".fasta",".checked.lin.minL.fasta",catted_DLS))
   
