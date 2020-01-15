@@ -528,25 +528,27 @@ count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
   step3$ss_sample_id<-gsub(".none.*$","",step3$Stats)
   after_cutadapt<-sum(step3[step3$ss_sample_id %in% ms_ss$ss_sample_id,"nseqs"])
   
-  # #import counts step4 - THIS IS UNIQ, SO I GUESS IT DOESNT AFFECT READ COUNT?
-  # step4<-data.table::fread(paste0(MBCtsvDir,"step4_stats.tsv"),data.table = F)
-  # step4$ss_sample_id<-gsub(".none.*$","",step4$Stats)
-  # OTUs_after_cutadapt<-sum(step4[step4$ss_sample_id %in% ms_ss$ss_sample_id,"nseqs"])
-  # 
-  # sum(step4[,"nseqs"])
+  # #import counts step4 
+  #cant figure out how to do this in R!
+  current<-getwd()
+  setwd(MBCtsvDir)
+  tempname<-paste0(as.numeric(Sys.time()),".txt")
+  writeLines(c("#!/bin/bash\nfind . -name *none.flash2_merged.vsearch_qfilt.cutadapt.vsearch_uniq.fasta.gz -print0 | xargs -0 zgrep '>' | sed 's/\\.\\///;s/.*\\///;s/.none.*size=/ /'")
+             ,paste0(MBCtsvDir,tempname))
+  step4<-as.data.frame(system2(command = "sh",args = paste0(MBCtsvDir,tempname),stdout = T,wait = T))
+  unlink(paste0(MBCtsvDir,tempname))
+  setwd(current)
+  colnames(step4)<-"V1"
+  step4$counts<-as.numeric(do.call(rbind,stringr::str_split(step4$V1," "))[,2])
+  step4$samples<-do.call(rbind,stringr::str_split(step4$V1," "))[,1]
+  step4<-aggregate(step4$counts,by=list(step4$samples),FUN=sum)
+  colnames(step4)<-c("ss_sample_id","nseqs")
+  after_rm.singletons<-sum(step4[step4$ss_sample_id %in% ms_ss$ss_sample_id,"nseqs"])
   
-  #import counts step5
-  #command used to make "step5_stats_BAS.tsv"
-  
-  # find . -name \*none.flash2_merged.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.fasta.gz -print0 
-  # | xargs -0 zgrep ">" | sed 's/\.\///;s/.*\///;s/.none.*size=/ /' > step5_stats_BAS.tsv         
-  # 
   # step5<-data.table::fread(paste0(MBCtsvDir,"step5_stats_BAS.tsv"),data.table = F)
   # step5_A<-step5[step5$V1 %in% ms_ss$ss_sample_id,]
   # sum(step5_A$V2)
-  
   #huh, well after all that, this is the same read count as in otutab, so can skip it
-  
   
   #import otu tab
   otutab_A<-data.table::fread(otutab,data.table = F)
@@ -586,7 +588,8 @@ count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
   out<-data.frame("Demuliplexed files"=demuliplexed_files,
                   "After paired end alignment"=after_paired_end,
                   "After primer trimming"=after_cutadapt,
-                  "After size selection and singleton removal"=after_size_select,
+                  "After singleton removal"=after_rm.singletons,
+                  "After size selection"=after_size_select,
                   "After blast"=after_blast,
                   "After blast filters"=after_blast_filt,
                   "After initial taxon filter"=after.taxon.filter)

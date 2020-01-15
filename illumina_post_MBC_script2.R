@@ -4,13 +4,9 @@ library(dplyr)
 
 setwd(bastoolsDir)
 if(use.google) googlesheets::gs_auth() 
-source("blast.min.bas.R")
-source("googlesheet.foos.R")
+source("master_functions.R")
 source("bin.blast.R")
-source("add.taxids.fasta.BAS.R")
-source("taxatab.filter.R")
-source("merge_MBC_otutab_with_bin_blast.R")
-source("plotting.R")
+
 
 setwd(outDir)
 
