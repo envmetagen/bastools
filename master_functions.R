@@ -1863,3 +1863,1265 @@ sumreps<-function(taxatab,master_sheet){
   
   taxatab.out<-cbind(taxon=taxatab$taxon,do.call(cbind, summed))
 }
+
+names2taxids<-function(vector,ncbiTaxDir){
+  message("Reminder - this function may require user input, DO NOT RUN LINES OF SCRIPT AFTER THIS FUNCTION")
+  names_fileA<-paste0("names",as.numeric(Sys.time()),".txt")
+  vector<-as.character(vector)
+  #dont search names with sp. in the first round
+  if(length(grep(" sp\\.",vector))>0){
+    vector2<-vector[-grep(" sp\\.",vector)]} else {vector2<-vector}
+  write.table(unique(vector2),file = names_fileA,row.names = F,col.names = F,quote = F) 
+  taxids_fileA<-gsub("names","taxids",names_fileA)
+  system2(command = "taxonkit", args = c("name2taxid",names_fileA,"-r","--data-dir",ncbiTaxDir),
+          stdout = taxids_fileA,stderr = "",wait = T)
+  taxidsA<-read.table(taxids_fileA,sep = "\t")
+  
+  #for unfound taxids, repeat search using only first word
+  namesB<-c(as.character(taxidsA$V1)[is.na(taxidsA$V2)],vector[grep(" sp\\.",vector)])
+  if(length(namesB)>0){
+    namesB<-gsub(" .*","",namesB)
+    names_fileB<-paste0("names",as.numeric(Sys.time()),".txt")
+    taxids_fileB<-gsub("names","taxids",names_fileA)
+    write.table(unique(namesB),file = names_fileB,row.names = F,col.names = F,quote = F)
+    system2(command = "taxonkit", args = c("name2taxid",names_fileB,"-r","--data-dir",ncbiTaxDir),
+            stdout = taxids_fileB,stderr = "",wait = T)
+    taxidsB<-read.table(taxids_fileB,sep = "\t")}
+  
+  #Note that if a name matches more than one taxid, taxonkit creates a new row and includes both taxids, 
+  #allow user input for choices
+  message("Should add choices for unknowns")
+  
+  #first for good results in taxidsA
+  taxidsA2<-taxidsA[!is.na(taxidsA$V2),]
+  #find names with multiple matches
+  if(length(taxidsA2$V1[duplicated(taxidsA2$V1)])>0){
+    
+    taxidsA4<-taxidsA2[duplicated(taxidsA2$V1),]
+    taxidsA5<-taxidsA2[taxidsA2$V1 %in% taxidsA4$V1,]
+    colnames(taxidsA5)<-c("name","taxids","rank")
+    #add lineage to make choice easier
+    taxidsA5<-add.lineage.df(taxidsA5,ncbiTaxDir)
+    taxidsA5$old_taxids=NULL
+    #present choice
+    message("The following ", length(unique(taxidsA5$name))," taxa had more than one taxid match. Please
+            type the full taxid of your choice")
+    choicesA_df<-as.data.frame(unique(taxidsA5$name))
+    for(i in 1:length(unique(taxidsA5$name))){
+      print(taxidsA5[taxidsA5$name %in%  unique(taxidsA5$name)[i],])
+      choicesA_df[i,2] <- readline("Type full chosen taxid: ")  
+    }
+    choicesA_df$V3<-"NA"
+    colnames(choicesA_df)<-c("V1","V2","V3")
+    #combine good results
+    taxidsA6<-taxidsA2[!taxidsA2$V1 %in% unique(taxidsA5$name),]
+    taxidsA7<-rbind(taxidsA6,choicesA_df)
+  } else {taxidsA7<-taxidsA2}
+  
+  
+  if(length(namesB)>0){
+    #for good results in taxidsB
+    taxidsB2<-taxidsB[!is.na(taxidsB$V2),]
+    
+    #find names with multiple matches
+    if(length(taxidsB2$V1[duplicated(taxidsB2$V1)])>0){
+      taxidsB4<-taxidsB2[duplicated(taxidsB2$V1),]
+      taxidsB5<-taxidsB2[taxidsB2$V1 %in% taxidsB4$V1,]
+      colnames(taxidsB5)<-c("name","taxids","rank")
+      #add lineage to make choice easier
+      taxidsB5<-add.lineage.df(taxidsB5,ncbiTaxDir)
+      taxidsB5$old_taxids=NULL
+      
+      #if genus vs subgenus, choose genus
+      choosegenusdf<-as.data.frame(unique(taxidsB5$name))
+      for(i in 1:length(unique(taxidsB5$name))){
+        tempdf<-taxidsB5[taxidsB5$name %in%  unique(taxidsB5$name)[i],]
+        if(TRUE %in% duplicated(tempdf[4:10])){
+          if(length(tempdf$rank)==2){
+            if(length(tempdf$rank[tempdf$rank=="genus"])==1){
+              if(length(tempdf$rank[tempdf$rank=="subgenus"])==1){
+                choosegenusdf[i,2] <- tempdf$taxids[tempdf$rank=="genus"]
+              }
+            }
+          }
+        }
+      }
+      colnames(choosegenusdf)<-c("name","taxid")
+      
+      taxidsB5_remaining<-taxidsB5[!taxidsB5$name %in% 
+                                     choosegenusdf[!is.na(choosegenusdf$taxid),"name"],]
+      
+      #for the remaining options present a choice
+      message("The following ", length(unique(taxidsB5_remaining$name))," taxa had more than one taxid match. Please
+              type the full taxid of your choice")
+      choicesB_df<-as.data.frame(unique(taxidsB5_remaining$name))
+      for(i in 1:length(unique(taxidsB5_remaining$name))){
+        print(taxidsB5_remaining[taxidsB5_remaining$name %in%  unique(taxidsB5_remaining$name)[i],])
+        choicesB_df[i,2] <- readline("Type full chosen taxid: ")  
+      }
+      choicesB_df$V3<-"NA"
+      colnames(choicesB_df)<-c("V1","V2","V3")
+      #combine good results
+      taxidsB6<-taxidsB2[!taxidsB2$V1 %in% unique(taxidsB5_remaining$name),]
+      taxidsB7<-rbind(taxidsB6,choicesB_df)
+    } else {taxidsB7<-taxidsB2}
+    
+  }
+  
+  #combine taxidA, taxidB:choosegenus and taxidB:remaining results
+  outdf<-as.data.frame(vector)
+  outdf$vec2<-gsub(" sp\\.","",outdf$vector)
+  outdf$vec3<-gsub(" .*","",outdf$vector)
+  outdf<-merge(outdf,taxidsA7,by.x = "vec2",by.y = "V1",all.x = T,all.y = F)
+  if(length(namesB)>0){
+    outdf<-merge(outdf,taxidsB7,by.x = "vec3",by.y = "V1",all.x = T,all.y = F)
+    outdf$V2.z<-ifelse(!is.na(outdf$V2.x) & !is.na(outdf$V2.y) | is.na(outdf$V2.y),outdf$V2.z<-outdf$V2.x,NA)}
+  #add choosegenus
+  if(length(namesB)>0){
+    outdf<-merge(outdf,choosegenusdf,by.x = "vec3",by.y = "name",all.x = T,all.y = F)
+    outdf$V2.w<-ifelse(is.na(outdf$V2.x) & is.na(outdf$V2.z),outdf$V2.w<-outdf$taxid,NA)}
+  
+  #combine taxids into one column
+  if(length(namesB)>0){
+    outdf$taxids<-do.call(pmax, c(outdf[,c("V2.z","V2.y","V2.w")], list(na.rm=TRUE)))} else {outdf$taxids<-outdf$V2}
+  
+  #remove files
+  unlink(names_fileA)
+  unlink(taxids_fileA)
+  if(length(namesB)>0){
+    unlink(names_fileB)
+    unlink(taxids_fileB)}
+  
+  #remove extraneous columns
+  colnames(outdf)<-gsub("vector","name",colnames(outdf))
+  outdf<-outdf[match(vector, outdf$name),]
+  outdf<-outdf[,"taxids"]
+}
+
+taxids2names<-function(df,ncbiTaxDir){
+  taxids_fileA<-paste0("taxids",as.numeric(Sys.time()),".txt")
+  write.table(unique(df$taxid),file = taxids_fileA,row.names = F,col.names = F,quote = F)
+  taxids_fileB<-paste0("taxids",as.numeric(Sys.time()),".txt")
+  g<-process$new(command = "taxonkit", args = c("lineage","-r",taxids_fileA,"--data-dir",ncbiTaxDir),
+                 echo_cmd = T,stdout = taxids_fileB)
+  g$wait()
+  lineage<-read.table(taxids_fileB,sep = "\t")
+  
+  lineage$V3<-gsub("infraclass","class",lineage$V3)
+  lineage$V3<-gsub("subfamily","family",lineage$V3)
+  lineage$V3<-gsub("tribe","family",lineage$V3)
+  lineage$V3<-gsub("suborder","order",lineage$V3)
+  lineage$V3<-gsub("infraorder","order",lineage$V3)
+  lineage$V3<-gsub("superfamily","order",lineage$V3)
+  lineage$V3<-gsub("subclass","class",lineage$V3)
+  lineage$V3<-gsub("subgenus","genus",lineage$V3)
+  lineage$V3<-gsub("species subgroup","species",lineage$V3)
+  lineage$V3<-gsub("cohort","order",lineage$V3)
+  
+  df2<-merge(df,lineage[,c(1,3)],by.x = "taxid",by.y = "V1", all.y = T)
+  colnames(df)<-gsub("V3","rank",colnames(df))
+  df<-cbind(df,do.call(rbind, stringr::str_split(df$path,";")))
+  colnames(df)[(length(df)-6):length(df)]<-c("K","P","C","O","F","G","S")
+  df[,(length(df)-6):length(df)] <- sapply(df[,(length(df)-6):length(df)],as.character)
+  df[,(length(df)-6):length(df)][df[,(length(df)-6):length(df)]==""]<- "unknown"
+  
+  unlink(taxids_fileA)
+  unlink(taxids_fileB)
+  
+  return(df)
+}
+
+build.refs<-function(input.ecopcr.results,output){
+  #select one hit per genus
+  a<-input.ecopcr.results[!duplicated(input.ecopcr.results$genus),]
+  #concatenate the primer forward binding site, sequence, reverse binding site
+  a$reverse_matchRC<-insect::rc(z = a$reverse_match)
+  a$newseq<-paste0(a$forward_match, a$sequence,a$reverse_matchRC)
+  a$definition<-paste0(a$AC," genus=",a$genus_name,"; taxid=",a$genus,";")
+  export<-a[,c("definition","newseq")]
+  invisible(seqRFLP::dataframe2fas(export,file = output))
+}
+
+map2targets<-function(queries.to.map,refs,out){
+  #use blast to align seqs to ref
+  message("mapping sequences to reference")
+  system2(command = "makeblastdb", args=c("-in", refs, "-dbtype", "nucl", "-parse_seqids","-out","refdb"),wait=T)
+  
+  system2(command = "blastn", args=c("-query", queries.to.map, "-task", "megablast","-db","refdb",
+                                     "-outfmt",'"7 qseqid qlen qstart qend slen sstart send length pident qcovs sstrand"',
+                                     "-num_threads", "16","-max_target_seqs", "3"),stdout=out,wait = T)
+}
+
+
+add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,after.checks.fasta,first.ecopcr.hit.table,mapped.fasta,out_bias_file){
+  
+  #catted DLS
+  cattedDLS<-count.fams.in.fasta(download.fasta,ncbiTaxDir)
+  
+  #after minL
+  afterminL<-count.fams.in.fasta(after.minL.fasta,ncbiTaxDir)
+  
+  #after rm fams and checks
+  afterchecks<-count.fams.in.fasta(after.checks.fasta,ncbiTaxDir)
+  
+  #after first ecopcr
+  firstecopcr<-data.table::fread(first.ecopcr.hit.table,sep = "\t")
+  firstecopcr$taxids<-firstecopcr$taxid
+  firstecopcr<-add.lineage.df(firstecopcr,ncbiTaxDir)
+  firstecopcr$count<-1
+  firstecopcr$path<-paste(firstecopcr$K,firstecopcr$P,firstecopcr$C,firstecopcr$O,firstecopcr$F,sep = ";")
+  a<-aggregate(firstecopcr$count,by=list(firstecopcr$path),FUN=sum)
+  colnames(a)<-c("Family","nseqs")
+  firstecopcr<-a
+  
+  #after mapping back
+  aftermapping<-count.fams.in.fasta(mapped.fasta,ncbiTaxDir)
+  
+  #merge all
+  merged<-merge(cattedDLS,afterminL,by = "Family",all = T)
+  colnames(merged)<-gsub("nseqs.x","downloaded",colnames(merged))
+  colnames(merged)<-gsub("nseqs.y","after_min_length",colnames(merged))
+  merged<-merge(merged,afterchecks,by = "Family",all = T)
+  colnames(merged)<-gsub("nseqs","after_checks",colnames(merged))
+  merged<-merge(merged,firstecopcr,by = "Family",all = T)
+  colnames(merged)<-gsub("nseqs","first_ecopcr",colnames(merged))
+  merged<-merge(merged,aftermapping,by = "Family",all = T)
+  colnames(merged)<-gsub("nseqs","after_mapping_back",colnames(merged))
+  
+  sum(merged$downloaded,na.rm = T)
+  sum(merged$after_min_length,na.rm = T)
+  sum(merged$after_checks,na.rm = T)
+  sum(merged$firstecopcr,na.rm = T)
+  sum(merged$after_mapping,na.rm = T)
+  
+  biastemp<-data.table::fread(out_bias_file,sep = "\t")
+  biastemp$path<-paste(biastemp$K,biastemp$P,biastemp$C,biastemp$O,biastemp$in.odb,sep = ";")
+  
+  mergedbias<-merge(merged,biastemp,by.x ="Family",by.y = "path",all = T)
+  mergedbias$in.odb=NULL
+  mergedbias$nseqs.odb=NULL
+  
+  return(mergedbias)
+}
+
+count.fams.in.fasta<-function(fasta,ncbiTaxDir){
+  message("Reminders: headers must contain \"taxid=taxid;\"")
+  tempfasta<-phylotools::read.fasta(fasta)
+  tempfasta$taxids<-stringr::str_match(tempfasta$seq.name, "taxid=(.*?);")[,2]
+  tempfasta<-add.lineage.df(tempfasta,ncbiTaxDir)
+  tempfasta$count<-1
+  tempfasta$path<-paste(tempfasta$K,tempfasta$P,tempfasta$C,tempfasta$O,tempfasta$F,sep = ";")
+  a<-aggregate(tempfasta$count,by=list(tempfasta$path),FUN=sum)
+  colnames(a)<-c("Family","nseqs")
+  return(a)
+}
+
+#read (and write) a processing sheet 
+google.make.exp.sheet.illumina<-function(outDir,sheeturls,experiment_id){
+  master<-list()
+  headers<-c("Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
+  for(i in 1:length(sheeturls)){
+    master[[i]]<-google.read.master.url(sheeturls[i])
+    if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
+      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
+    master[[i]]<-master[[i]][,headers]
+  }
+  
+  #make a processing sheet
+  experimentsheet<-as.data.frame(data.table::rbindlist(master))
+  experimentsheet<-experimentsheet[experimentsheet$experiment_id %in% experiment_id,]
+  
+  #write file
+  write.table(experimentsheet,paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
+  message(paste("file saved as",paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt")))
+  
+  return(experimentsheet)
+}
+
+#workaround for getting filenames of fastas to blast
+google.get.startingfastas<-function(outDir,sheeturls,experiment_id,usingobiuniq){
+  experimentsheet<-google.make.experiment.sheet(outDir,sheeturls,experiment_id) #in process, writes a sheet to file 
+  
+  #get barcodes used  
+  barcodes.used<-unique(experimentsheet$barcode_id)
+  barcodes.used <- barcodes.used[!is.na(barcodes.used)]
+  barcodes.used<-gsub("BC","barcode",barcodes.used)
+  
+  #size select, for each fragment, I checked and seqs appear to have primers plus one base (at each end)
+  experimentsheet$primer_combo<-paste0(experimentsheet$Primer_F,experimentsheet$Primer_R)
+  primer_combo<-unique(experimentsheet$primer_combo)
+  
+  #barcodes in each primer combo
+  primer_combo.bcs<-list()
+  for(i in 1:length(primer_combo)){
+    primer_combo.bcs[[i]]<-unique(experimentsheet[experimentsheet$primer_combo==primer_combo[i],"barcode_id"])
+    primer_combo.bcs[[i]]<-gsub("BC","barcode",primer_combo.bcs[[i]])
+    names(primer_combo.bcs[[i]])<-gsub(" ","",
+                                       experimentsheet[experimentsheet$primer_combo==primer_combo[i],"Primer_set"][1])
+  }
+  if(usingobiuniq){
+    for(i in 1:length(primer_combo.bcs)){
+      print(paste0(experiment_id,"_",names(primer_combo.bcs[[i]][1]),".uniq.filtlen.wlen.obi.fasta"))
+    }}
+  
+  if(usingobiuniq==F){
+    for(i in 1:length(primer_combo.bcs)){
+      print(paste0(experiment_id,"_",names(primer_combo.bcs[[i]][1]),".filtlen.wlen.obi.fasta"))
+    }}
+  
+}
+
+ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr){
+  message("Reminder: assumes -D option was used for ecopcr")
+  #read results
+  ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
+  #remove hits outside desired lengths
+  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
+  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
+  #remove duplicates (i.e. pick one entry per AC, based on lowest mismatches)
+  ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
+  ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
+  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
+  
+  #the edges removal in next step takes a long time, so choose one seq per genus
+  ecopcroutput <- ecopcroutput[order(ecopcroutput$family_name,ecopcroutput$amplicon_length,decreasing = T),]
+  ecopcroutput <-ecopcroutput[!duplicated(ecopcroutput[,c("family_name")]),] 
+  
+  #remove seqs with edges less than buffer
+  a<-strsplit(ecopcroutput$sequence,split = "")
+  ecopcroutput$leftbuffer<-"0"
+  ecopcroutput$rightbuffer<-"0"
+  
+  d<-list()
+  pb = txtProgressBar(min = 0, max = length(ecopcroutput$leftbuffer), initial = 0,style = 3) 
+  for(i in 1:length(ecopcroutput$leftbuffer)){
+    ecopcroutput$leftbuffer[i]<-match(FALSE,a[[i]] %in% letters)
+    d[[i]]<-a[[i]][ecopcroutput$leftbuffer[i]:length(a[[i]])]
+    ecopcroutput$rightbuffer[i]<-length(d[[i]])-as.numeric(match(TRUE,d[[i]] %in% letters))
+    setTxtProgressBar(pb,i)
+  }
+  #remove seqs with left buffer less than buffer
+  ecopcroutput<-ecopcroutput[!ecopcroutput$leftbuffer<bufferecopcr,]
+  #remove seqs with right buffer less than buffer
+  ecopcroutput<-ecopcroutput[!ecopcroutput$rightbuffer<bufferecopcr,]
+  
+  #output as fasta
+  colnames(ecopcroutput)<-gsub("sequence", "seq.text",colnames(ecopcroutput))
+  ecopcroutput$seq.text<-toupper(ecopcroutput$seq.text)
+  ecopcroutput$seq.name<-paste0(ecopcroutput$AC," taxid=",ecopcroutput$taxid,"; ",ecopcroutput$definition)
+  phylotools::dat2fasta(ecopcroutput[,c("seq.name","seq.text")],outfile)
+}
+
+add.3pmms<-function(ecopcroutput,Pf,Pr){
+  #add 3' mismatches to ecopcroutput
+  f_mismatch_table<-mismatch.table(ecopcroutput,Pf,"f")
+  f_mismatches_3prime<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)/2):nchar(Pf)]))
+  colnames(f_mismatches_3prime)<-"f_mismatches_3prime"
+  r_mismatch_table<-mismatch.table(ecopcroutput, Pr,"r")
+  r_mismatches_3prime<-as.data.frame(rowSums(r_mismatch_table[,as.integer(nchar(Pr)/2):nchar(Pr)]))
+  colnames(r_mismatches_3prime)<-"r_mismatches_3prime"
+  ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime,r_mismatches_3prime)
+  
+  #add 3' mismatches to ecopcroutput - 6bp
+  f_mismatches_3prime6<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)-5):nchar(Pf)]))
+  colnames(f_mismatches_3prime6)<-"f_mismatches_3prime6"
+  r_mismatches_3prime6<-as.data.frame(rowSums(r_mismatch_table[,as.integer(nchar(Pr)-5):nchar(Pr)]))
+  colnames(r_mismatches_3prime6)<-"r_mismatches_3prime6"
+  ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime6,r_mismatches_3prime6)
+}
+
+add.res.ecopcroutput<-function(ecopcroutput){
+  #add taxonomic resolution to ecopcroutput
+  ecopcroutput.res<-add.res.Bas(ecopcroutput,obitaxdb=obitaxoR)
+  
+  #remove extra columns
+  ecopcroutput.res$genus=NULL
+  ecopcroutput.res$genus_name=NULL
+  ecopcroutput.res$species_name=NULL
+  ecopcroutput.res$species=NULL
+  ecopcroutput.res$forward_tm=NULL
+  ecopcroutput.res$reverse_tm=NULL
+  
+  ecopcroutput.res
+}
+
+add.tm.ecopcroutput<-function(ecopcroutput){
+  ecopcroutput$fTms<-Tm.calc(ecopcroutput$forward_match)
+  ecopcroutput$rTms<-Tm.calc(ecopcroutput$reverse_match)
+  ecopcroutput$fTms3primehalf<-Tm.calc(substr(x = ecopcroutput$forward_match,
+                                              start = as.integer(nchar(as.character(ecopcroutput$forward_match))/2+1),
+                                              stop = nchar(as.character(ecopcroutput$forward_match))))
+  ecopcroutput$rTms3primehalf<-Tm.calc(substr(x = ecopcroutput$reverse_match,
+                                              start = as.integer(nchar(as.character(ecopcroutput$reverse_match))/2+1),
+                                              stop = nchar(as.character(ecopcroutput$reverse_match))))
+  ecopcroutput$fTms3prime6<-Tm.calc(substr(x = ecopcroutput$forward_match,
+                                           start = as.integer(nchar(as.character(ecopcroutput$forward_match))-5),
+                                           stop = nchar(as.character(ecopcroutput$forward_match))))
+  ecopcroutput$rTms3prime6<-Tm.calc(substr(x = ecopcroutput$reverse_match,
+                                           start = as.integer(nchar(as.character(ecopcroutput$reverse_match))-5),
+                                           stop = nchar(as.character(ecopcroutput$reverse_match))))
+  ecopcroutput
+  
+}
+
+add.gc.ecopcroutput<-function(ecopcroutput){
+  ecopcroutput$fgc<-gc.calc(ecopcroutput$forward_match)
+  ecopcroutput$rgc<-gc.calc(ecopcroutput$reverse_match)
+  ecopcroutput
+}
+
+#calculating Tm
+#calculate Tm for each primer binding site in vector
+Tm.calc<-function(primerVec){
+  Tms<-vector()
+  for (i in 1:length(primerVec)){
+    Tms[i]<-2*(stringr::str_count(primerVec[i],"A")+stringr::str_count(primerVec[i],"T")) +
+      4*(stringr::str_count(primerVec[i],"G")+stringr::str_count(primerVec[i],"C"))
+  }
+  return(Tms)
+}
+
+#calculating gc%
+#calculate gc% for each primer binding site in vector
+gc.calc<-function(primerVec){
+  gc<-vector()
+  for (i in 1:length(primerVec)){
+    gc[i]<-(stringr::str_count(primerVec[i],"G")+stringr::str_count(primerVec[i],"C"))/
+      (nchar(primerVec[i]))*100
+  }
+  return(gc)
+}
+
+#add taxonomic resolution to ecopcroutput
+add.res.Bas<-function(ecopcroutput,obitaxdb){
+  if (class(obitaxdb)[1]!="obitools.taxonomy") obitaxdb2=ROBITaxonomy::read.taxonomy(obitaxdb)
+  if (class(obitaxdb)[1]=="obitools.taxonomy") obitaxdb2=obitaxdb
+  res=ROBIBarcodes::resolution(taxonomy = obitaxdb2,ecopcr = ecopcroutput)
+  a<-as.data.frame(res)
+  a$res<-gsub(x = a$res,pattern = "infraclass",replacement = "class")
+  a$res<-gsub(x = a$res,pattern = "subfamily",replacement = "family")
+  a$res<-gsub(x = a$res,pattern = "tribe",replacement = "family")
+  a$res<-gsub(x = a$res,pattern = "suborder",replacement = "order")
+  a$res<-gsub(x = a$res,pattern = "infraorder",replacement = "order")
+  a$res<-gsub(x = a$res,pattern = "superfamily",replacement = "order")
+  a$res<-gsub(x = a$res,pattern = "subclass",replacement = "class")
+  a$res<-gsub(x = a$res,pattern = "subgenus",replacement = "genus")
+  a$res<-gsub(x = a$res,pattern = "species subgroup",replacement = "species")
+  a$res<-gsub(x = a$res,pattern = "cohort",replacement = "order")
+  
+  #K,P,C,O,F,G,S
+  
+  b<-cbind(ecopcroutput,a)
+}
+
+#function to calculate % species with family or lower res
+res.fam.or.better<-function(ecopcroutput){
+  (length(ecopcroutput$res[ecopcroutput$res=="family"])+
+     length(ecopcroutput$res[ecopcroutput$res=="genus"])+
+     length(ecopcroutput$res[ecopcroutput$res=="species"])) /
+    (length(ecopcroutput$res))
+}
+
+
+
+# #gc clamp present?
+# gc.clamp<-function(primerVec){
+#   gc<-vector()
+#   for (i in 1:length(primerVec)){
+#     gc[i]<-(stringr::str_count(primerVec[i],"G")+stringr::str_count(primerVec[i],"C"))/
+#       (nchar(primerVec[i]))*100
+#   }
+#   return(gc)
+# }
+
+
+#Mean No. 3 prime PRIMER MISMATCHES (last half and last 6 bases) BY FAMILY
+calc.3pmms.fam<-function(ecopcroutput,Pf,Pr){
+  #mean primer mismatch tables for each base by family
+  fam_f_mismatch_table<-family.mean.mismatch(ecopcroutput,Pf,"f")
+  fam_r_mismatch_table<-family.mean.mismatch(ecopcroutput,Pr,"r")
+  
+  #mean 3' mismatches (last half of bases)
+  fam_f_mismatches_3prime<-as.data.frame(rowMeans(fam_f_mismatch_table[,as.integer(nchar(Pf)/2+1):nchar(Pf)]))
+  fam_f_mismatches_3prime$family<-rownames(fam_f_mismatches_3prime)
+  colnames(fam_f_mismatches_3prime)<-c("mean_3prime_mms_f","family")
+  fam_r_mismatches_3prime<-as.data.frame(rowMeans(fam_r_mismatch_table[,as.integer(nchar(Pr)/2+1):nchar(Pr)]))
+  fam_r_mismatches_3prime$family<-rownames(fam_r_mismatches_3prime)
+  colnames(fam_r_mismatches_3prime)<-c("mean_3prime_mms_r","family")
+  
+  #mean 3' mismatches (last 6 bases)
+  fam_f_mismatches_3prime6<-as.data.frame(rowMeans(fam_f_mismatch_table[,as.integer(nchar(Pf)-5):nchar(Pf)]))
+  fam_f_mismatches_3prime6$family<-rownames(fam_f_mismatches_3prime6)
+  colnames(fam_f_mismatches_3prime6)<-c("mean_3prime6bp_mms_f","family")
+  fam_r_mismatches_3prime6<-as.data.frame(rowMeans(fam_r_mismatch_table[,as.integer(nchar(Pr)-5):nchar(Pr)]))
+  fam_r_mismatches_3prime6$family<-rownames(fam_r_mismatches_3prime6)
+  colnames(fam_r_mismatches_3prime6)<-c("mean_3prime6bp_mms_r","family")
+  
+  list(fam_f_mismatches_3prime,fam_r_mismatches_3prime,fam_f_mismatches_3prime6,fam_r_mismatches_3prime6)
+}
+
+calc.fam.res<-function(ecopcroutput){
+  #calculate percentage species that have tax res to family or better
+  famsplit<-split(ecopcroutput,f = ecopcroutput$family_name)
+  b<-lapply(X = famsplit,FUN = res.fam.or.better)
+  pc.res<-as.data.frame(t(as.data.frame(b)))
+  pc.res$family<-names(famsplit)
+  colnames(pc.res)<-gsub("V1","pc_res_fam_or_better",colnames(pc.res))
+  pc.res
+}
+variable="r_mismatches_3prime6"
+appliedstat=var
+calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
+  if(appliedstat=="mean"){
+    a<-as.data.frame(aggregate(x =  ecopcroutput[,..variable], by = list(ecopcroutput$family_name),FUN = mean))
+    colnames(a)<-c("family_name",paste0("mean_",colnames(a)[2]))}
+  if(appliedstat=="var"){
+    a<-as.data.frame(aggregate(x =  ecopcroutput[,..variable], by = list(ecopcroutput$family_name),FUN = var))
+    colnames(a)<-c("family_name",paste0("var_",colnames(a)[2]))}
+  a
+}
+
+
+#DO CALCULATIONS AND STATS
+make.primer.bias.tables<-function(originaldbtab,ecopcrfile,
+                                  out_bias_file,out_mod_ecopcrout_file,Pf,Pr, obitaxoR,min_length,
+                                  max_length){
+  
+  ##########################################
+  #GENERAL CLEANING 
+  
+  #read results
+  ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
+  #remove hits outside desired lengths
+  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
+  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
+  #remove duplicates (i.e. pick one entry per AC, based on lowest mismatches)
+  ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
+  ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
+  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
+  #remove weird primer mismatches (only a few usually)
+  ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$forward_match,allowNA = T)<nchar(Pf),]
+  ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$reverse_match,allowNA = T)<nchar(Pr),]
+  ##########################################
+  #READ ORIGINAL DB
+  originaldb<-as.data.frame(data.table::fread(originaldbtab,header = TRUE,sep = "\t"))
+  colnames(originaldb)<-gsub("taxid","taxids",colnames(originaldb))
+  originaldb<-add.lineage.df(originaldb,ncbiTaxDir)
+  ##########################################
+  #LIST FAMILIES IN ODB
+  all_primer_bias<-data.frame(row.names = 1:length(unique(originaldb$F)))
+  all_primer_bias$in.odb<-unique(originaldb$F)[order(as.character(unique(originaldb$F)))]
+  ##########################################
+  #COUNT NO. SEQS IN ORIGINALDB 
+  originaldb$n<-1
+  nseqs.odb<-aggregate(originaldb$n,by=list(originaldb$F),FUN = sum)
+  colnames(nseqs.odb)<-c("in.odb","nseqs.odb")
+  all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
+  ##########################################
+  #COUNT No. Taxa IN ORIGINALDB 
+  originaldb$path<-paste0(originaldb$F,";",originaldb$G,originaldb$S)
+  originaldb.taxa<-originaldb[!duplicated(originaldb$path),c("path","n")]
+  nseqs.odb<-aggregate(originaldb.taxa$n,by=list(originaldb.taxa$path),FUN = sum)
+  colnames(nseqs.odb)<-c("path","nseqs.odb.taxa")
+  nseqs.odb$F<-do.call(rbind,strsplit(nseqs.odb$path,";"))[,1]
+  nseqs.odb<-aggregate(nseqs.odb$n,by=list(nseqs.odb$F),FUN = sum)
+  colnames(nseqs.odb)<-c("in.odb","ntaxa.odb")
+  all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
+  ##########################################
+  #ADD LOGICAL IF FAMILY AMPED
+  all_primer_bias$amplified<-all_primer_bias$in.odb %in% unique(ecopcroutput$family_name)
+  ##########################################
+  #COUNT NO. SEQS THAT AMPED 
+  ecopcroutput$n<-1
+  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$family_name),FUN = sum)
+  colnames(nseqs.amped)<-c("in.odb","nseqs.amped")
+  all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
+  ##########################################
+  #COUNT No. Taxa THAT AMPED
+  ecopcroutput$path<-paste0(ecopcroutput$family_name,";",ecopcroutput$genus_name,ecopcroutput$species_name)
+  ecopcroutput.taxa<-ecopcroutput[!duplicated(ecopcroutput$path),c("path","n")]
+  nseqs.amped<-aggregate(ecopcroutput.taxa$n,by=list(ecopcroutput.taxa$path),FUN = sum)
+  colnames(nseqs.amped)<-c("path","nseqs.amped.taxa")
+  nseqs.amped$F<-do.call(rbind,strsplit(nseqs.amped$path,";"))[,1]
+  nseqs.amped<-aggregate(nseqs.amped$n,by=list(nseqs.amped$F),FUN = sum)
+  colnames(nseqs.amped)<-c("in.odb","ntaxa.amped")
+  all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
+  ##########################################
+  #percentage seqs amped
+  all_primer_bias$pc_seqs_amped<-round(all_primer_bias$nseqs.amped/all_primer_bias$nseqs.odb*100,digits = 2)
+  #percentage taxa amped
+  all_primer_bias$pc_taxa_amped<-round(all_primer_bias$ntaxa.amped/all_primer_bias$ntaxa.odb*100,digits = 2)
+  ##########################################
+  
+  
+  ##########################################
+  #for rest of stats keep only unique barcodes for each family
+  message("dereplicating by family")
+  ecopcroutput$fullseq<-paste0(ecopcroutput$forward_match,ecopcroutput$sequence,ecopcroutput$reverse_match)
+  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput[,c("family_name","fullseq")]),]
+  message("Total_unique_barcodes=",length(ecopcroutput$AC))
+  message("Total_families_odb=",length(all_primer_bias$in.odb))
+  message("Total_families_amped=",sum(all_primer_bias$amplified))
+  ##########################################
+  ##########################################
+  ##########################################
+  ##########################################
+  #COUNT NO. UNIQUE BARCODES THAT AMPED 
+  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$family_name),FUN = sum)
+  colnames(nseqs.amped)<-c("in.odb","n.uniq.brcds.amped")
+  all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
+  ##########################################
+  #ADD LINEAGES TO ALL_PRIMER_BIAS AND ECOPCROUTPUT
+  y=originaldb[,c("K","P","C","O","F")]
+  y=y[!duplicated(y),]
+  all_primer_bias<-merge(x = all_primer_bias,y = y,by.x = "in.odb",by.y = "F",all.y = F)
+  ecopcroutput<-merge(x = ecopcroutput,y = y,by.x = "family_name",by.y = "F",all.y = F)
+  
+  ##########################################################################################
+  #add 3 prime mms to ecopcroutput
+  ecopcroutput<-add.3pmms(ecopcroutput,Pf,Pr) 
+  #add tm
+  ecopcroutput<-add.tm.ecopcroutput(ecopcroutput)
+  #diff tm
+  ecopcroutput$diff_tm<-ecopcroutput$fTms-ecopcroutput$rTms
+  #add gc content
+  ecopcroutput<-add.gc.ecopcroutput(ecopcroutput)
+  #gc clamp present?###########
+  #add diff ta tm
+  ecopcroutput$tm.ta_fw<-ecopcroutput$fTms-Ta
+  ecopcroutput$tm.ta_rv<-ecopcroutput$rTms-Ta  
+  #Tm of last 6 bp of fw primer divided by overall Tm (%)
+  ecopcroutput$tm_fw_3p6_perc<-ecopcroutput$fTms3prime6/ecopcroutput$fTms*100
+  ecopcroutput$tm_rv_3p6_perc<-ecopcroutput$rTms3prime6/ecopcroutput$rTms*100
+  #add taxonomic resolution
+  ecopcroutput<-add.res.ecopcroutput(ecopcroutput)
+  ###########################################################################################
+  #mean no. primer mismatches fw
+  mean_mms_fw<-calc.stat.ecopcroutput(ecopcroutput,variable="forward_mismatch","mean")
+  #mean no. primer mismatches rv
+  mean_mms_rv<-calc.stat.ecopcroutput(ecopcroutput,variable="reverse_mismatch","mean")
+  #mean no. primer mismatches total
+  mean_mms_total<-calc.stat.ecopcroutput(ecopcroutput,variable="total_mismatches","mean")
+  #Mean no. 3 prime mismatches (last half and last 6 bases) 
+  mean.3pmms<-calc.3pmms.fam(ecopcroutput,Pf,Pr) ######LIST
+  mean_fmms3Phalf<-mean.3pmms[[1]]
+  mean_rmms3Phalf<-mean.3pmms[[2]]
+  mean_fmms3P6<-mean.3pmms[[3]]
+  mean_rmms3P6<-mean.3pmms[[4]]
+  #mean ftm 
+  mean_ftm<-calc.stat.ecopcroutput(ecopcroutput,variable="fTms","mean")
+  #mean rtm 
+  mean_rtm<-calc.stat.ecopcroutput(ecopcroutput,variable="rTms","mean")
+  #mean fTm 3' half
+  mean_ftm3Phalf<-calc.stat.ecopcroutput(ecopcroutput,variable="fTms3primehalf","mean")
+  #mean rTm 3' half
+  mean_rtm3Phalf<-calc.stat.ecopcroutput(ecopcroutput,variable="rTms3primehalf","mean")
+  #mean fTm for 3' half - 6bp  
+  mean_ftm3P6<-calc.stat.ecopcroutput(ecopcroutput,variable="fTms3prime6","mean")  
+  #mean rTm for 3' half - 6bp  
+  mean_rtm3P6<-calc.stat.ecopcroutput(ecopcroutput,variable="rTms3prime6","mean")  
+  #% of unqiue seqs that get to fam or better
+  mean_fam.res<-calc.fam.res(ecopcroutput)
+  #mean amplicon length
+  mean_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$family_name),FUN = mean)
+  colnames(mean_amplicon.len)<-gsub("x","mean_amplicon.len",colnames(mean_amplicon.len))
+  #mean gc_fw
+  mean_fgc<-calc.stat.ecopcroutput(ecopcroutput,variable="fgc","mean")
+  #mean gc_rv
+  mean_rgc<-calc.stat.ecopcroutput(ecopcroutput,variable="rgc","mean")
+  #mean tm.ta.fw
+  mean_tm.ta.fw<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_fw","mean")
+  #mean tm.ta.rv
+  mean_tm.ta.rv<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_rv","mean")
+  #mean diff tm
+  mean_diff_tm<-calc.stat.ecopcroutput(ecopcroutput,variable="diff_tm","mean")
+  #mean tm_fw_3p6_perc
+  mean_tm_fw_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_fw_3p6_perc","mean")
+  #mean tm_rv_3p6_perc
+  mean_tm_rv_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_rv_3p6_perc","mean")
+  ##########################################################################################
+  #VARIANCES
+  #var no. primer mismatches fw
+  var_mms_fw<-calc.stat.ecopcroutput(ecopcroutput,variable="forward_mismatch","var")
+  #var no. primer mismatches rv
+  var_mms_rv<-calc.stat.ecopcroutput(ecopcroutput,variable="reverse_mismatch","var")
+  #var no. primer mismatches total
+  var_mms_total<-calc.stat.ecopcroutput(ecopcroutput,variable="total_mismatches","var")
+  #var amplicon length
+  var_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$family_name),FUN = var)
+  colnames(var_amplicon.len)<-gsub("x","var_amplicon.len",colnames(var_amplicon.len))
+  #var gc_fw
+  var_fgc<-calc.stat.ecopcroutput(ecopcroutput,variable="fgc","var")
+  #var gc_rv
+  var_rgc<-calc.stat.ecopcroutput(ecopcroutput,variable="rgc","var")
+  #var tm.ta_fw
+  var_tm.ta.fw<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_fw","var")
+  #var tm.ta_rv
+  var_tm.ta.rv<-calc.stat.ecopcroutput(ecopcroutput,variable="tm.ta_rv","var")
+  #diff tm
+  var_diff_tm<-calc.stat.ecopcroutput(ecopcroutput,variable="diff_tm","var")
+  #var tm_fw_3p6_perc
+  var_tm_fw_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_fw_3p6_perc","var")
+  #var tm_rv_3p6_perc
+  var_tm_rv_3p6_perc<-calc.stat.ecopcroutput(ecopcroutput,variable="tm_rv_3p6_perc","var")
+  #mms_fw_3p6
+  var_mms_fw_3p6<-calc.stat.ecopcroutput(ecopcroutput,variable="f_mismatches_3prime6","var")
+  #mms_rv_3p6
+  var_mms_rv_3p6<-calc.stat.ecopcroutput(ecopcroutput,variable="r_mismatches_3prime6","var")
+  
+  ##########################################################################################
+  #compile
+  h<-list()
+  for(i in 1:length(ls(pattern = "mean\\_.*"))){
+    h[[i]]<-get(ls(pattern = "mean\\_.*")[i])
+  }
+  all_means<-do.call(cbind,h)
+  h<-list()
+  for(i in 1:length(ls(pattern = "var\\_.*"))){
+    h[[i]]<-get(ls(pattern = "var\\_.*")[i])
+  }
+  all_vars<-do.call(cbind,h)
+  
+  all_mean_and_var<-cbind(all_means,all_vars)
+  all_mean_and_var<-all_mean_and_var[,-grep("family",colnames(all_mean_and_var))]
+  all_mean_and_var$Group.1.1=NULL
+  
+  #compile all
+  all_primer_bias<-merge(all_primer_bias,all_mean_and_var,all.x = T,by.x = "in.odb", by.y = "Group.1")
+  
+  #remove extraneous columns
+  ecopcroutput$path=NULL
+  ecopcroutput$n=NULL
+  
+  #write primer bias file
+  write.table(x=all_primer_bias,file = out_bias_file,quote = F,sep = "\t",row.names = F)
+  #write final, modified ecopcroutput file
+  write.table(x=ecopcroutput, file = out_mod_ecopcrout_file,quote = F,sep = "\t",row.names = F)
+}
+
+mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out){
+  message("reading query file")
+  #read in query file and count
+  n<-phylotools::read.fasta(query)
+  n$qseqid = sub(" .*", "", x = n$seq.name)
+  n$seq.text<-as.character(n$seq.text)
+  #count
+  count_queries=length(n$qseqid)
+  
+  message("reading mapping results")
+  #turn result into table, ignoring comment lines (so ignoring defintions). The table length excludes queries with
+  #non-hits
+  j<-read.table(file = blast.results.file)
+  colnames(j)<-c("qseqid", "qlen", "qstart", "qend",
+                 "slen", "sstart", "send", "length", "pident", "qcovs","sstrand")
+  #calculate scov
+  j$scov<-j$length/j$slen
+  
+  #remove duplicate hsp hits, based on highest scov
+  j2 <- j[order(j$qseqid,j$scov,decreasing = T),]
+  j2<-j2[!duplicated(j2$qseqid),]
+  count_hits<-length(j2$qseqid)
+  
+  #remove hits less than specified subject cover
+  j2<-j2[j2$scov>qc,]
+  count_qc<-length(j2$qseqid)
+  
+  #merge query and blast results
+  k<-merge(x = j2,y = n,by = "qseqid",all.y = F) 
+  
+  message("outputting as fasta")
+  message("testing keeping all sequence that passed buffers, rather than extracting sequence")
+  k_export<-k[,c("seq.name","seq.text")]
+  count_final_db<-length(k_export$seq.name)
+  phylotools::dat2fasta(k_export,outfile = out)
+  
+  ###########################
+  message(c("Done. ", "From ", count_queries," sequences, ", count_hits, " mapped to a reference, ",count_qc,
+            " of which had > ",qc*100,"% coverage"))
+}
+
+
+
+#####################################################################################
+
+
+mapTrim2<-function(query,buffer,blast.results.file,qc=0.7,out){
+  message("reading query file")
+  #read in query file and count
+  n<-phylotools::read.fasta(query)
+  n$qseqid = sub(" .*", "", x = n$seq.name)
+  n$seq.text<-as.character(n$seq.text)
+  #count
+  count_queries=length(n$qseqid)
+  
+  message("reading mapping results")
+  #turn result into table, ignoring comment lines (so ignoring defintions). The table length excludes queries with
+  #non-hits
+  j<-read.table(file = blast.results.file)
+  colnames(j)<-c("qseqid", "qlen", "qstart", "qend",
+                 "slen", "sstart", "send", "length", "pident", "qcovs","sstrand")
+  #calculate scov
+  j$scov<-j$length/j$slen
+  
+  #remove duplicate hits
+  j2 <- j[order(j$qseqid,j$scov),]
+  j2<-j2[!duplicated(j2$qseqid),]
+  count_hits<-length(j2$qseqid)
+  
+  #remove hits less than specified subject cover
+  j2<-j2[j2$scov>qc,]
+  count_qc<-length(j2$qseqid)
+  
+  #merge query and blast results
+  k<-merge(x = j2,y = n,by = "qseqid",all.y = F)
+  
+  #find query position that matches first subject position (i.e. first base of primer-binding site,
+  #or first base of buffer if ref already included buffer)
+  ##the strand problem...
+  kplus<-k[k$sstrand=="plus",]
+  kminus<-k[k$sstrand=="minus",]
+  kplus$q_start_base<-kplus$qstart-kplus$sstart
+  kminus$q_start_base<-kminus$qstart-kminus$send
+  kboth<-rbind(kplus,kminus)
+  
+  #subtract the buffer from this (to only accept queries that extend left of primer)
+  kboth$q_left_buff<-kboth$q_start_base-buffer
+  #find final query base required
+  kboth$q_right_buff<-kboth$q_left_buff+kboth$slen+buffer*2
+  
+  #remove queries with negative starting base
+  k2<-kboth[kboth$q_left_buff>-1,]
+  #count
+  count_left_buffer<-length(k2$qseqid)
+  
+  #extract the sequence within thresholds
+  k2$ex.seq<-substr(k2$seq.text,start = k2$q_left_buff,stop = k2$q_right_buff)
+  #remove queries shorter than expected
+  k2$newlen<-nchar(k2$ex.seq)
+  #caLculate desired length, with slight leeway (to account for 1-3bp difference in calculation)
+  k2$desiredlen<-k2$q_right_buff-k2$q_left_buff-3
+  k3<-k2[k2$newlen>k2$desiredlen,]
+  #count
+  count_right_buffer<-length(k3$qseqid)
+  
+  message("outputting as fasta")
+  message("testing keeping all sequence that passed buffers, rather than extracting sequence")
+  k3_export<-k3[,c("seq.name","seq.text")]
+  #k3_export<-k3[,c("seq.name","ex.seq")]
+  #colnames(k3_export)<-c("seq.name","seq.text")
+  count_final_db<-length(k3_export$seq.name)
+  phylotools::dat2fasta(k3_export,outfile = out)
+  
+  ###########################
+  message(c("Done. ", "From ", count_queries," sequences, ", count_hits, " mapped to a reference, ",count_qc,
+            " of which had > ",qc*100,"% coverage, ",
+            count_left_buffer," of which passed left buffer and, of those, ",count_right_buffer," passed right buffer."))
+}
+
+#' Convert BLAST into rma6. See megan help file (\code{blast2rma.BAS(h=T)}) for full details.
+#'     This is just an R wrapper of that function. This does not support all options for the \code{blast2rma} command.
+#' @title Convert BLAST into rma6
+#' @param infile BLAST results file
+#' @param format format of BLAST results file. Common values: "BlastTab" (default),"BlastXML", "BlastText". See h=T for more
+#' @param blastMode mode used for BLAST
+#' @param reads Optional. fasta file used to perform BLAST
+#' @param outfile filename for output file. Recommended to use .rma6 suffix
+#' @param top Optional. When binning, consider hits falling within \code{top} percent of BLAST score of the top hit
+#' @param mdf Optional. Files containing metadata to be included in RMA6 files ######Need to find the accpeted formats for this
+#' @param ms Min score. Default value: 50.0
+#' @param me Max expected. Default value: 0.01
+#' @param mrc Min percent of read length to be covered by alignments. Default value: 70.0
+#' @param ram Set the read assignment mode. Default value: readCount. Legal values: readCount, readLength, alignedBases, readMagnitude
+#' @param a2t Optional, bit highly recommended. Accession-to-Taxonomy mapping file
+#' @param h Set h=T to show program usage
+#' @return An rma6 file
+#' @note Apparently, if \code{infile} is xml format, filename must end in ".xml"
+#'
+#' @examples
+#' blast2rma.BAS("primer_16S.uniq.l75L120.c20.xml",outfile = "primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6",
+#'    a2t = "nucl_acc2tax-Nov2018.abin")
+#' #inspect file and disable taxa as necessary
+#' primer_16S.uniq.l75L120.c20.TEST.taxon.table<-rma2info.BAS("primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6")
+#' final.table<-merge.tab.taxon(obitab.txt = "primer_16S.uniq.l75L120.c20.tab",primer_16S.uniq.l75L120.c20.TEST.taxon.table)
+#' @export
+blast2rma.BAS<-function(infile,format="BlastTab",blastMode="BlastN",outfile,reads=F,
+                        top=10.0, mdf=F,ms=50.0,me=0.01,mrc=70.0, ram="readCount",a2t=F,h=F){
+  if(reads==F) message("Running without a specified fasta file, which is fine, but resultant megan file will not contain as much information")
+  
+  if(h==T){
+    processx::run(command = "blast2rma", args="-h",echo = T)}
+  
+  if(h==F){
+    cb <- function(line, proc) {cat(line, "\n")}
+    argsBas<-c(" --in ", infile," --format",format," --blastMode ",blastMode,
+               " --reads ", reads," --out ",outfile," --topPercent ",top," -mdf ",mdf," -ms ",ms,
+               " -me ",me," -mrc ",mrc," -ram ",ram," -a2t ",a2t," -supp ",0)
+    argsBasF<-argsBas[-(grep(FALSE,argsBas)-1)]
+    argsBasF<-argsBasF[-grep(FALSE,argsBasF)]
+    processx::run(command = "blast2rma", args=argsBasF,stderr_line_callback = cb,echo_cmd = T,echo = F)}
+  b<-"SUCCESS!" #this is mainly to stop processx::run printing stdout and stderr to screen, which it does because we
+  #cannot explicitly redirect stdout because the command has an "out" option
+  return(b)
+}
+
+#' Convert rma6 file into a table with read names, associated taxon path and a letter denoting the lowest taxonomic
+#'     level reached. See megan help file (\code{rma2info.BAS(h=T)}) for full details.
+#'     This is just an R wrapper of the \code{rma2info} command, it does not support all options for the \code{rma2info} command.
+#' @title Convert rma6 into taxon path table.
+#' @param infile rma6 file
+#' @param names Report names rather than taxid numbers. Default value: true.
+#' @param h Show program usage
+#' @return A dataframe consisting of read names in the "id" column, a letter denoting the lowest taxonomic in the "resolution"
+#'     column and seven further columns for the taxon path split by major taxonomic ranks (SK,P,C,O,F,G,S).
+#'     The function is fixed to output the taxonomy path to lowest level reached.
+#' @examples
+#' a<-system.file("extdata", "Mblast.c20.uniq.l85L105.PRIMER_16S.rma6", package = "bastools")
+#' b<-rma2info.BAS(a)
+#' @export
+rma2info.BAS<-function(infile,names="true",h=F,out.txt=NULL){
+  if(h==T){
+    processx::run(command = "rma2info", args="-h",echo = T)}
+  
+  if(h==F){
+    cb <- function(line, proc) {cat(line, "\n")}
+    if(is.null(out.txt)){
+      argsBas<-c(" --in ", infile,
+                 " -r2c ", "Taxonomy", " --names ",names," -u ","true"," -mro ","true",
+                 " --ranks ","true"," --paths ","true"," -v ", "true")
+      a<-processx::run(command = "rma2info", args=argsBas, echo_cmd = T,stderr_line_callback = cb)
+      
+      b<-read.delim(text = a$stdout,header=F)
+      colnames(b)<-c("id","resolution","path")
+      c<-as.data.frame(stringr::str_split(b$path,pattern = ";",simplify = T))
+      d<-c[,1:(length(colnames(c))-1)]
+      colnames(d)<-c("SK","P","C","O","F","G","S")
+      d[] <- lapply(d, function(x) (gsub("\\[.*\\] ", "", x)))
+      e<-cbind(b[,c("id","resolution")],d)
+      return(e)
+    }
+    
+    if(!is.null(out.txt)){
+      argsBas<-c(" --in ", infile,
+                 " -r2c ", "Taxonomy", " --names ",names," -u ","true"," -mro ","true",
+                 " --ranks ","true"," --paths ","true"," -v ", "true")
+      h<-process$new(command = "rma2info", args=argsBas, echo_cmd = T,stdout = out.txt)
+      h$wait()
+      b<-"SUCCESS!" #this is mainly to stop processx::run printing stdout and stderr to screen, which it does because we
+      #cannot explicitly redirect stdout because the command has an "out" option
+      return(b)
+      #########this will not be in correct format for merge.tab.taxon
+    }
+  }
+}
+
+#' Combine an OTU table with a table of taxon names. Most commonly where \code{obitab} was used to convert a fasta file to a table,
+#'    and \code{MEGAN} was used to assign taxonomy from BLAST results of the same fasta file.
+#' @title Merge reads and assigned taxonomy
+#' @param obitab.txt Any tab-delineated text file with a column "id" containing read names,
+#'     such as the file created by \code{obitab}.
+#' @param megan.taxa Can be:
+#'    \itemize{
+#'     \item A simple, headerless text file where the first column consist of the read names
+#'     and the second column consists of taxa, as manually output using the \code{MEGAN::readName_to_taxonName} option.
+#'     \item A dataframe consisting of a taxonomy table with read names in a column named "id", as ouput by \code{rma2info.BAS}}
+#' @return A dataframe which is equal to \code{obitab.txt} but, depending on input, either has one new column "taxon",
+#'     or multiple columns corresponding to taxon path (SK,P,C,O,F,G,S) and lowest taxonomic level reached.
+#'
+#' @examples
+#'   \itemize{
+#'     \item test<-merge.tab.taxon(c20.uniq.l85L105.PRIMER_16S.tab", "Mblast.c20.uniq.l85L105.PRIMER_16S-taxon.txt")
+#'     \item test<-merge.tab.taxon(c20.uniq.l85L105.PRIMER_16S.tab", taxon.table)
+#'     \item blast2rma.BAS("primer_16S.uniq.l75L120.c20.xml",outfile = "primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6",
+#'               a2t = "nucl_acc2tax-Nov2018.abin")
+#'              inspect file and disable taxa as necessary
+#'              primer_16S.uniq.l75L120.c20.TEST.taxon.table<-rma2info.BAS("primer_16S.uniq.l75L120.c20.TEST.blast2rma.rma6")
+#'              final.table<-merge.tab.taxon(obitab.txt = "primer_16S.uniq.l75L120.c20.tab",primer_16S.uniq.l75L120.c20.TEST.taxon.table)}
+#' @export
+merge.tab.taxon<-function(obitab.txt,megan.taxa){
+  
+  if (class(megan.taxa)!="data.frame") {
+    read.csv(file = obitab.txt, sep = "\t")->obitab_input
+    read.csv(file = megan.taxa, sep = "\t", header = FALSE)->taxon_input
+    taxon_input$taxon<-taxon_input$V2
+    taxon_input$V2<-NULL
+    merged.table<-merge(obitab_input,taxon_input,by.x = "id",by.y = "V1",all.x = TRUE)
+  }
+  
+  if (class(megan.taxa)=="data.frame") {
+    read.csv(file = obitab.txt, sep = "\t")->obitab_input
+    merged.table<-merge(obitab_input,megan.taxa,by.x = "id",by.y = "id",all.x = TRUE)
+  }
+  return(merged.table)
+}
+
+family.mean.mismatch<-function(ecopcroutput_clean,primer.seq=NULL,primer.direction){
+  
+  #split query forward primer
+  if(primer.direction=="f"){
+    sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$forward_match), ""))))}
+  if(primer.direction=="r"){
+    sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$reverse_match), ""))))}
+  sst$family_name<-ecopcroutput_clean$family_name
+  rownames(sst)<-NULL
+  
+  #split subject primer into list
+  pflist<-list()
+  for(i in 1:nchar(primer.seq)){
+    pflist[[i]]<-substr(primer.seq,start = i,stop = i)
+  }
+  
+  #IUPAC RULES IN LIST
+  IUPAC=list(R=c("A","G"),
+             Y=c("C","T"),
+             S=c("G","C"),
+             W=c("A","T"),
+             K=c("G","T"),
+             M=c("A","C"),
+             B=c("C","G","T"),
+             D=c("A","G","T"),
+             H=c("A","C","T"),
+             V=c("A","C","G"),
+             N=c("C","G","T","A"))
+  
+  #replace subject primer baseswith IUPAC ambiguities
+  suppressWarnings(for(i in 1:length(pflist)){
+    if(pflist[[i]]=="Y") pflist[[i]]<-IUPAC[["Y"]]
+    if(pflist[[i]]=="S") pflist[[i]]<-IUPAC[["S"]]
+    if(pflist[[i]]=="W") pflist[[i]]<-IUPAC[["W"]]
+    if(pflist[[i]]=="K") pflist[[i]]<-IUPAC[["K"]]
+    if(pflist[[i]]=="M") pflist[[i]]<-IUPAC[["M"]]
+    if(pflist[[i]]=="B") pflist[[i]]<-IUPAC[["B"]]
+    if(pflist[[i]]=="D") pflist[[i]]<-IUPAC[["D"]]
+    if(pflist[[i]]=="H") pflist[[i]]<-IUPAC[["H"]]
+    if(pflist[[i]]=="V") pflist[[i]]<-IUPAC[["V"]]
+    if(pflist[[i]]=="N") pflist[[i]]<-IUPAC[["N"]]
+  })
+  
+  #split ecopcroutput_clean by family
+  splitdf<-split(sst, f = sst$family_name)
+  
+  #check if query primer is in subject primer
+  #function to apply %in% to one data.frame
+  matchdf<-function(df,pflist){
+    out<-data.frame(matrix(ncol=length(pflist),nrow = length(df[,1])))
+    for(i in 1:length(pflist)){
+      out[,i]<-df[,i] %in% pflist[[i]]
+    }
+    return(out)
+  }
+  
+  #apply to all dataframe in list
+  out2=list()
+  for(i in 1:length(splitdf)){
+    out2[[i]]<-matchdf(splitdf[[i]],pflist)
+  }
+  
+  #convert true/false to 1/0
+  out3=list()
+  for(i in 1:length(out2)){
+    out3[[i]]<-out2[[i]]*1
+  }
+  
+  #swap 0s for 1s
+  for(i in 1:length(out3)){
+    out3[[i]][out3[[i]]==1]<-2
+    out3[[i]][out3[[i]]==0]<-1
+    out3[[i]][out3[[i]]==2]<-0
+  }
+  
+  #calculate mean mismatches for each family for each base
+  out4<-lapply(X=out3,FUN = colMeans)
+  names(out4)<-names(splitdf)
+  out5<-as.data.frame(t(bind_rows(out4)))
+  colnames(out5)<-as.character(strsplit(x = primer.seq,"")[[1]])
+  
+  return(out5)
+}
+
+
+
+
+mismatch.table<-function(ecopcroutput_clean,primer.seq=NULL,primer.direction){
+  
+  #split query forward primer
+  if(primer.direction=="f"){
+    sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$forward_match), ""))))}
+  if(primer.direction=="r"){
+    sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$reverse_match), ""))))}
+  sst$family_name<-ecopcroutput_clean$family_name
+  rownames(sst)<-NULL
+  
+  #split subject primer into list
+  pflist<-list()
+  for(i in 1:nchar(primer.seq)){
+    pflist[[i]]<-substr(primer.seq,start = i,stop = i)
+  }
+  
+  #IUPAC RULES IN LIST
+  IUPAC=list(R=c("A","G"),
+             Y=c("C","T"),
+             S=c("G","C"),
+             W=c("A","T"),
+             K=c("G","T"),
+             M=c("A","C"),
+             B=c("C","G","T"),
+             D=c("A","G","T"),
+             H=c("A","C","T"),
+             V=c("A","C","G"),
+             N=c("C","G","T","A"))
+  
+  #replace subject primer baseswith IUPAC ambiguities
+  suppressWarnings(for(i in 1:length(pflist)){
+    if(pflist[[i]]=="R") pflist[[i]]<-IUPAC[["R"]]
+    if(pflist[[i]]=="Y") pflist[[i]]<-IUPAC[["Y"]]
+    if(pflist[[i]]=="S") pflist[[i]]<-IUPAC[["S"]]
+    if(pflist[[i]]=="W") pflist[[i]]<-IUPAC[["W"]]
+    if(pflist[[i]]=="K") pflist[[i]]<-IUPAC[["K"]]
+    if(pflist[[i]]=="M") pflist[[i]]<-IUPAC[["M"]]
+    if(pflist[[i]]=="B") pflist[[i]]<-IUPAC[["B"]]
+    if(pflist[[i]]=="D") pflist[[i]]<-IUPAC[["D"]]
+    if(pflist[[i]]=="H") pflist[[i]]<-IUPAC[["H"]]
+    if(pflist[[i]]=="V") pflist[[i]]<-IUPAC[["V"]]
+    if(pflist[[i]]=="N") pflist[[i]]<-IUPAC[["N"]]
+  })
+  
+  #check if query primer is in subject primer
+  #function to apply %in% to one data.frame
+  matchdf<-function(df,pflist){
+    out<-data.frame(matrix(ncol=length(pflist),nrow = length(df[,1])))
+    for(i in 1:length(pflist)){
+      out[,i]<-df[,i] %in% pflist[[i]]
+    }
+    return(out)
+  }
+  
+  #apply
+  out2<-matchdf(sst,pflist)
+  
+  #convert true/false to 1/0
+  out3<-out2*1
+  #swap 0s for 1s
+  
+  out3[out3==1]<-2
+  out3[out3==0]<-1
+  out3[out3==2]<-0
+  
+  return(out3)
+}
+
+#' get classic taxonomy table from taxids
+#' @param x A dataframe with a column called "taxid".
+#' @param taxo An obitools-formatted taxonomy database as an R object, generated by \code{\link[ROBITaxonomy]{read.taxonomy}}.
+#' @return The original dataframe \code{x} with seven new taxonomy columns, kingdom to species.
+#' @examples
+#' get.classic.taxonomy.BAS(My_df_with_taxid_col, my_obitools-formatted_taxonomy_as_object)
+#' @export
+get.classic.taxonomy.Bas = function(x, obitaxdb) {
+  classic.taxo = c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+  taxids = x$taxid
+  out = as.data.frame(do.call("cbind", lapply(classic.taxo, function(y) {
+    ROBITaxonomy::scientificname(obitaxdb, ROBITaxonomy::taxonatrank(obitaxdb,taxids,y))
+  })))
+  colnames(out) = paste(classic.taxo, "_name_ok", sep="")
+  rownames(out) = row.names(x)
+  out$scientific_name_ok = ROBITaxonomy::scientificname(obitaxdb, taxids)
+  out$taxonomic_rank_ok = ROBITaxonomy::taxonomicrank(obitaxdb, taxids)
+  return(out)
+}
+
+#' Add taxids to fasta
+#' @param infile A fasta file with scientific names in headers.
+#' \itemize{
+#'     \item By default, the sequence identifier is used.
+#'     \itemize{
+#'         \item Underscore characters (_) are substituted by spaces.
+#'         \item e.g. \code{>Leiopelma_hochstetteri length=658}}
+#'     \item Alternatively, the k option specifies an attribute containing the taxon scientific name.
+#'     \itemize{
+#'         \item e.g.  \code{>seqX species=Leiopelma_hochstetteri;}
+#'         \item Note that the \code{space} before the attribute and the \code{;} after is mandatory}}
+#' @param taxo An obitools-formatted taxonomy database - a set of files (.adx,.ndx,.rdx,.tdx).
+#' @return A new fasta with taxids in header.
+#' @note Sequences for which taxids cannot be found are discarded
+#' @examples
+#' obiaddtaxids.Bas(infile = a, taxo="/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/TAXONOMIES/obitax_26-4-19",
+#' out = "wTaxids.head.test.op2.fasta",k = "species")
+#' @export
+obiaddtaxids.Bas<-function(infile,taxo,k=NULL,out){
+  cb <- function(line, proc) {cat(line, "\n")}
+  if(is.null(k)){
+    f<-process$new(command = "obiaddtaxids", args=c(infile,"-d",taxo),
+                   echo_cmd = T,stdout=out)
+    f$wait()
+    d<-"SUCCESS!"
+  }
+  if(!is.null(k)){
+    f<-process$new(command = "obiaddtaxids", args=c(infile,"-d",taxo, "-k", k),
+                   echo_cmd = T,stdout=out)
+    f$wait()
+    d<-"SUCCESS!"
+  }
+}
+
+#' Report taxonomic resolution attained for each taxon amplified in silico
+#' @param ecopcroutput A data frame such as that produced by \code{ecoPCR.Bas}.
+#' @param taxo An obitools-formatted taxonomy database. This can be an R object, generated by \code{\link[ROBITaxonomy]{read.taxonomy}}
+#'     or \code{\link[bastools]{NCBI2obitaxonomy}}, or a set of files (.adx,.ndx,.rdx,.tdx).
+#' @param taxLevel Taxonomic level to use to generate list.
+#'     Accepted values are "superkingdom", "phylum", "class", "order", "family", "genus", "species" (default), "subspecies".
+#' @return A data frame consisting of the species amplified, the taxid and the taxon resolution attained
+#'     by the amplified fragment.
+#' @examples
+#' a2<-system.file("extdata", "45F-63R_4Mis_ALLVERTS_REFSEQ.ecopcroutput", package = "bastools")
+#' b2<-substr(system.file("extdata", "obitax_26-4-19.ndx", package = "bastools"),1,str_locate(system.file("extdata", "obitax_26-4-19.ndx", package = "bastools"),"\\.")-1)
+#' d2<-ecopcr.hit.table(a2,obitaxdb = b2,taxLevel = "class")
+#' e2<-d2$ecopcroutput_uncleaned
+#' test.res2<-ecopcroutput.res.Bas(e2,b2,taxLevel = "order")
+#' plot.ecopcroutput.res.Bas(test.res2)
+#' @export
+#'
+ecopcroutput.res.Bas<-function(ecopcroutput,obitaxdb,taxLevel="species"){
+  if (class(obitaxdb)[1]!="obitools.taxonomy") obitaxdb2=ROBITaxonomy::read.taxonomy(obitaxdb)
+  if (class(obitaxdb)[1]=="obitools.taxonomy") obitaxdb2=obitaxdb
+  res=ROBIBarcodes::resolution(taxonomy = obitaxdb2,ecopcr = ecopcroutput)
+  a<-as.data.frame(res)
+  a$res<-gsub(x = a$res,pattern = "infraclass",replacement = "class")
+  a$res<-gsub(x = a$res,pattern = "subfamily",replacement = "family")
+  a$res<-gsub(x = a$res,pattern = "tribe",replacement = "family")
+  a$res<-gsub(x = a$res,pattern = "suborder",replacement = "order")
+  a$res<-gsub(x = a$res,pattern = "infraorder",replacement = "order")
+  a$res<-gsub(x = a$res,pattern = "superfamily",replacement = "order")
+  a$res<-gsub(x = a$res,pattern = "subclass",replacement = "class")
+  a$res<-gsub(x = a$res,pattern = "subgenus",replacement = "genus")
+  a$res<-gsub(x = a$res,pattern = "species subgroup",replacement = "species")
+  a$res<-gsub(x = a$res,pattern = "cohort",replacement = "order")
+  
+  #K,P,C,O,F,G,S
+  
+  b<-cbind(ecopcroutput,a)
+  
+  taxongroup=paste0(taxLevel,"_name")
+  e<-as.data.frame(table(b[,taxongroup],b$res))
+  colnames(e)<-c("taxon","resolution","Freq")
+  f<-e[e$Freq!=0,]
+  return(f)
+}
+
+#' @export
+obiaddtaxids.nodump.Bas<-function(infile,taxo,k=NULL,out){
+  cb <- function(line, proc) {cat(line, "\n")}
+  if(is.null(k)){
+    f<-process$new(command = "obiaddtaxids", args=c(infile,"-d",taxo),
+                   echo_cmd = T,stdout=out)
+    f$wait()
+    d<-"SUCCESS!"
+  }
+  if(!is.null(k)){
+    f<-process$new(command = "obiaddtaxids", args=c(infile,"-d",taxo, "-k", k),
+                   echo_cmd = T,stdout=out)
+    f$wait()
+    d<-"SUCCESS!"
+  }
+}
+
+
