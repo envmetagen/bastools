@@ -1042,8 +1042,8 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
 }
 
 taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F){
-  taxa<-do.call(rbind,str_split(taxatab$taxon,";"))
-  taxa<-cbind(taxa,do.call(rbind,str_split(taxa[,7]," ")))
+  taxa<-do.call(rbind,stringr::str_split(taxatab$taxon,";"))
+  taxa<-cbind(taxa,do.call(rbind,stringr::str_split(taxa[,7]," ")))
   taxa2<-as.data.frame(substr(taxa,start = 1,stop = 3))
   taxatab$taxon<-apply(taxa2,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],"_",x[9]))
   
@@ -1655,7 +1655,7 @@ google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
 
 
 filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,out,min_qcovs=70,
-                       max_evalue=0.001,top=1){
+                       max_evalue=0.001,top=1,obitaxdb){
   
   if(length(grep("qcovs",headers))<1) stop("qcovs not in headers")
   if(length(grep("evalue",headers))<1) stop("evalue not in headers")
@@ -2066,6 +2066,7 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   
   #after first ecopcr
   firstecopcr<-data.table::fread(first.ecopcr.hit.table,sep = "\t")
+  firstecopcr<-firstecopcr[!firstecopcr$amplicon_length>max_length,]
   firstecopcr$taxids<-firstecopcr$taxid
   firstecopcr<-add.lineage.df(firstecopcr,ncbiTaxDir)
   firstecopcr$count<-1
@@ -2073,6 +2074,22 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   a<-aggregate(firstecopcr$count,by=list(firstecopcr$path),FUN=sum)
   colnames(a)<-c("Family","nseqs")
   firstecopcr<-a
+  
+  #after long ecopcr
+  long.ecopcr<-data.table::fread("all.ecopcr.hits.long.txt",data.table = F)
+  long.ecopcr<-long.ecopcr[long.ecopcr$amplicon_length>max_length & long.ecopcr$amplicon_length<max_length+200,]
+  long.ecopcr$taxids<-long.ecopcr$taxid
+  long.ecopcr<-add.lineage.df(long.ecopcr,ncbiTaxDir)
+  long.ecopcr$count<-1
+  long.ecopcr$path<-paste(long.ecopcr$K,long.ecopcr$P,long.ecopcr$C,long.ecopcr$O,long.ecopcr$F,sep = ";")
+  a<-aggregate(long.ecopcr$count,by=list(long.ecopcr$path),FUN=sum)
+  colnames(a)<-c("Family","nseqs")
+  long.ecopcr1<-a
+  
+  #mean length in long ecopcr
+  a<-aggregate(long.ecopcr$amplicon_length,by=list(long.ecopcr$path),FUN=mean)
+  colnames(a)<-c("Family","nseqs")
+  long.ecopcr2<-a
   
   #after mapping back
   aftermapping<-count.fams.in.fasta(mapped.fasta,ncbiTaxDir)
@@ -2085,6 +2102,14 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   colnames(merged)<-gsub("nseqs","after_checks",colnames(merged))
   merged<-merge(merged,firstecopcr,by = "Family",all = T)
   colnames(merged)<-gsub("nseqs","first_ecopcr",colnames(merged))
+  
+  merged<-merge(merged,long.ecopcr1,by = "Family",all = T)
+  colnames(merged)<-gsub("nseqs","first_ecopcr_but_above_max_length",colnames(merged))
+  
+  merged<-merge(merged,long.ecopcr2,by = "Family",all = T)
+  colnames(merged)<-gsub("nseqs","mean_length_for_above_max_length",colnames(merged))
+  merged$mean_length_for_above_max_length<-round(merged$mean_length_for_above_max_length,digits = 0)
+  
   merged<-merge(merged,aftermapping,by = "Family",all = T)
   colnames(merged)<-gsub("nseqs","after_mapping_back",colnames(merged))
   

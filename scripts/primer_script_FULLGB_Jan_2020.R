@@ -1,13 +1,7 @@
 ####
-setwd("/home/bastian.egeter/git_bastools/bastools/")
-file.sources<-c("add.taxids.fasta.BAS.R","building_dbs.R","manip_fasta.R","running_ecoTools.R","build_refs.R",
-                "mapTrim.R","primer_mistmatches.R","primer_matches_by_family.R","building_dbs4.R","ecopcr2refs.R",
-                "make.primer.bias.tables.R","make.primer.bias.tables.addfuncs.R",
-                "make.primer.bias.tables.famfuncs.R","counting.fams.at.each.step.R")
-sapply(file.sources,source)
+source("/home/bastian.egeter/git_bastools/bastools/master_functions.R")
 library(processx)
 library(dplyr)
-
 setwd(outDir)
 
 #######################################################
@@ -172,12 +166,26 @@ message("STEP6 COMPLETE")
 }
 
 #######################################################
+#step 6a - run ecopcr with increased length to see what might have been excluded due to length
+
+if("step6a" %in% stepstotake){
+  message("RUNNING STEP6")
+  
+  ecoPCR.Bas(Pf,Pr,ecopcrdb = "formatted.minL.lineage.goodfam.uid2.ecopcrdb",max_error = max_error_buildrefs,
+             min_length,max_length = long_length,out = "all.ecopcr.hits.long.txt",  buffer = buffer)
+  
+  message("STEP6a COMPLETE")
+  
+}
+
+#######################################################
 #step 7 - add counts to bias file
 
 if("step7" %in% stepstotake){
   
   message("RUNNING STEP7")
-  biastemp<-add.counts.to.biasfile(ncbiTaxDir = ncbiTaxDir,download.fasta = catted_DLS,after.minL.fasta = gsub(".fasta",".minL.fasta",catted_DLS)
+  biastemp<-add.counts.to.biasfile(ncbiTaxDir = ncbiTaxDir,download.fasta = catted_DLS,after.minL.fasta = gsub(".fasta",".minL.fasta",
+                                                                                                               catted_DLS)
                           ,after.checks.fasta = gsub(".fasta",".checked.lin.minL.fasta",catted_DLS)
                          ,first.ecopcr.hit.table = "final.ecopcr.hits.txt",mapped.fasta = "formatted.minL.lineage.goodfam.uid2.mapped.fasta"
                          ,out_bias_file = out_bias_file)

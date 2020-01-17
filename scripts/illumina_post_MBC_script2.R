@@ -7,7 +7,6 @@ if(use.google) googlesheets::gs_auth()
 source("master_functions.R")
 source("bin.blast.R")
 
-
 setwd(outDir)
 
 ####################################################
@@ -62,7 +61,7 @@ if("step8" %in% stepstotake){
     message(paste("filtering blast results for",files[i]))
     blastfile = files[i]
     out<-gsub(".blast.txt",".blast.filt.txt",files[i])
-    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top)
+    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top,obitaxdb = obitaxdb)
   }
   message("STEP8 complete")
   
