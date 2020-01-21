@@ -177,7 +177,7 @@ if("step14" %in% stepstotake){
   
   files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   for(i in 1:length(files)){
-    bas.krona.plot(files[i],KronaPath = "/home/bastian.egeter/Tools/Krona.install/bin/ktImportText")
+    bas.krona.plot(files[i],KronaPath)
   }
   message("STEP14 complete")
   

@@ -98,7 +98,7 @@ filter.dxns<-function(taxatab,filter_dxn=50){
   dxns2<-sum(taxatab2>0)
   taxatab2<-cbind(taxon=taxatab$taxon,taxatab2)  
   taxatab2<-rm.0readtaxSam(taxatab2)
-  message(paste("reads removed:",reads1-reads2,"from",reads1, "; detections removed:",dxns1-dxns2,"from",dxns1))
+  message(paste("Using detection filter of",filter_dxn, ": reads removed:",reads1-reads2,"from",reads1, "; detections removed:",dxns1-dxns2,"from",dxns1))
   return(taxatab2)
 }
 
@@ -790,30 +790,43 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
 #' genbank to ecopcrdb
 #'
 #' @export
-obiconvert.Bas<-function(infile,in_type,taxo,out_type,out){
+obiconvert.Bas<-function(infile,in_type,taxo,out_type,out,add2existing=F){
+  
   if(in_type!="fasta" & out_type=="--ecopcrdb-output") stop("Only fasta files can be converted into an ecopcrdb")
   
   cb <- function(line, proc) {cat(line, "\n")}
   if(out_type=="--fasta-output"){
-    b<-processx::run(command = "obiconvert", args=c(infile,"-d",taxo,out_type),
-                     echo=F,stderr_line_callback = cb,echo_cmd = T)
+    b<-processx::run(command = "obiconvert", args=c(infile,"-d",taxo,out_type),echo=F,stderr_line_callback = cb,echo_cmd = T)
     writeLines(b$stdout,con = out)
   }
+  
   if(out_type=="--ecopcrdb-output"){
     message("Make sure input fasta file has taxids in sequence headers in the format \" taxid=XXXX;\"")
-    processx::run(command = "obiconvert", args=c(infile,"-d",taxo,paste0(out_type,"=",out),"--skip-on-error"),
-                  echo=F,stderr_line_callback = cb,echo_cmd = T)
+    if(add2existing==F) {
+      if(length(grep(paste0(out,".adx"),list.files())>0)) {
+        message(paste("Removing existing datase", out))
+        unlink(x = list.files(pattern = out)) 
+      }
+    }
+    
+    tempfasta<-paste0(as.numeric(Sys.time()),".fasta")
+        #remove "|"s to stop ecopcr errors
+    f<-process$new(command = "sed", args = c("s/|/_/g",infile), echo_cmd = T,
+                   stdout=tempfasta)
+    f$wait()
+    system2(command = "obiconvert", args=c(tempfasta,"-d",taxo,paste0(out_type,"=",out),"--skip-on-error"),wait = T)
     d<-"SUCCESS!"
+    unlink(tempfasta)
   }
-  h<-processx::run(command = "obicount", args=c(infile),echo=F,echo_cmd = F,stderr_line_callback = cb)
-  j<-stringr::str_locate_all(string = h$stdout,pattern = " " )[[1]][,1]
-  k<-substr(h$stdout,1,j-1)
-  l<-paste0("input_read_count=",k)
-  h<-processx::run(command = "obicount", args=c(out),echo=F,echo_cmd = F,stderr_line_callback = cb)
+  
+  #count input fasta
+  l<-paste0("input_read_count=",bascount.fasta(infile))
+  #count output ecopcr
+  h<-processx::run(command = "obicount", args=out,echo=F,echo_cmd = F,stderr_line_callback = cb)
   j<-stringr::str_locate_all(string = h$stdout,pattern = " " )[[1]][,1]
   k<-substr(h$stdout,1,j-1)
   m<-paste0("output_read_count=",k)
-  print("SUCCESS!")
+  
   print(l)
   print(m)
 }
@@ -1073,7 +1086,8 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   
   a<-ggplot2::ggplot(data=long , aes(y=value, x=variable, fill=taxon))+
     theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
-          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical")
+          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical")+
+    ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol))
   
   if(length(unique(long$taxon))<29)  a<-a+scale_fill_manual(values = MyCols) 
   
@@ -1146,8 +1160,12 @@ taxatab.pca.plot<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,
 
 #Plotting bray distance matrix PCA
 taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
-  taxatab<-rm.0readtaxSam(taxatab)
-  taxatab2<-binarise.taxatab(taxatab)
+  
+  if(MS_colID!="ss_sample_id") taxatab2<-sumreps(taxatab = taxatab,master_sheet = master_sheet,by = MS_colID)
+  taxatab2<-rm.0readtaxSam(taxatab2)
+  
+  taxatab2<-binarise.taxatab(taxatab2)
+  
   distance_matrix<-taxatab2bray(taxatab2)
   
   cmds<-cmdscale(distance_matrix,k=4, list. = T, eig = T)
@@ -1160,16 +1178,17 @@ taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",fact
   cmdspoints<-as.data.frame(cmds$points)
   cmdspoints[,MS_colID]<-rownames(cmdspoints)
   cmdspoints<-merge(cmdspoints,master_sheet,by=MS_colID,all.x = T)
-  
+
   #plot
   # The palette with grey:
-  cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+  #cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
   
   p<-ggplot(cmdspoints,aes(x=V1,y=V2))+
-    geom_point(aes(size=1,colour=cmdspoints[,factor1],shape=cmdspoints[,factor1],stroke=1))+
+    geom_point(aes(size=1,colour=cmdspoints[,factor1],stroke=1))+
+    #geom_point(aes(size=1,colour=cmdspoints[,factor1],shape=cmdspoints[,factor1],stroke=1))+
     #geom_jitter(position = )
-    scale_shape_manual(values=c(1, 2, 0, 5, 6, 3, 4))+
-    scale_color_manual(values = c(cbPalette))+
+    #scale_shape_manual(values=c(1, 2, 0, 5, 6, 3, 4))+
+    #scale_color_manual(values = c(cbPalette))+
     xlab(bquote("Variance explained =" ~ .(VarExplainedPC1)))+
     ylab(bquote("Variance explained =" ~ .(VarExplainedPC2))) +
     theme_bw()+
@@ -1184,13 +1203,14 @@ taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",fact
   message("Principal Component Analysis plot of community simmilarity using Bray-Curtis distances")
   
   if(ellipse){
+    message("Note: Ellipses will not be calculated if there are groups with too few data points")
     p<- p+stat_ellipse(aes(colour=cmdspoints[,factor1] 
                            ,fill=cmdspoints[,factor1]
     )
     ,type = "norm", level=0.90, 
     geom = "polygon",alpha=0.2,
-    show.legend = F,segments = 100) +
-      scale_fill_manual(values = c(cbPalette))
+    show.legend = F,segments = 100) #+
+      #scale_fill_manual(values = c(cbPalette))
     
     p$layers<-rev(p$layers)
     
@@ -1307,20 +1327,33 @@ ecoPrimers.Bas<-function(ecopcrdb,max_error,min_length,max_length,strict_match_p
 #' @return A dataframe with in silico PCR results
 #'
 #' @export
-ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length,out,buffer=NULL){
+ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length=NULL,out,buffer=NULL){
   #cb <- function(line, proc) {cat(line, "\n")}
   
   if(length(grep("I",Pf))>0)(Pf<-gsub("I","N",Pf))
   if(length(grep("I",Pr))>0)(Pf<-gsub("I","N",Pr))
   
+  if(!is.null(max_length)){
   if(is.null(buffer)){
-    system2(command = "ecoPCR",args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k","-c"),
+    system2(command = "ecoPCR",args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k"),
             stdout = out,wait = T)}
   
   if(!is.null(buffer)){
     system2(command = "ecoPCR",
-            args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k","-c","-D",buffer),
+            args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-L", max_length,"-k","-D",buffer),
             stdout = out,wait = T)}
+  }
+  
+  if(is.null(max_length)){
+    if(is.null(buffer)){
+      system2(command = "ecoPCR",args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-k"),
+              stdout = out,wait = T)}
+    
+    if(!is.null(buffer)){
+      system2(command = "ecoPCR",
+              args=c(Pf, Pr,"-d",ecopcrdb,"-e",max_error,"-l",min_length,"-k","-D",buffer),
+              stdout = out,wait = T)}
+  }
   
   #remove comment lines to help data.table to read properly
   f<-process$new(command = "sed", args = c("-i","/^#/ d", out), echo_cmd = T)
@@ -1840,23 +1873,21 @@ dxns.by.rank<-function(taxatab){
   return(d)
 }
 
-sumreps<-function(taxatab,master_sheet){
-  #this gsub will not always work. e.g where sample names were chosen in google sheet, not exactly the same as sample
-  #DNA_samples<-unique(gsub("(.*)-(.*)-(.*)-(.*)$", "\\1", colnames(taxatab[,-1])))
-  
-  DNA_samples<-master_sheet[match(colnames(taxatab[,-1]),table = master_sheet[,"ss_sample_id"]),"Sample_Name"]
+sumreps<-function(taxatab,master_sheet,by="Sample_Name"){
+
+  grouping<-master_sheet[match(colnames(taxatab[,-1]),table = master_sheet[,"ss_sample_id"]),by]
   
   taxatab2<-taxatab
-  colnames(taxatab2)<-c("taxon",DNA_samples)
+  colnames(taxatab2)<-c("taxon",grouping)
   
   summed<-list()
-  for(i in 1:length(unique(DNA_samples))){
-    taxatab.temp<-as.data.frame(taxatab2[,grep(unique(DNA_samples)[i],colnames(taxatab2)),drop=F])
+  for(i in 1:length(unique(grouping))){
+    taxatab.temp<-as.data.frame(taxatab2[,grep(unique(grouping)[i],colnames(taxatab2)),drop=F])
     if(length(colnames(taxatab.temp))>1) taxatab.temp$sum<-rowSums(taxatab.temp) else taxatab.temp$sum<-taxatab.temp[,1]
     
     taxatab.temp2<-taxatab.temp[,"sum",drop=F]
     
-    colnames(taxatab.temp2)<-gsub("sum",unique(DNA_samples)[i],colnames(taxatab.temp2))
+    colnames(taxatab.temp2)<-gsub("sum",unique(grouping)[i],colnames(taxatab.temp2))
     
     summed[[i]]<-taxatab.temp2
   }
@@ -2196,21 +2227,21 @@ google.get.startingfastas<-function(outDir,sheeturls,experiment_id,usingobiuniq)
   
 }
 
-ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr){
+ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr,min_length=NULL,max_length=NULL){
   message("Reminder: assumes -D option was used for ecopcr")
   #read results
-  ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
+  ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t",data.table = F)
   #remove hits outside desired lengths
-  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
-  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
+  if(!is.null(min_length)) {ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]}
+  if(!is.null(max_length)) {ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]}
   #remove duplicates (i.e. pick one entry per AC, based on lowest mismatches)
   ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
   ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
   ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
   
-  #the edges removal in next step takes a long time, so choose one seq per genus
+  #the edges removal in next step takes a long time, choosing one seq per genus 
   ecopcroutput <- ecopcroutput[order(ecopcroutput$family_name,ecopcroutput$amplicon_length,decreasing = T),]
-  ecopcroutput <-ecopcroutput[!duplicated(ecopcroutput[,c("family_name")]),] 
+  ecopcroutput <-ecopcroutput[!duplicated(ecopcroutput[,c("family")]),] 
   
   #remove seqs with edges less than buffer
   a<-strsplit(ecopcroutput$sequence,split = "")
@@ -2218,12 +2249,12 @@ ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr){
   ecopcroutput$rightbuffer<-"0"
   
   d<-list()
-  pb = txtProgressBar(min = 0, max = length(ecopcroutput$leftbuffer), initial = 0,style = 3) 
+  #pb = txtProgressBar(min = 0, max = length(ecopcroutput$leftbuffer), initial = 0,style = 3) 
   for(i in 1:length(ecopcroutput$leftbuffer)){
     ecopcroutput$leftbuffer[i]<-match(FALSE,a[[i]] %in% letters)
     d[[i]]<-a[[i]][ecopcroutput$leftbuffer[i]:length(a[[i]])]
     ecopcroutput$rightbuffer[i]<-length(d[[i]])-as.numeric(match(TRUE,d[[i]] %in% letters))
-    setTxtProgressBar(pb,i)
+    #setTxtProgressBar(pb,i)
   }
   #remove seqs with left buffer less than buffer
   ecopcroutput<-ecopcroutput[!ecopcroutput$leftbuffer<bufferecopcr,]
@@ -2624,8 +2655,7 @@ make.primer.bias.tables<-function(originaldbtab,ecopcrfile,
   write.table(x=ecopcroutput, file = out_mod_ecopcrout_file,quote = F,sep = "\t",row.names = F)
 }
 
-mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out){
-  message("reading query file")
+mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out,pident=20){
   #read in query file and count
   n<-phylotools::read.fasta(query)
   n$qseqid = sub(" .*", "", x = n$seq.name)
@@ -2633,12 +2663,11 @@ mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out){
   #count
   count_queries=length(n$qseqid)
   
-  message("reading mapping results")
   #turn result into table, ignoring comment lines (so ignoring defintions). The table length excludes queries with
   #non-hits
   j<-read.table(file = blast.results.file)
-  colnames(j)<-c("qseqid", "qlen", "qstart", "qend",
-                 "slen", "sstart", "send", "length", "pident", "qcovs","sstrand")
+  colnames(j)<-c("qseqid", "qlen", "qstart", "qend","slen", "sstart", "send", "length", "pident", "qcovs","sstrand")
+                 
   #calculate scov
   j$scov<-j$length/j$slen
   
@@ -2647,9 +2676,13 @@ mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out){
   j2<-j2[!duplicated(j2$qseqid),]
   count_hits<-length(j2$qseqid)
   
-  #remove hits less than specified subject cover
+  #remove hits less than specified scov
   j2<-j2[j2$scov>qc,]
   count_qc<-length(j2$qseqid)
+  
+  #remove hits less than specified pident
+  j2<-j2[j2$pident>pident,]
+  count_pident<-length(j2$pident)
   
   #merge query and blast results
   k<-merge(x = j2,y = n,by = "qseqid",all.y = F) 
@@ -2661,8 +2694,8 @@ mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out){
   phylotools::dat2fasta(k_export,outfile = out)
   
   ###########################
-  message(c("Done. ", "From ", count_queries," sequences, ", count_hits, " mapped to a reference, ",count_qc,
-            " of which had > ",qc*100,"% coverage"))
+  message(paste("Done.", "From", count_queries,"sequences,", count_hits, "mapped to a reference,",count_qc,
+            "of which had >",qc*100,"% coverage,",count_pident,"of which had greater than",pident,"% percentage identity"))
 }
 
 
@@ -2693,7 +2726,7 @@ mapTrim2<-function(query,buffer,blast.results.file,qc=0.7,out){
   j2<-j2[!duplicated(j2$qseqid),]
   count_hits<-length(j2$qseqid)
   
-  #remove hits less than specified subject cover
+  #remove hits less than specified scov
   j2<-j2[j2$scov>qc,]
   count_qc<-length(j2$qseqid)
   

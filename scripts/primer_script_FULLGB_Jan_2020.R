@@ -1,7 +1,39 @@
 ####
+
+#The overall plan
+## Starting with a database composed (ideally solely, but some errors ok) of a certain fragment;
+## 1. Remove sequences below the min length of the expected insert length (+primer lengths + buffer, usually 10)
+### Anything below this will not be usable later and could slow things down 
+### Min length should be way below that expected, as one of the outcomes is to find the range of insert lengths
+## 2. Because currently the whole pipeline is done on a family level, remove any sequences without family-level taxonomy
+## 3. Important to know which families are represented in db, i.e.contain the target fragment, regardless of whether they contain primers
+### i. Run ecopcr to extract inserts (in sequences that have primer binding sites), using 10bp buffer, to ensure that only seqs with 
+###    flanks survive. This is to avoid any seqs that may have been generated using the same binding site. It has no limits on maxL
+#### b. This should be done quite strictly (mismatch=2) to make more reliable. May be missing families, but I tested and "wrong" frags 
+####    do seem to be amplified using loose settings (e.g. for COI 180bp frags with 4 mismatches at best)
+### ii. Keep only best hits per seq.
+### iii. Keep only one seq per genus (should be enough and otherwise following steps very slow)
+### iv. Map all seqs back against references. Using blast. 
+### v. Remove hits less than 97% subject cover and 50 % identity
+#### a. This is because we want anything that aligns with the entire fragment (insert+primers+buffers). The pident is just a minor quality
+####    control
+
+
+#Desired improvements
+##Start with nuno's nr database
+
+
+message("settings:
+        ")
+ls.str()
+message("script being used:
+        ")
+readLines(script)
+
 source("/home/bastian.egeter/git_bastools/bastools/master_functions.R")
 library(processx)
 library(dplyr)
+obitaxoR<-ROBITaxonomy::read.taxonomy(dbname = obitaxo)
 setwd(outDir)
 
 #######################################################
@@ -16,41 +48,19 @@ if("step3" %in% stepstotake){
                  stdout=gsub(".fasta",".minL.fasta",catted_DLS))
   f$wait()
   
-  count.after.rm.minL<-as.data.frame(bascount.fasta(gsub(".fasta",".minL.fasta",catted_DLS)))
-  colnames(count.after.rm.minL)<-"count.after.rm.minL"
-  write.table(count.after.rm.minL,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-  
   #add lineage
   add.lineage.fasta.BAS(infasta=gsub(".fasta",".minL.fasta",catted_DLS),taxids=T,
                         ncbiTaxDir=ncbiTaxDir,out=gsub(".fasta",".lin.minL.fasta",catted_DLS))
-  count.after.add.lin<-as.data.frame(bascount.fasta(gsub(".fasta",".lin.minL.fasta",catted_DLS)))
-  colnames(count.after.add.lin)<-"count.after.add.lin"
-  write.table(count.after.add.lin,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
   
-  #some checks & removals
-  #1. remove unknown kingdoms
+  #remove family=unknown sequences
   fastatemp<-phylotools::read.fasta(gsub(".fasta",".lin.minL.fasta",catted_DLS))
-  if(length(grep("kingdom=unknown",fastatemp$seq.name))>0){
-    fastatemp<-fastatemp[-grep("kingdom=unknown",fastatemp$seq.name),]}
-  #2. further remove unknown families
   if(length(grep("family=unknown",fastatemp$seq.name))>0){
     fastatemp<-fastatemp[-grep("family=unknown",fastatemp$seq.name),]}
   
-  
+  #write to fasta
   phylotools::dat2fasta(fastatemp,gsub(".fasta",".checked.lin.minL.fasta",catted_DLS))
   
-  count.after.rmNoFams<-as.data.frame(bascount.fasta(gsub(".fasta",".checked.lin.minL.fasta",catted_DLS)))
-  colnames(count.after.rmNoFams)<-"count.after.rmNoFams"
-  count.familes.after.rmNoFams<-as.data.frame(length(unique(stringr::str_match(fastatemp$seq.name, 
-                                                                               "family=(.*?);")[,2])))
-  colnames(count.familes.after.rmNoFams)<-"count.familes.after.rmNoFams"
-  
-  write.table(count.after.rmNoFams,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-  write.table(count.familes.after.rmNoFams,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-  
   message("STEP3 COMPLETE")
-
-############actually should derep within taxid, as I was doing before
 }
 #######################################################
 #step 4 make refdb 
@@ -58,42 +68,24 @@ if("step4" %in% stepstotake){
   
   message("RUNNING STEP4")
   
-#just for ease for now
-file.copy(list.files(pattern = "*.checked.lin.minL.fasta"),to = "formatted.minL.lineage.goodfam.fasta")
-
-#ensure uniq ids
-system2(command = "obiannotate", args=c("--uniq-id","formatted.minL.lineage.goodfam.fasta"), 
-        stdout="formatted.minL.lineage.goodfam.uid.fasta",wait=T)
-bascount.fasta("formatted.minL.lineage.goodfam.uid.fasta")
-
-
-######################should add this chunk to obiconvert.BAS (with option for adding to existing)
-#remove "|"s to stop ecopcr errors
-f<-process$new(command = "sed", args = c("s/|/_/g",
-                                         "formatted.minL.lineage.goodfam.uid.fasta"), echo_cmd = T,
-               stdout="formatted.minL.lineage.goodfam.uid2.fasta")
-f$wait()
-bascount.fasta("formatted.minL.lineage.goodfam.uid2.fasta")
-
-####################################
-#convert to ecopcrdb
-unlink(x = "formatted.minL.lineage.goodfam.uid2.ecopcrdb*")
-
-obiconvert.Bas(infile = "formatted.minL.lineage.goodfam.uid2.fasta",in_type = "fasta",
-               out = "formatted.minL.lineage.goodfam.uid2.ecopcrdb",taxo = obitaxo,
-               out_type = "--ecopcrdb-output" )
-
-#run ecopcr with buffer option
-ecoPCR.Bas(Pf,Pr,ecopcrdb = "formatted.minL.lineage.goodfam.uid2.ecopcrdb",max_error = max_error_buildrefs,
-           min_length,max_length,out = "all.ecopcr.hits.txt",  buffer = buffer)
-
-#build refs fasta from results
-ecopcr2refs2(ecopcrfile="all.ecopcr.hits.txt",outfile = "mapping.reference.fasta",bufferecopcr = buffer)
-mapping.reference<-as.data.frame(bascount.fasta("mapping.reference.fasta"))
-colnames(mapping.reference)<-"mapping.reference"
-write.table(mapping.reference,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-
-message("STEP4 COMPLETE")
+  #ensure uniq ids
+  system2(command = "obiannotate", args=c("--uniq-id",list.files(pattern = "*.checked.lin.minL.fasta")), 
+          stdout="formatted.minL.lineage.goodfam.uid.fasta",wait=T)
+  
+  #convert to ecopcrdb
+  obiconvert.Bas(infile = "formatted.minL.lineage.goodfam.uid.fasta",in_type = "fasta",
+                 out = "formatted.minL.lineage.goodfam.uid.ecopcrdb",taxo = obitaxo,
+                 out_type = "--ecopcrdb-output",add2existing = F)
+  
+  #run ecopcr with buffer option
+  message("Creating refdb without using maxL in first ecopcr, or ecopcr2refs")
+  ecoPCR.Bas(Pf,Pr,ecopcrdb = "formatted.minL.lineage.goodfam.uid.ecopcrdb",max_error = max_error_buildrefs,
+             min_length,out = "all.ecopcr.hits.txt",  buffer = buffer)
+  
+  #build refs fasta from results
+  ecopcr2refs2(ecopcrfile="all.ecopcr.hits.txt",outfile = "mapping.reference.fasta",bufferecopcr = buffer,min_length = min_length)
+  
+  message("STEP4 COMPLETE")
 
 }
 #######################################################
@@ -102,33 +94,20 @@ if("step5" %in% stepstotake){
   
   message("RUNNING STEP5")
   
-#MAP ALL SEQUENCES AGAINST TARGET REFERENCE DATABASE
-map2targets(queries.to.map = "formatted.minL.lineage.goodfam.uid2.fasta",
-            refs = "mapping.reference.fasta",out = "formatted.minL.lineage.goodfam.uid2.mapped.txt")
-
-#trim
-mapTrim2.simple(query = "formatted.minL.lineage.goodfam.uid2.fasta",
-                blast.results.file = "formatted.minL.lineage.goodfam.uid2.mapped.txt",
-                out = "formatted.minL.lineage.goodfam.uid2.mapped.fasta",qc=0.97)
-
-count.aftermap<-as.data.frame(bascount.fasta("formatted.minL.lineage.goodfam.uid2.mapped.fasta"))
-colnames(count.aftermap)<-"count.aftermap"
-write.table(count.aftermap,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-
-#count.families
-tempfasta<-phylotools::read.fasta("formatted.minL.lineage.goodfam.uid2.mapped.fasta")
-
-count.familes.after.map<-as.data.frame(length(unique(stringr::str_match(tempfasta$seq.name, "family=(.*?);")[,2])))
-colnames(count.familes.after.map)<-"count.familes.after.map"
-write.table(count.familes.after.map,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-
-#create final ecopcrdb
-unlink(x = "final.ecopcrdb*")
-obiconvert.Bas(infile = "formatted.minL.lineage.goodfam.uid2.mapped.fasta",
+  #MAP ALL SEQUENCES AGAINST TARGET REFERENCE DATABASE
+  map2targets(queries.to.map = "formatted.minL.lineage.goodfam.uid.fasta",
+              refs = "mapping.reference.fasta",out = "formatted.minL.lineage.goodfam.uid.mapped.txt")
+  #trim
+  mapTrim2.simple(query = "formatted.minL.lineage.goodfam.uid.fasta",
+                  blast.results.file = "formatted.minL.lineage.goodfam.uid.mapped.txt",
+                  out = "formatted.minL.lineage.goodfam.uid.mapped.fasta",qc=0.97,pident = 25)
+ 
+  #create final ecopcrdb
+  obiconvert.Bas(infile = "formatted.minL.lineage.goodfam.uid.mapped.fasta",
                in_type = "fasta",out = "final.ecopcrdb",taxo = obitaxo,
-               out_type = "--ecopcrdb-output")
+               out_type = "--ecopcrdb-output",add2existing = F)
 
-message("STEP5 COMPLETE")
+  message("STEP5 COMPLETE")
 
 }
 #######################################################
@@ -171,7 +150,7 @@ message("STEP6 COMPLETE")
 if("step6a" %in% stepstotake){
   message("RUNNING STEP6")
   
-  ecoPCR.Bas(Pf,Pr,ecopcrdb = "formatted.minL.lineage.goodfam.uid2.ecopcrdb",max_error = max_error_buildrefs,
+  ecoPCR.Bas(Pf,Pr,ecopcrdb = "formatted.minL.lineage.goodfam.uid.ecopcrdb",max_error = max_error_buildrefs,
              min_length,max_length = long_length,out = "all.ecopcr.hits.long.txt",  buffer = buffer)
   
   message("STEP6a COMPLETE")
@@ -187,7 +166,7 @@ if("step7" %in% stepstotake){
   biastemp<-add.counts.to.biasfile(ncbiTaxDir = ncbiTaxDir,download.fasta = catted_DLS,after.minL.fasta = gsub(".fasta",".minL.fasta",
                                                                                                                catted_DLS)
                           ,after.checks.fasta = gsub(".fasta",".checked.lin.minL.fasta",catted_DLS)
-                         ,first.ecopcr.hit.table = "final.ecopcr.hits.txt",mapped.fasta = "formatted.minL.lineage.goodfam.uid2.mapped.fasta"
+                         ,first.ecopcr.hit.table = "final.ecopcr.hits.txt",mapped.fasta = "formatted.minL.lineage.goodfam.uid.mapped.fasta"
                          ,out_bias_file = out_bias_file)
   
   write.table(x = biastemp,file = out_bias_file,quote = F,row.names = F,sep = "\t")
