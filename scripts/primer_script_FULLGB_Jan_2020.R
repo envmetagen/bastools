@@ -3,20 +3,24 @@
 #The overall plan
 ## Starting with a database composed (ideally solely, but some errors ok) of a certain fragment;
 ## 1. Remove sequences below the min length of the expected insert length (+primer lengths + buffer, usually 10)
-### Anything below this will not be usable later and could slow things down 
-### Min length should be way below that expected, as one of the outcomes is to find the range of insert lengths
+##    Anything below this will not be usable later and could slow things down 
+##    Min length should be way below that expected, as one of the outcomes is to find the range of insert lengths
 ## 2. Because currently the whole pipeline is done on a family level, remove any sequences without family-level taxonomy
 ## 3. Important to know which families are represented in db, i.e.contain the target fragment, regardless of whether they contain primers
 ### i. Run ecopcr to extract inserts (in sequences that have primer binding sites), using 10bp buffer, to ensure that only seqs with 
 ###    flanks survive. This is to avoid any seqs that may have been generated using the same binding site. It has no limits on maxL
-#### b. This should be done quite strictly (mismatch=2) to make more reliable. May be missing families, but I tested and "wrong" frags 
-####    do seem to be amplified using loose settings (e.g. for COI 180bp frags with 4 mismatches at best)
-### ii. Keep only best hits per seq.
-### iii. Keep only one seq per genus (should be enough and otherwise following steps very slow)
+###    This should be done quite strictly (mismatch=2) to make more reliable. May be missing families, but I tested and "wrong" frags 
+###    do seem to be amplified using loose settings (e.g. for COI we get 180bp frags with 4 mismatches at best, not likely true)
+### ii. Keep only best primer matches per sequence.
+### iii. For reference database keep only one sequence per genus (should be enough and otherwise following steps very slow)
 ### iv. Map all seqs back against references. Using blast. 
 ### v. Remove hits less than 97% subject cover and 50 % identity
-#### a. This is because we want anything that aligns with the entire fragment (insert+primers+buffers). The pident is just a minor quality
-####    control
+###    This is because we want anything that aligns with the entire fragment (insert+primers+buffers). The pident is just a minor quality
+###    control. This will be the final ecopcr database.
+## 4. Run ecopcr with more relaxed settings, not using flank buffer. From the output calculate a range of statistics, 
+##    including taxonomic resolution. Need to use ecotaxspecificty, as ROBITOOLS function not published
+## 5. The ecopcr in step 4 will have a maxL (possibly the restrction on sequencing length in illumina). To see what might be missed
+##    run another ecopcr with maxL + 400bp. Add this info to the output
 
 
 #Desired improvements
@@ -100,7 +104,7 @@ if("step5" %in% stepstotake){
   #trim
   mapTrim2.simple(query = "formatted.minL.lineage.goodfam.uid.fasta",
                   blast.results.file = "formatted.minL.lineage.goodfam.uid.mapped.txt",
-                  out = "formatted.minL.lineage.goodfam.uid.mapped.fasta",qc=0.97,pident = 25)
+                  out = "formatted.minL.lineage.goodfam.uid.mapped.fasta",qc=0.97,pident = 50)
  
   #create final ecopcrdb
   obiconvert.Bas(infile = "formatted.minL.lineage.goodfam.uid.mapped.fasta",
@@ -116,31 +120,22 @@ if("step6" %in% stepstotake){
   
   message("RUNNING STEP6")
   
-#run final ecopcr without buffer option
-ecoPCR.Bas(Pf,Pr,ecopcrdb = "final.ecopcrdb",max_error = max_error_ecopcr,
-           min_length,max_length,out = "final.ecopcr.hits.txt")
-#convert final ecopcrdb to tab
-system2(command = "obitab", args=c("-o","final.ecopcrdb"), stdout="final.ecopcrdb.tab", wait = T)
-#DO STATS
-make.primer.bias.tables(originaldbtab = "final.ecopcrdb.tab",ecopcrfile = "final.ecopcr.hits.txt",
-                        out_bias_file = out_bias_file,
-                        out_mod_ecopcrout_file = out_mod_ecopcrout_file,Pf = Pf, Pr = Pr,
-                        obitaxoR = obitaxoR,min_length = min_length,max_length = max_length)
-
-biastemp<-data.table::fread(out_bias_file,sep = "\t")
-
-count.amped<-as.data.frame(sum(biastemp$nseqs.amped,na.rm = T))
-colnames(count.amped)<-"count.amped"
-families.amped<-as.data.frame(sum(biastemp$amplified))
-colnames(families.amped)<-"families.amped"
-count.uniq.brcds.amped<-as.data.frame(sum(biastemp$n.uniq.brcds.amped,na.rm = T))
-colnames(count.uniq.brcds.amped)<-"count.uniq.brcds.amped"
-
-write.table(count.amped,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-write.table(families.amped,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-write.table(count.uniq.brcds.amped,stepcountfile,quote = F,sep = "\t",row.names = F,append = T)
-
-message("STEP6 COMPLETE")
+  #run final ecopcr without buffer option
+  ecoPCR.Bas(Pf,Pr,ecopcrdb = "final.ecopcrdb",max_error = max_error_ecopcr,
+             min_length,max_length,out = "final.ecopcr.hits.txt")
+  #convert final ecopcrdb to tab
+  system2(command = "obitab", args=c("-o","final.ecopcrdb"), stdout="final.ecopcrdb.tab", wait = T)
+  
+  #tidy ecopcrfile
+  modify.ecopcroutput(ecopcrfile = "final.ecopcr.hits.txt",out = out_mod_ecopcrout_file,min_length,max_length)
+  
+  #DO STATS
+  make.primer.bias.tables(originaldbtab = "final.ecopcrdb.tab",mod_ecopcrout_file = out_mod_ecopcrout_file,
+                          out_bias_file = out_bias_file,
+                          Pf = Pf, Pr = Pr,
+                          obitaxoR = obitaxoR,min_length = min_length,max_length = max_length)
+  
+  message("STEP6 COMPLETE")
 
 }
 
@@ -153,6 +148,9 @@ if("step6a" %in% stepstotake){
   ecoPCR.Bas(Pf,Pr,ecopcrdb = "formatted.minL.lineage.goodfam.uid.ecopcrdb",max_error = max_error_buildrefs,
              min_length,max_length = long_length,out = "all.ecopcr.hits.long.txt",  buffer = buffer)
   
+  #tidy ecopcrfile
+  modify.ecopcroutput(ecopcrfile = "all.ecopcr.hits.long.txt",out = "mod.all.ecopcr.hits.long.txt",min_length,long_length)
+  
   message("STEP6a COMPLETE")
   
 }
@@ -163,14 +161,33 @@ if("step6a" %in% stepstotake){
 if("step7" %in% stepstotake){
   
   message("RUNNING STEP7")
-  biastemp<-add.counts.to.biasfile(ncbiTaxDir = ncbiTaxDir,download.fasta = catted_DLS,after.minL.fasta = gsub(".fasta",".minL.fasta",
-                                                                                                               catted_DLS)
-                          ,after.checks.fasta = gsub(".fasta",".checked.lin.minL.fasta",catted_DLS)
-                         ,first.ecopcr.hit.table = "final.ecopcr.hits.txt",mapped.fasta = "formatted.minL.lineage.goodfam.uid.mapped.fasta"
-                         ,out_bias_file = out_bias_file)
+  biastemp<-add.counts.to.biasfile(ncbiTaxDir = ncbiTaxDir,download.fasta = catted_DLS
+                        ,after.minL.fasta = gsub(".fasta",".minL.fasta",catted_DLS)
+                        ,after.checks.fasta = gsub(".fasta",".checked.lin.minL.fasta",catted_DLS)
+                        ,first.ecopcr.hit.table = "final.ecopcr.hits.txt"
+                        ,mapped.fasta = "formatted.minL.lineage.goodfam.uid.mapped.fasta"
+                        ,out_bias_file = out_bias_file,long.ecopcr.file="mod.all.ecopcr.hits.long.txt")
   
   write.table(x = biastemp,file = out_bias_file,quote = F,row.names = F,sep = "\t")
+  
+  message("STEP7 COMPLETE")
 
 }
+
+#######################################################
+#step 8 - use ecotaxspecificty instead of Robitools
+
+if("step8" %in% stepstotake){
+  
+  message("RUNNING STEP8")
+  
+  
+  
+ # write.table(x = biastemp,file = out_bias_file,quote = F,row.names = F,sep = "\t")
+  
+  message("STEP8 COMPLETE")
+  
+}
+
 
 warnings()

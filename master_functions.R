@@ -225,7 +225,7 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code,prin
         
         message(paste("Based on",negative_type,neg, ", Removing detections of"))
         print(negtaxa)
-        message("from")
+        message("if it occurred in any of the following samples")
         print(group.samples)
         message(paste("which all belong to",group.code,":",group.id))
         
@@ -1080,8 +1080,7 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
     
   } else message("No master_sheet or column specified, making default plot")
   
-  #long<-long[order(long$taxon),]
-  
+
   if(as.dxns) long<-long[!duplicated(long),]
   
   a<-ggplot2::ggplot(data=long , aes(y=value, x=variable, fill=taxon))+
@@ -1161,7 +1160,12 @@ taxatab.pca.plot<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,
 #Plotting bray distance matrix PCA
 taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
   
-  if(MS_colID!="ss_sample_id") taxatab2<-sumreps(taxatab = taxatab,master_sheet = master_sheet,by = MS_colID)
+  if(MS_colID!="ss_sample_id") {
+    taxatab2<-sumreps(taxatab = taxatab,master_sheet = master_sheet,by = MS_colID) 
+  } else {
+    taxatab2<-taxatab
+    }
+  
   taxatab2<-rm.0readtaxSam(taxatab2)
   
   taxatab2<-binarise.taxatab(taxatab2)
@@ -2084,7 +2088,8 @@ map2targets<-function(queries.to.map,refs,out){
 }
 
 
-add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,after.checks.fasta,first.ecopcr.hit.table,mapped.fasta,out_bias_file){
+add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,after.checks.fasta,first.ecopcr.hit.table,
+                                 mapped.fasta,out_bias_file,long.ecopcr.file){
   
   #catted DLS
   cattedDLS<-count.fams.in.fasta(download.fasta,ncbiTaxDir)
@@ -2107,7 +2112,7 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   firstecopcr<-a
   
   #after long ecopcr
-  long.ecopcr<-data.table::fread("all.ecopcr.hits.long.txt",data.table = F)
+  long.ecopcr<-data.table::fread(long.ecopcr.file,data.table = F)
   long.ecopcr<-long.ecopcr[long.ecopcr$amplicon_length>max_length & long.ecopcr$amplicon_length<max_length+200,]
   long.ecopcr$taxids<-long.ecopcr$taxid
   long.ecopcr<-add.lineage.df(long.ecopcr,ncbiTaxDir)
@@ -2156,6 +2161,16 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   mergedbias<-merge(merged,biastemp,by.x ="Family",by.y = "path",all = T)
   mergedbias$in.odb=NULL
   mergedbias$nseqs.odb=NULL
+  
+  #fixing taxonomy columns
+  splittaxonomy<-do.call(rbind,stringr::str_split(mergedbias$Family,";"))
+  mergedbias$K<-splittaxonomy[,1]
+  mergedbias$P<-splittaxonomy[,2]
+  mergedbias$C<-splittaxonomy[,3]
+  mergedbias$O<-splittaxonomy[,4]
+  mergedbias$Family<-splittaxonomy[,5]
+  
+  mergedbias<-mergedbias %>% select(K,P,C,O,everything())
   
   return(mergedbias)
 }
@@ -2438,26 +2453,34 @@ calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
 }
 
 
-#DO CALCULATIONS AND STATS
-make.primer.bias.tables<-function(originaldbtab,ecopcrfile,
-                                  out_bias_file,out_mod_ecopcrout_file,Pf,Pr, obitaxoR,min_length,
-                                  max_length){
-  
-  ##########################################
+modify.ecopcroutput<-function(ecopcrfile,out,min_length=NULL,max_length=NULL){
   #GENERAL CLEANING 
   
   #read results
   ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
-  #remove hits outside desired lengths
-  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
-  ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
-  #remove duplicates (i.e. pick one entry per AC, based on lowest mismatches)
+  message("Removing hits outside desired lengths, if provided")
+  if(!is.null(min_length)) ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
+  if(!is.null(max_length)) ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
+  message("Removing duplicates (i.e. pick one entry per AC, based on lowest mismatches)")
   ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
   ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
   ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
-  #remove weird primer mismatches (only a few usually)
+  message("Removing weird primer mismatches (only a few usually)")
   ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$forward_match,allowNA = T)<nchar(Pf),]
   ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$reverse_match,allowNA = T)<nchar(Pr),]
+  
+  #write  file
+  write.table(x=ecopcroutput,file = out,quote = F,sep = "\t",row.names = F)
+  
+}
+
+#DO CALCULATIONS AND STATS
+make.primer.bias.tables<-function(originaldbtab,
+                                  out_bias_file,mod_ecopcrout_file,Pf,Pr, obitaxoR,min_length,
+                                  max_length){
+  
+  ecopcroutput<-data.table::fread(mod_ecopcrout_file,sep = "\t")
+  
   ##########################################
   #READ ORIGINAL DB
   originaldb<-as.data.frame(data.table::fread(originaldbtab,header = TRUE,sep = "\t"))
@@ -2651,8 +2674,7 @@ make.primer.bias.tables<-function(originaldbtab,ecopcrfile,
   
   #write primer bias file
   write.table(x=all_primer_bias,file = out_bias_file,quote = F,sep = "\t",row.names = F)
-  #write final, modified ecopcroutput file
-  write.table(x=ecopcroutput, file = out_mod_ecopcrout_file,quote = F,sep = "\t",row.names = F)
+  
 }
 
 mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out,pident=20){
