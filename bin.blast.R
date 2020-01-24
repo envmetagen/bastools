@@ -73,46 +73,66 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
     disabledSpecies<-disabledSpecies[!is.na(disabledSpecies$taxids),]
     #get children of all disabled species
     disabledSpecies$taxids<-disabledSpecies$S
-    childrenS<-get.children.taxonkit(disabledSpecies) 
+    if(nrow(disabledSpecies)>0)  {
+      childrenS<-get.children.taxonkit(disabledSpecies) 
+    } else {
+      childrenS<-NULL
+    } 
     
     disabledGenus<-disabledTaxaDf[disabledTaxaDf$disable_genus==T,]
     disabledGenus<-disabledGenus[!is.na(disabledGenus$taxids),]
     #get children of all disabled genera
     disabledGenus$taxids<-disabledGenus$G
-    childrenG<-get.children.taxonkit(disabledGenus) 
+    if(nrow(disabledGenus)>0)  {
+      childrenG<-get.children.taxonkit(disabledGenus) 
+    } else {
+      childrenG<-NULL
+    }
+    
     
     disabledFamily<-disabledTaxaDf[disabledTaxaDf$disable_family==T,]
     disabledFamily<-disabledFamily[!is.na(disabledFamily$taxids),]
     #get children of all disabled families
     disabledFamily$taxids<-disabledFamily$F
-    childrenF<-get.children.taxonkit(disabledFamily) 
+    if(nrow(disabledFamily)>0)  {
+      childrenF<-get.children.taxonkit(disabledFamily) 
+    } else {
+      childrenF<-NULL
+    }
     
     message("The following taxa are disabled at species level")
-    childrenAlldf<-as.data.frame(unique(c(childrenS,childrenG,childrenF)))
-    colnames(childrenAlldf)<-"taxids"
-    childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
-    childrenNames$pathString<-paste("Family",childrenNames$F,childrenNames$G,childrenNames$S,sep = "/")
-    childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
-    disabledtree <- data.tree::as.Node(childrenNames)
-    print(disabledtree,limit = NULL)
+     if(!is.null(childrenS)){
+      childrenAlldf<-as.data.frame(unique(c(childrenS,childrenG,childrenF)))
+      colnames(childrenAlldf)<-"taxids"
+      childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
+      childrenNames$pathString<-paste("Family",childrenNames$F,childrenNames$G,childrenNames$S,sep = "/")
+      childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
+      disabledtree <- data.tree::as.Node(childrenNames)
+      print(disabledtree,limit = NULL)
+    } else (message("No species disabled"))
     
     message("The following taxa are disabled at genus level")
-    childrenAlldf<-as.data.frame(unique(c(childrenG,childrenF)))
-    colnames(childrenAlldf)<-"taxids"
-    childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
-    childrenNames$pathString<-paste("Family",childrenNames$F,childrenNames$G,sep = "/")
-    childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
-    disabledtree <- data.tree::as.Node(childrenNames)
-    print(disabledtree,limit = NULL)
+      if(!is.null(childrenG)){
+      childrenAlldf<-as.data.frame(unique(c(childrenG,childrenF)))
+      colnames(childrenAlldf)<-"taxids"
+      childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
+      childrenNames$pathString<-paste("Family",childrenNames$F,childrenNames$G,sep = "/")
+      childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
+      disabledtree <- data.tree::as.Node(childrenNames)
+      print(disabledtree,limit = NULL)
+      } else (message("No genera disabled"))
+  
     
     message("The following taxa are disabled at family level")
-    childrenAlldf<-as.data.frame(unique(c(childrenF)))
-    colnames(childrenAlldf)<-"taxids"
-    childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
-    childrenNames$pathString<-paste("Family",childrenNames$F,sep = "/")
-    childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
-    disabledtree <- data.tree::as.Node(childrenNames)
-    print(disabledtree,limit = NULL)
+      if(!is.null(childrenF)){
+      childrenAlldf<-as.data.frame(unique(c(childrenF)))
+      colnames(childrenAlldf)<-"taxids"
+      childrenNames<-add.lineage.df(childrenAlldf,ncbiTaxDir)
+      childrenNames$pathString<-paste("Family",childrenNames$F,sep = "/")
+      childrenNames$pathString<-lapply(childrenNames$pathString, gsub, pattern = "unknown", replacement = "", fixed = TRUE)
+      disabledtree <- data.tree::as.Node(childrenNames)
+      print(disabledtree,limit = NULL)
+      } else (message("No families disabled"))
   }
   
   #species-level assignments

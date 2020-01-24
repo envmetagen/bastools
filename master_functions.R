@@ -1691,66 +1691,6 @@ google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
 }
 
 
-filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,out,min_qcovs=70,
-                       max_evalue=0.001,top=1,obitaxdb){
-  
-  if(length(grep("qcovs",headers))<1) stop("qcovs not in headers")
-  if(length(grep("evalue",headers))<1) stop("evalue not in headers")
-  if(length(grep("qseqid",headers))<1) stop("qseqid not in headers")
-  if(length(grep("pident",headers))<1) stop("pident not in headers")
-  if(length(grep("staxid",headers))<1) stop("staxid not in headers")
-  
-  if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
-  if(is.null(obitaxdb)) stop("obitaxdb not specified")
-  if(is.null(out)) stop("out not specified")
-  
-  message("reading blast results")
-  btab<-as.data.frame(data.table::fread(file = blastfile,sep = "\t"))
-  colnames(btab)<-strsplit(headers,split = " ")[[1]]
-  
-  message("applying global min_qcovs threshold")
-  btab<-btab[btab$qcovs>min_qcovs,]
-  message("applying global max_evalue threshold")
-  btab<-btab[btab$evalue<max_evalue,]
-  message("applying global top threshold")
-  if(length(btab[,1])==0) stop("No hits passing min_qcovs and max_evalue thresholds")
-  topdf<-aggregate(x = btab[,colnames(btab) %in% c("qseqid","pident")],by=list(btab$qseqid),FUN = max)
-  topdf$min_pident<-topdf$pident-topdf$pident*top/100
-  btab<-merge(btab,topdf[,c(2,4)],by = "qseqid", all.y = T) #can definitely do this differently and faster
-  btab<-btab[btab$pident>btab$min_pident,]
-  
-  #add lineage to results
-  message("adding taxonomic lineages")
-  btab$taxids<-btab$staxid #add.lineage.df requires this colname
-  btab<-add.lineage.df(btab,ncbiTaxDir)
-  
-  #remove crappy hits 
-  #1. btab$S contains uncultured
-  message("Removing species containing the terms: uncultured, environmental, 
-          unidentified,fungal, eukaryote or unclassified")
-  if(length(grep("uncultured",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("uncultured",btab$S,ignore.case = T),]}
-  #2. btab$S contains environmental
-  if(length(grep("environmental",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("environmental",btab$S,ignore.case = T),]}
-  #3. btab$S contains unclassified
-  if(length(grep("unclassified",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("unclassified",btab$S,ignore.case = T),]}
-  #4. btab$S contains "unidentified"
-  if(length(grep("unidentified",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("unidentified",btab$S,ignore.case = T),]}
-  #5. btab$S contains "fungal "
-  if(length(grep("fungal ",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("fungal ",btab$S,ignore.case = T),]}
-  #6. btab$S contains "eukaryote"
-  if(length(grep("eukaryote",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("eukaryote",btab$S,ignore.case = T),]}
-  
-  write.table(x = btab,file = out,sep="\t",quote = F,row.names = F)
-  
-}
-
-
 #loop glm by taxon
 loop.glm<-function(taxatab, master_sheet,factor,grouping,summaries=F){
   if(!"ss_sample_id" %in% colnames(master_sheet)) stop("No column called ss_sample_id")
