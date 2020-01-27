@@ -5,7 +5,6 @@ ls.str()
 library(processx)
 library(dplyr)
 setwd(bastoolsDir)
-googlesheets4::sheets_auth(email = email) 
 source("master_functions.R")
 source("bin.blast.R")
 setwd(outDir)
@@ -24,7 +23,7 @@ if("step9" %in% stepstotake){
                                 stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
                obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,
-               abspident = abspident,disabledTaxaFiles = disabledTaxaFiles,disabledTaxaOut = disabledTaxaOut)
+               abspident = abspident,disabledTaxaFiles = disabledTaxaFiles,disabledTaxaOut = disabledTaxaOut,force = force)
   }
   
   message("STEP9 complete")
@@ -76,7 +75,7 @@ if("step12" %in% stepstotake){
   taxatabs<-list.files(pattern = ".taxatable.tf.txt$")
   for(i in 1:length(taxatabs)){
     taxatable<-data.table::fread(taxatabs[i],sep = "\t",header = T,data.table = F)
-    taxatable<-taxatable[,c(1,grep(project_name,colnames(taxatable)))]
+    taxatable<-taxatable[,c(1,grep(paste0("^",project_name),colnames(taxatable)))]
     taxatable<-taxatable[rowSums(taxatable[,2:length(colnames(taxatable))])!=0,]
     write.table(taxatable,
                 paste0(project_name,gsub("taxatable.tf.txt","taxatable.tf.spliced.txt",taxatabs[i])),

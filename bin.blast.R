@@ -43,8 +43,14 @@
 #' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="blast_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
 #' @export
 bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
-                     obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,disabledTaxaFiles=NULL,disabledTaxaOut=NULL){
+                     obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,
+                     disabledTaxaFiles=NULL,disabledTaxaOut=NULL,
+                     force=F){
   t1<-Sys.time()
+  
+  if(is.null(out)) stop("out not specified")
+  if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
+  if(is.null(obitaxdb)) stop("obitaxdb not specified")
   
   require(treemap)
   
@@ -64,7 +70,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #read and check disabled taxa file(s) 
   if(!is.null(disabledTaxaFiles)){
     
-    disabledTaxaDf<-merge.and.check.disabled.taxa.files(disabledTaxaFiles,disabledTaxaOut)
+    disabledTaxaDf<-merge.and.check.disabled.taxa.files(disabledTaxaFiles,disabledTaxaOut,force = force)
     
     #get taxids at 7 levels
     disabledTaxaDf<-add.lineage.df(disabledTaxaDf,ncbiTaxDir,as.taxids = T)
@@ -468,7 +474,6 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
   if(length(grep("staxid",headers))<1) stop("staxid not in headers")
   
   if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
-  if(is.null(obitaxdb)) stop("obitaxdb not specified")
   if(is.null(out)) stop("out not specified")
   
   message("reading blast results")
@@ -518,13 +523,16 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
 }
 
 
-merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut){
+merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,force=F){
+  
+  message("Note: Use force=T to ignore any contributor entries where no levels were disabled when consistency checking.
+                 Use force=F to do more thorough consistency checks")
   
   disabledTaxaDFList<-list()
   
   for(i in 1:length(disabledTaxaFiles)){
     
-    disabledTaxaDFList[[i]]<-read.table(disabledTaxaFiles[i], header=T,sep = "\t")
+    disabledTaxaDFList[[i]]<-data.table::fread(disabledTaxaFiles[i], data.table = F,sep = "\t")
     
     if(!"taxids" %in% colnames(disabledTaxaDFList[[i]]))  stop(paste("No column called 'taxids' in", disabledTaxaFiles[i]))
     if(!"disable_species" %in% colnames(disabledTaxaDFList[[i]])) stop(paste("No column called 'disable_species' in", disabledTaxaFiles[i]))
@@ -539,6 +547,12 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
   disabledTaxaDF<-do.call(rbind,disabledTaxaDFList)
   disabledTaxaDF[,c(-1,-2)][is.na(disabledTaxaDF[,c(-1,-2)])]<-FALSE
   
+  if(force) {
+    message("Using force=T")
+    disabledTaxaDF$trues<-rowSums(disabledTaxaDF[,c("disable_species","disable_genus","disable_family")])
+    disabledTaxaDF<-disabledTaxaDF[disabledTaxaDF$trues>0,-7]
+  }
+
   disabledTaxaDF<-add.lineage.df(disabledTaxaDF,ncbiTaxDir,as.taxids = T)
   
   #check that identical paths have not been treated differently
@@ -553,8 +567,6 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
     }
   }
   
-  #if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
-  
   #check that identical families have not been treated differently
   shouldstop2<-list()
   for(i in 1:length(unique(disabledTaxaDF$F))){
@@ -566,8 +578,6 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
     }
   }
   
-  #if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
-  
   #check that identical genera have not been treated differently
   shouldstop3<-list()
   for(i in 1:length(unique(disabledTaxaDF$G))){
@@ -578,8 +588,6 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
       shouldstop3[[i]]<-temp
     }
   }
-  
-  #if(length(shouldstop)>0) for(i in 1:length(shouldstop)) if(!is.null(shouldstop[[i]])) stop("fix inconsistencies")
   
   #check that identical species have not been treated differently
   shouldstop4<-list()
@@ -621,5 +629,78 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut)
   write.table(disabledTaxaDF,disabledTaxaOut,col.names = T,row.names = F,quote = F,sep = "\t")
   
   return(disabledTaxaDF)
+}
+
+bin.blast.lite<-function(filtered_blastfile,ncbiTaxDir,obitaxdb,out){
+  
+  t1<-Sys.time()
+  
+  if(is.null(out)) stop("out not specified")
+  if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
+  if(is.null(obitaxdb)) stop("obitaxdb not specified")
+  
+  ###################################################
+  #read in obitools taxonomy
+  obitaxdb2=ROBITaxonomy::read.taxonomy(obitaxdb)
+  
+  btab<-data.table::fread(filtered_blastfile,sep="\t",data.table = F)
+  
+  #preparing some things for final step
+  total_hits<-length(btab$qseqid) #for info later
+  total_queries<-length(unique(btab$qseqid))
+  qseqids<-as.data.frame(unique(btab$qseqid))
+  qseqids$qseqid<-qseqids$`unique(btab$qseqid)`
+  qseqids$`unique(btab$qseqid)`=NULL
+  
+  message("binning")
+  message("Not considering species with 'sp.', numbers or more than one space, or with species=unknown")
+  btabsp<-btab[btab$S!="unknown",]
+  
+  if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
+  if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]
+  if(length(grep("[0-9]",btabsp$S))>0) btabsp<-btabsp[-grep("[0-9]",btabsp$S),]
+  
+  if(length(btabsp$taxids)>0){
+    lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+    
+    #get lca names
+    colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
+    if(sum(is.na(lcasp$taxids))>0){
+      message("************
+              ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
+              *************")
+      problem.contributors<-btabsp[!duplicated(btabsp[lcasp[is.na(lcasp$taxids),1] %in% btabsp$qseqid,c("taxids","K","P","C","O","F","G","S")]),
+                                   c("taxids","K","P","C","O","F","G","S")]
+      for(i in 1:length(problem.contributors$taxids)){
+        problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
+      }
+      print(problem.contributors[is.na(problem.contributors$validate),])
+    }
+    lcasp<-add.lineage.df(df = lcasp,ncbiTaxDir)
+    colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
+  } else {
+    lcasp<-data.frame(matrix(nrow=1,ncol = 10))
+    colnames(lcasp)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+  }
+  
+  
+  ###################################################
+  
+  com_level<-merge(x=qseqids, y = lcasp[,c(2,4:10)], by = "qseqid",all = T)
+  
+  com_level[com_level=="unknown"]<-NA
+  
+  #info
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  
+  write.table(x = com_level,file = out,sep="\t",quote = F,row.names = F)
+  
+  message(c("Complete. ",total_hits, " hits from ", total_queries," queries processed in ",t3," mins."))
+  
+  message("Note: if all hits for a particular OTU are removed due to filters, 
+          the results will be NA for all taxon levels.
+          If the lca for a particular OTU is above kingdom, e.g. cellular organisms or root, 
+          the results will be unknown for all taxon levels.")
 }
 

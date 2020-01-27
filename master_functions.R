@@ -401,8 +401,8 @@ check.blasts<-function(infastas,h){
   a<-list()
   for(i in 1:length(h)){
     message(infastas[i])
-    a[[i]]<-tryCatch(h[[i]]$get_status(),error=function(e) print("not running"))
-    if(nchar(a[[i]])!=11) message(gsub("sleeping","running",h[[i]]$get_status()))
+    a[[i]]<-tryCatch(h[[i]]$get_status(),error=function(e) print("not running, may be finished"))
+    if(nchar(a[[i]])!=28) message(gsub("sleeping","running",h[[i]]$get_status()))
     message(paste0("exit status: ",h[[i]]$get_exit_status()))
   }
 }
@@ -669,60 +669,46 @@ interp.lm <- function(model){
   }}
 
 
-make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=T, ncbiTaxDir, dbversion=5){
+make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=F, ncbiTaxDir, dbversion=5){
   library(processx)
   
-  if(!infasta %in% list.files()) stop("infasta not found in current directory")
+  message("Reminder: Assumes header includes taxid=taxid;")
+  message("Reminder: Assumes there are only spaces between attributes, not within them, e.g. species names should not have spaces")
+  
   
   message("Reminder: Only works for blast 2.9.0: Current version:")
   system2(command = makeblastdb_exec,args = c("-version"))
+  if(!infasta %in% list.files()) stop("infasta not found in current directory")
+
+  tempfasta<-phylotools::read.fasta(infasta)
   
-  tempfileA<-paste0("temp",as.numeric(Sys.time()),".fasta")
-  
-  if(addtaxidsfasta==T){  
-    message("assumes fasta with species=xxx;") 
-    add.lineage.fasta.BAS(infasta,ncbiTaxDir,out = tempfileA)
-    tempfasta<-phylotools::read.fasta(tempfileA)
-    
-    #remove seqs with no taxonomy 
-    if(length(tempfasta$seq.name[grep("kingdom=unknown",tempfasta$seq.name)])>0){
-      message(paste0("Discarding ",length(tempfasta$seq.name[grep("kingdom=unknown",tempfasta$seq.name)]),
-                     " sequences for which taxonomy could not be found"))
-      tempfasta<-tempfasta[-grep("kingdom=unknown",tempfasta$seq.name),]
-    }
-    phylotools::dat2fasta(tempfasta,tempfileA)
-    
-  } else{message("Assumes fasta with taxid=xxx;")
-    file.copy(infasta,tempfileA)}
+  tempfasta$ids<-do.call(rbind,strsplit(as.character(tempfasta$seq.name)," "))[,1]
+  taxids<-do.call(rbind,strsplit(as.character(tempfasta$seq.name),"taxid="))[,2]
+  tempfasta$taxids<-do.call(rbind,strsplit(as.character(taxids),";"))[,1]
   
   #give unique ids
-  message("giving unique ids")
-  tempfileB<-paste0("temp",as.numeric(Sys.time()),".fasta")
-  system2(command = "obiannotate", args=c("--uniq-id",tempfileA), stdout=tempfileB,stderr = "",wait = T)
-  
+  if(length(unique(tempfasta$ids))!=length(tempfasta$ids)) {
+    message("IDs not unique - giving unique ids - ensure to check if mapping back!")
+    tempfasta$ids<-make.unique(tempfasta$ids, sep = ".")
+  }
+
   #Add "database name to header
-  message("adding db name to headers")
-  sedarg=paste0("s/taxid=/database=",gsub(".fasta","",infasta),"; taxid=/g")
-  h<-process$new(command = "sed", args=c(sedarg, tempfileB), echo_cmd = T,
-                 stdout=gsub(".fasta",".blastdbformatted.fasta",infasta))
-  h$wait()
+  message("Adding db name to headers")
+  tempfasta$db<-gsub(".fasta","",infasta)
   
   #ensure ids are <50 characters
-  tempfasta<-phylotools::read.fasta(gsub(".fasta",".blastdbformatted.fasta",infasta))
-  defs<-suppressWarnings(do.call(rbind,strsplit(as.character(tempfasta$seq.name)," ")))
-  defs[,1]<-stringr::str_trunc(as.character(defs[,1]),width = 49)
+  message("Ensuring ids are <50 characters - ensure to check if mapping back!")
+  tempfasta$ids<-stringr::str_trunc(as.character(tempfasta$ids),width = 49)
   #remove any quotes
-  defs[,1]<-gsub('"',"",defs[,1])
-  tempfasta$seq.name <- apply(as.data.frame(defs),1,paste,collapse = " " )
+  tempfasta$ids<-gsub('"',"",tempfasta$ids)
+  
+  #make final headers & write fasta
+  tempfasta$seq.name<-paste0(tempfasta$ids," taxids=",tempfasta$taxids, "; db=",tempfasta$db)
   phylotools::dat2fasta(tempfasta,gsub(".fasta",".blastdbformatted.fasta",infasta))
   
   #make mapping file
-  taxids<-sub(x = stringr::str_match(string = tempfasta$seq.name,pattern = "taxid=(.*)"),pattern = ";.*",
-              replacement = "")[,2]
-  
-  taxonmap<-as.data.frame(cbind(defs[,1],taxids))
   mappingfile<-paste0("mapping",as.numeric(Sys.time()),".txt")
-  write.table(taxonmap,mappingfile,quote = F,sep = " ",row.names = F,col.names = F)
+  write.table(tempfasta[,c("ids","taxids")],mappingfile,quote = F,sep = " ",row.names = F,col.names = F)
   
   system2(command = makeblastdb_exec, 
           args=c("-in", gsub(".fasta",".blastdbformatted.fasta",infasta), 
@@ -736,14 +722,13 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
   phylotools::dat2fasta(head(tempfasta,n=1),gsub(".fasta",".blastdbformatted.test.fasta",infasta))
   h<-blast.min.bas(gsub(".fasta",".blastdbformatted.test.fasta",infasta),refdb = gsub(".fasta","",infasta))
   check.blasts(gsub(".fasta",".blastdbformatted.test.fasta",infasta),h)
-  message("Does new db have taxids?")
+  message("Does new db have taxids - column V3?")
   print(data.table::fread(gsub(".fasta",".blastdbformatted.test.blast.txt",infasta)))
   system2(command = "blastdbcheck",args = c("-must_have_taxids","-db",gsub(".fasta","",infasta)))
   
-  unlink(tempfileA)
-  unlink(tempfileB)
   unlink(gsub(".fasta",".blastdbformatted.test.blast.txt",infasta))
   unlink(gsub(".fasta",".blastdbformatted.test.fasta",infasta))
+  unlink(mappingfile)
 }
 
 #' Convert sequence files between various formats
@@ -1580,7 +1565,7 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
   
   #add disabled taxa columns
   if(!is.null(disabledTaxaFile)){
-    disabledTaxaDf<-read.table(disabledTaxaFile, header=T,sep = "\t")
+    disabledTaxaDf<-data.table::fread(disabledTaxaFile, data.table = T,sep = "\t")
     if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
     if(!"disable_species" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_species'")
     if(!"disable_genus" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_genus'")
@@ -2448,7 +2433,7 @@ make.primer.bias.tables<-function(originaldbtab,
   all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
   ##########################################
   #ADD LOGICAL IF FAMILY AMPED
-  all_primer_bias$amplified<-all_primer_bias$in.odb %in% unique(ecopcroutput$family_name)
+  all_primer_bias$amplified<-all_primer_bias$in.odb %in% unique(ecopcroutput$family_name) #there can be diff families with same names
   ##########################################
   #COUNT NO. SEQS THAT AMPED 
   ecopcroutput$n<-1
@@ -3144,4 +3129,128 @@ obiaddtaxids.nodump.Bas<-function(infile,taxo,k=NULL,out){
   }
 }
 
+ecopcr2fasta<-function(mod_ecopcrout,out){
+  message("Reminder: Converts all ecopcr results to fasta. This can probably be greatly reduced!")
+  
+  ecopcr<-data.table::fread(mod_ecopcrout,sep = "\t",data.table = F)
+  
+  ecopcr$seq.name<-paste0(ecopcr$AC, " taxid=", ecopcr$taxid,"; organism=", gsub(" ","_",ecopcr$species_name))
+  ecopcr$seq.text<-ecopcr$sequence
+  
+  phylotools::dat2fasta(ecopcr[,c("seq.name","seq.text")],outfile = out)
+}
 
+add.res.bas2<-function(mod_ecopcrout,makeblastdb_exec="makeblastdb",ncbiTaxDir,blast_exec="blastn",obitaxdb){
+  
+  t1<-Sys.time()
+  
+  out="resolution_test_files"
+  
+  ecopcr2fasta(mod_ecopcrout,paste0(out,".fasta"))
+  
+  make.blastdb.bas(infasta = paste0(out,".fasta"),makeblastdb_exec = makeblastdb_exec,ncbiTaxDir = ncbiTaxDir,dbversion = 5)
+  
+  blast.min.bas(infastas = paste0(out,".fasta"),refdb = out,blast_exec = blast_exec)
+  
+  filter.blast(blastfile = paste0(out,".blast.txt"),ncbiTaxDir = ncbiTaxDir,out = paste0(out,".blast.filt.txt"),top=1,min_qcovs = 97)
+  
+  bin.blast.lite(filtered_blastfile = paste0(out,".blast.filt.txt"),ncbiTaxDir = ncbiTaxDir
+                 ,obitaxdb = obitaxdb, out = paste0(out,".bins.txt"))           
+  
+  #add rank
+  bins<-data.table::fread(paste0(out,".bins.txt"),data.table = F)
+  bins$path<-paste(bins$K,bins$P,bins$C,bins$O,bins$F,bins$G,bins$S,sep = ";")
+  temprank<-stringr::str_count(bins$path,";NA")
+  temprank<-gsub(0,"species",temprank)
+  temprank<-gsub(1,"genus",temprank)
+  temprank<-gsub(2,"family",temprank)
+  temprank<-gsub(3,"above_family",temprank)
+  temprank<-gsub(4,"above_family",temprank)
+  temprank<-gsub(5,"above_family",temprank)
+  temprank<-gsub(6,"above_family",temprank)
+  bins$resolution.bas<-temprank
+  
+  #merge with ecopcr output
+  ecopcrout<-data.table::fread(mod_ecopcrout,data.table = F)  
+  ecopcroutput<-merge(ecopcrout,bins[,c("qseqid","resolution.bas")],by.x = "AC",by.y = "qseqid")
+  
+  #write
+  write.table(ecopcroutput,file = mod_ecopcrout,sep = "\t",append = F,quote = F,row.names = F)
+  
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  
+  message(paste0("Resolution added to ",mod_ecopcrout," in ",t3," mins."))
+}
+
+
+
+run.ecotaxspecificity<-function(infasta,ecopcrdb){
+  test<-system2("ecotaxspecificity",c("-d",ecopcrdb, "-e", 1, infasta),wait = T,stdout = T)
+}
+
+google.make.MBC.sheet<-function(tokenDir,email,url,out,subsetlist){
+  
+  a<-getwd()
+  setwd(tokenDir)
+  googlesheets4::sheets_auth(email)
+  setwd(a)
+  
+  master<-google.read.master.url(url)
+  
+  #change the common capitals issues
+  colnames(master)<-gsub("Index_combination","index_combination",colnames(master))
+  colnames(master)<-gsub("Min_length","min_length",colnames(master))
+  colnames(master)<-gsub("Max_length","max_length",colnames(master))
+  
+  #remove duplicated columns
+  if(length(grep("\\.\\.\\.",colnames(master),value = T))>0) {
+    message("Removing duplicated columns")
+    a<-grep("\\.\\.\\.",colnames(master),value = T)
+    b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
+    d<-b[duplicated(b[,1]),]
+    e<-paste0(d[,1],"...",d[,2])
+    master<-master[,!colnames(master) %in% e]
+    colnames(master)<-gsub("\\.\\.\\..*","",colnames(master))
+  }
+  
+  headers<-c("Sample_ID",	"Sample_Name",	"Sample_Plate",	"Sample_Well",	"I7_Index_ID",	"index",
+             "I5_Index_ID",	"index2",	"Sample_Project",	"Description",	"index_combination",	"MID_F",	
+             "MID_R",	"Primer_F",	"Primer_R",	"Filenames","min_length","max_length","ss_sample_id")
+  
+  for(i in 1:length(headers)){
+    if(!headers[i] %in% colnames(master)) stop (c(headers[i]," missing: "))
+  }
+  
+  message("Defaulting to putting all index_combinations to 'used'")
+  master$index_combination<-"used"
+  
+  #subset sheet
+  for(i in 1:length(subsetlist)){
+    if(!names(subsetlist)[i] %in% colnames(master)) stop (c(names(subsetlist)[i]," missing: "))
+  }
+  
+  ms_ss<-subset_mastersheet(master,subsetlist)
+  
+  #check subset
+  message("Check the numbers below make sense")
+  print(master_xtabs(ms_ss,columns=names(subsetlist)))
+  
+  #make ss_sample_id Sample_Name
+  ms_ss$Sample_Name<-ms_ss$ss_sample_id
+  
+  #use only the required headers (exclude ss_sample_id)
+  ms_ss<-ms_ss[,headers[-length(headers)]]
+  
+  #order correctly
+  ms_ss<-ms_ss[c(headers[-length(headers)])]
+  
+  ms_ss$extra_information<-""
+  
+  #write file
+  write.table(ms_ss,out,sep = "\t",quote = F,row.names = F)
+  message(paste0("file saved as ",paste0(getwd(),"/",out)))
+  
+  return(ms_ss)
+  
+}
