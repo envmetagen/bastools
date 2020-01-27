@@ -1,6 +1,6 @@
 message("settings:
         ")
-ls.str()
+print(ls.str())
 
 library(processx)
 library(dplyr)

@@ -1,11 +1,11 @@
 message("settings:
         ")
-ls.str()
+print(ls.str())
 
 library(processx)
 library(dplyr)
 setwd(bastoolsDir)
-googlesheets4::sheets_auth(email = email)
+#googlesheets4::sheets_auth(email = email)
 source("master_functions.R")
 source("bin.blast.R")
 setwd(outDir)

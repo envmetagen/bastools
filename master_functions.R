@@ -318,7 +318,7 @@ add.lineage.df<-function(df,ncbiTaxDir,as.taxids=F){
   }
 
   #merge with df
-  message("replacing taxids with updated taxids. Saving old taxids in old_taxids.")
+  #message("replacing taxids with updated taxids. Saving old taxids in old_taxids.")
   df<-merge(df,lineage[,c("taxids","new_taxids","path")],by = "taxids")
   df$old_taxids<-df$taxids
   df$taxids<-df$new_taxids
@@ -1659,8 +1659,21 @@ google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
   headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
   for(i in 1:length(sheeturls)){
     master[[i]]<-google.read.master.url(sheeturls[i])
+    
+    #remove duplicated columns
+    if(length(grep("\\.\\.\\.",colnames(master[[i]]),value = T))>0) {
+      message("Removing duplicated columns")
+      a<-grep("\\.\\.\\.",colnames(master[[i]]),value = T)
+      b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
+      d<-b[duplicated(b[,1]),]
+      e<-paste0(d[,1],"...",d[,2])
+      master[[i]]<-master[[i]][,!colnames(master[[i]]) %in% e]
+      colnames(master[[i]])<-gsub("\\.\\.\\..*","",colnames(master[[i]]))
+    }
+    
     if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
-      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
+      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))
+      }
     master[[i]]<-master[[i]][,headers]
   }
   
@@ -2118,8 +2131,21 @@ google.make.exp.sheet.illumina<-function(outDir,sheeturls,experiment_id){
   headers<-c("Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
   for(i in 1:length(sheeturls)){
     master[[i]]<-google.read.master.url(sheeturls[i])
+    
+    #remove duplicated columns
+    if(length(grep("\\.\\.\\.",colnames(master[[i]]),value = T))>0) {
+      message("Removing duplicated columns")
+      a<-grep("\\.\\.\\.",colnames(master[[i]]),value = T)
+      b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
+      d<-b[duplicated(b[,1]),]
+      e<-paste0(d[,1],"...",d[,2])
+      master[[i]]<-master[[i]][,!colnames(master[[i]]) %in% e]
+      colnames(master[[i]])<-gsub("\\.\\.\\..*","",colnames(master[[i]]))
+    }
+    
     if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
       stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
+    
     master[[i]]<-master[[i]][,headers]
   }
   
@@ -3254,3 +3280,5 @@ google.make.MBC.sheet<-function(tokenDir,email,url,out,subsetlist){
   return(ms_ss)
   
 }
+
+

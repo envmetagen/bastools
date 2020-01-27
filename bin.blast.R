@@ -551,7 +551,7 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,
     message("Using force=T")
     disabledTaxaDF$trues<-rowSums(disabledTaxaDF[,c("disable_species","disable_genus","disable_family")])
     disabledTaxaDF<-disabledTaxaDF[disabledTaxaDF$trues>0,-7]
-  }
+  } else { message("Using force=F")}
 
   disabledTaxaDF<-add.lineage.df(disabledTaxaDF,ncbiTaxDir,as.taxids = T)
   
