@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "Package: ROBITaxonomy\nType: Package\nTitle: Metabarcoding data biodiversity analysis\nVersion: 0.1\nDate: 2012-08-23\nAuthor: LECA - Laboratoire d'ecologie alpine\nMaintainer: LECA OBITools team <obitools@metabarcoding.org>\nDescription: More about what it does (maybe more than one line)\nLicense: CeCILL v2.0\nLazyLoad: yes\nRoxygen: list(wrap = FALSE)\nCollate:\n    'ROBITaxonomy.R'\n    'taxonomy.R'\n    'basic.R'\n    'default.R'\n    'distance.R'\n    'lca.R'\n    'rank.R'\nRoxygenNote: 5.0.1\n",
+    "created" : 1496928901072.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2566400589",
+    "id" : "FD5F7332",
+    "lastKnownWriteTime" : 1452675950,
+    "last_content_update" : 1452675950,
+    "path" : "~/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS/DESCRIPTION",
+    "project_path" : "DESCRIPTION",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "dcf"
+}

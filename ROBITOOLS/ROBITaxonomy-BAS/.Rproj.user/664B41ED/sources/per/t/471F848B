@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556280289736.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1357166955",
+    "id" : "471F848B",
+    "lastKnownWriteTime" : 1556220571,
+    "last_content_update" : 1556220571,
+    "path" : "/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/bastools/R/megan_foos.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "44,1",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,190 @@
+package.skeleton("ROBITools",c("robitools.motu.count","robitools.motus",
+                               "robitools.reads","robitools.samples",
+                               "robitools.sample.count",))
+                               
+                               
+#include <R.h>
+#include <Rinternals.h>
+
+static void cooked_goose(SEXP foo)
+{
+    if (TYPEOF(foo) != EXTPTRSXP)
+        error("argument not external pointer");
+    double *x = (double *) R_ExternalPtrAddr(foo);
+    int blather = x[0];
+    Free(x);
+    if (blather)
+        printf("finalizer ran\n");
+}
+
+SEXP blob(SEXP nin, SEXP blatherin)
+{
+    if (! isInteger(nin))
+        error("n not integer");
+    int n = INTEGER(nin)[0];
+    if (! (n > 0))
+        error("n not positive");
+    if (! isLogical(blatherin))
+        error("blather not logical");
+    int blather = LOGICAL(blatherin)[0];
+
+    double *x = Calloc(n + 2, double);
+
+    GetRNGstate();
+    for (int i = 0; i < n; ++i)
+        x[i + 2] = norm_rand();
+    PutRNGstate();
+    x[1] = n;
+    x[0] = blather;
+
+    SEXP bar;
+    PROTECT(bar = R_MakeExternalPtr(x, R_NilValue, R_NilValue));
+    R_RegisterCFinalizer(bar, cooked_goose);
+    UNPROTECT(1);
+    return bar;
+}
+
+SEXP blub(SEXP foo)
+{
+    if (TYPEOF(foo) != EXTPTRSXP)
+        error("argument not external pointer");
+
+    double *x = (double *) R_ExternalPtrAddr(foo);
+    int blather = x[0];
+    int n = x[1];
+
+    SEXP bar;
+    PROTECT(bar = allocVector(REALSXP, n));
+    for (int i = 0; i < n; ++i)
+        REAL(bar)[i] = x[i + 2];
+    UNPROTECT(1);
+    return bar;
+}
+
+
+
+blob <- function(n, blather = FALSE) {
+    stopifnot(is.numeric(n))
+    stopifnot(as.integer(n) == n)
+    stopifnot(n > 0)
+    stopifnot(is.logical(blather))
+    .Call("blob", as.integer(n), blather)
+}
+
+blub <- function(x) {
+    stopifnot(class(x) == "externalptr")
+    .Call("blub", x)
+}
+
+
+Hi Robert,
+
+It looks like there is no way to explicitly make an S4 object call a
+function when it is garbage collected unless you resort to tricks with
+reg.finalizer.
+
+It turns out that Prof. Ripley's reply (thanks!!) had enough hints in it
+that I was able to get the effect I wanted by using R's external pointer
+facility. In fact it works quite nicely.
+
+In a nutshell, I create a C++ object (with new) and then wrap its pointer
+with an R external pointer using
+SEXP rExtPtr = R_MakeExternalPtr( cPtr, aTag, R_NilValue);
+
+Where cPtr is the C++/C pointer to the object and aTag is an R symbol
+describing the pointer type [e.g. SEXP aTag =
+install("this_is_a_tag_for_a_pointer_to_my_object")]. The final argument is
+"a value to protect". I don't know what this means, but all of the examples
+I saw use R_NilValue.
+
+If you want a C++ function to be called when R loses the reference to the
+external pointer (actually when R garbage collects it, or when R quits), do
+R_RegisterCFinalizerEx( rExtPtr, (R_CFinalizer_t)functionToBeCalled, TRUE );
+
+The TRUE means that R will call the "functionToBeCalled" if the pointer is
+still around when R quits. I guess if you set it to FALSE, then you are
+assuming that your shell can delete memory and/or release resources when R
+quits. 
+
+So return this external pointer to R (the function that new'ed it was called
+by .Call or something similar) and stick it in a slot of your object. Then
+when your object is garbage collected, "functionToBeCalled" will be called.
+The slot would have the type "externalptr".
+
+The functionToBeCalled contains the code to delete the C++ pointer or
+release resources, for example...
+
+SEXP functionToBeCalled( SEXP rExtPtr ) {
+  // Get the C++ pointer
+  MyThing* ptr = R_ExternalPtrAddr(rExtPtr);
+
+  // Delete it
+  delete ptr;
+
+  // Clear the external pointer
+  R_ClearExternalPtr(rExtPtr);
+
+  return R_NilValue;
+}
+
+And there you have it.
+
+There doesn't seem to be any official documentation on this stuff (at least
+none that I could find). The best references I found are on the R developers
+web page. See the links within  "some notes on _references, external
+objects, or mutable state_ for R and a _simple implementation_ of external
+references and finalization". Note that the documents are slightly out of
+date (the function names have apparently been changed somewhat). The latter
+one has some examples that are very helpful. And as Prof. Ripley pointed
+out, RODBC uses this facility too, so look at that code.
+
+Hope this was useful. Good luck.
+
+
+SEXP
+get(SEXP ext)
+{
+    return mkString((char *) R_ExternalPtrAddr(ext));
+}
+
+SEXP
+
+set(SEXP ext, SEXP str)
+{
+    char *x = (char *) R_ExternalPtrAddr(ext);
+    snprintf(x, N_MAX, CHAR(STRING_ELT(str, 0)));
+    return ScalarLogical(TRUE);
+}
+
+
+> dyn.load("tmp.so")
+> x <- .Call("create", list("info could be any R object", 1:5))
+> .Call("get", x)
+[1] "my name is joe"
+> ## reference semantics!
+> .Call("set", x, "i am sam i am")
+[1] TRUE
+> .Call("get", x)
+[1] "i am sam i am"
+> x <- NULL
+> gc()
+finalizing
+         used (Mb) gc trigger (Mb) max used (Mb)
+Ncells 339306 18.2     467875   25   407500 21.8
+Vcells 202064  1.6     786432    6   380515  3.0
+
+
+SEXP
+incr(SEXP ext)
+{
+    struct Foo *foo = (struct Foo*) R_ExternalPtrAddr(ext);
+    foo->x += 1;
+    return ScalarInteger(foo->x);
+}
+
+
+
+library(ROBITools)
+library.dynam('ROBITools.so')
+t=.Call('R_read_taxonomy','ecochange',TRUE)
+.Call('R_get_scientific_name',t,as.integer(7742))

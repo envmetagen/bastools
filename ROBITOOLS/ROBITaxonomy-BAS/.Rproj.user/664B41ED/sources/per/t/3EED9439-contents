@@ -1,0 +1,48 @@
+#' Download NCBI taxonomy
+#' @title Download NCBI taxonomy.
+#' @param path full path to directory to download NCBI taxonomy to. If using current directory use \code{path="here"}
+#' @return An unpacked NCBI taxonomy
+#' @note any previous versions of the taxonomy located the same directory are overwritten
+#' @examples
+#' getNCBItaxonomy("here")
+#' @export
+getNCBItaxonomy<-function(path){
+  if(path!="here"){setwd(path)}
+  file.remove("taxdump.tar.gz")
+  cb <- function(line, proc) {cat(line, "\n")}
+  processx::run(command = "wget",
+                args=c('ftp://ftp.ncbi.nlm.nih.gov://pub/taxonomy/taxdump.tar.gz'),echo=F,stderr_line_callback = cb)
+  taxdump<-"taxdump.tar.gz"
+  processx::run(command = "tar",
+                args=c("-xzf",taxdump),echo=F,stderr_line_callback = cb)
+  b<-"SUCCESS!"
+}
+#' Convert NCBI taxonomy to obitools taxonomy
+#' @title Convert NCBI taxonomy to obitools taxonomy.
+#' @param path full path to directory containing the (unzipped) NCBI taxonomy files. If using current directory use \code{path="here"}
+#' @return An obitools taxonomy
+#'
+#' @examples
+#'
+#' @export
+NCBItaxonomy2obitaxonomy<-function(path,out){
+  if(path!="here"){setwd(path)}
+  a<-getwd()
+  b<-stringr::str_locate_all(string = a,pattern = "/" )
+  d<-b[[1]][,1]
+  #stringr::str_length(a)
+  #d[length(d)]
+  if(stringr::str_length(a)>d[length(d)]){
+    e<-substr(a,d[length(d)]+1,stringr::str_length(a))
+  }
+  if(stringr::str_length(a)==d[length(d)]){
+    e<-substr(a,d[length(d)-1]+1,d[length(d)]-1)
+  }
+
+  cb <- function(line, proc) {cat(line, "\n")}
+  processx::run(command = "obitaxonomy",
+                args=c(" -t ",e," -d ","out"),echo=T,stderr_line_callback = cb,echo_cmd = T)
+}
+
+stringr::str_locate_all(string = ncbi_folder,pattern = "/" )
+substr(ncbi_folder,55+1,65-1)

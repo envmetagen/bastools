@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<obimetabarcodedb xmlns="http://metabarcoding.org/OBIMetabarcodes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mods="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://metabarcoding.org/OBIMetabarcodes OBIMetabarcodes.xsd">
+	<metadata>
+		<loci>
+			<abstractlocus ID="LO.RRNA">
+				<name>mRNA</name>
+			</abstractlocus>
+			<abstractlocus ID="LO.MRRNA">
+				<name>Mitochondrial mRNA</name>
+				<partof>LO.RRNA</partof>
+			</abstractlocus>
+			<abstractlocus ID="LO.ITS">
+				<name>Internal Transcribed Spacer (ITS)</name>
+			</abstractlocus>
+			<locus ID="LO.M16SRRNA">
+				<name>16S rRNA</name>
+				<partof>LO.MRRNA</partof>
+				<organelle>mitochondria</organelle>
+			</locus>
+			<locus ID="LO.M12SRRNA">
+				<name>12S rRNA</name>
+				<partof>LO.MRRNA</partof>
+				<organelle>mitochondria</organelle>
+			</locus>
+			<locus ID="LO.P6_LOOP">
+				<name>P6-Loop trnL</name>
+				<organelle>chloroplast</organelle>
+			</locus>
+			<locus ID="LO.ITS1">
+				<name>ITS1</name>
+				<partof>LO.ITS</partof>
+				<organelle>nucleus</organelle>
+			</locus>
+		</loci>
+	</metadata>
+	<taxonomy>
+    <root ID="TX.1">
+			<name>Root</name>
+			<rank>no rank</rank>
+		</root><taxon ID="TX.2759"><name>Eukaryota</name><rank>superkingdom</rank><partof>TX.131567</partof></taxon><taxon ID="TX.3193"><name>Embryophyta</name><rank>no rank</rank><partof>TX.131221</partof></taxon><taxon ID="TX.3208"><name>Bryophyta</name><rank>no rank</rank><partof>TX.3193</partof></taxon><taxon ID="TX.4751"><name>Fungi</name><rank>kingdom</rank><partof>TX.33154</partof></taxon><taxon ID="TX.6072"><name>Eumetazoa</name><rank>no rank</rank><partof>TX.33208</partof></taxon><taxon ID="TX.6340"><name>Annelida</name><rank>phylum</rank><partof>TX.193545</partof></taxon><taxon ID="TX.6381"><name>Oligochaeta</name><rank>subclass</rank><partof>TX.42113</partof></taxon><taxon ID="TX.6382"><name>Haplotaxida</name><rank>order</rank><partof>TX.6381</partof></taxon><taxon ID="TX.6383"><name>Tubificina</name><rank>suborder</rank><partof>TX.6382</partof></taxon><taxon ID="TX.6388"><name>Enchytraeidae</name><rank>family</rank><partof>TX.6383</partof></taxon><taxon ID="TX.6656"><name>Arthropoda</name><rank>phylum</rank><partof>TX.88770</partof></taxon><taxon ID="TX.6960"><name>Hexapoda</name><rank>superclass</rank><partof>TX.197562</partof></taxon><taxon ID="TX.7041"><name>Coleoptera</name><rank>order</rank><partof>TX.33392</partof></taxon><taxon ID="TX.7496"><name>Pterygota</name><rank>no rank</rank><partof>TX.85512</partof></taxon><taxon ID="TX.7711"><name>Chordata</name><rank>phylum</rank><partof>TX.33511</partof></taxon><taxon ID="TX.7742"><name>Vertebrata</name><rank>no rank</rank><partof>TX.89593</partof></taxon><taxon ID="TX.7776"><name>Gnathostomata</name><rank>superclass</rank><partof>TX.7742</partof></taxon><taxon ID="TX.8287"><name>Sarcopterygii</name><rank>no rank</rank><partof>TX.117571</partof></taxon><taxon ID="TX.8457"><name>Sauropsida</name><rank>no rank</rank><partof>TX.32524</partof></taxon><taxon ID="TX.8492"><name>Archosauria</name><rank>no rank</rank><partof>TX.32561</partof></taxon><taxon ID="TX.8782"><name>Aves</name><rank>class</rank><partof>TX.436492</partof></taxon><taxon ID="TX.32523"><name>Tetrapoda</name><rank>no rank</rank><partof>TX.8287</partof></taxon><taxon ID="TX.32524"><name>Amniota</name><rank>no rank</rank><partof>TX.32523</partof></taxon><taxon ID="TX.32561"><name>Sauria</name><rank>no rank</rank><partof>TX.8457</partof></taxon><taxon ID="TX.33090"><name>Viridiplantae</name><rank>kingdom</rank><partof>TX.2759</partof></taxon><taxon ID="TX.33154"><name>Opisthokonta</name><rank>no rank</rank><partof>TX.2759</partof></taxon><taxon ID="TX.33208"><name>Metazoa</name><rank>kingdom</rank><partof>TX.33154</partof></taxon><taxon ID="TX.33213"><name>Bilateria</name><rank>no rank</rank><partof>TX.6072</partof></taxon><taxon ID="TX.33316"><name>Coelomata</name><rank>no rank</rank><partof>TX.33213</partof></taxon><taxon ID="TX.33317"><name>Protostomia</name><rank>no rank</rank><partof>TX.33316</partof></taxon><taxon ID="TX.33340"><name>Neoptera</name><rank>subclass</rank><partof>TX.7496</partof></taxon><taxon ID="TX.33392"><name>Endopterygota</name><rank>infraclass</rank><partof>TX.33340</partof></taxon><taxon ID="TX.33511"><name>Deuterostomia</name><rank>no rank</rank><partof>TX.33316</partof></taxon><taxon ID="TX.35493"><name>Streptophyta</name><rank>phylum</rank><partof>TX.33090</partof></taxon><taxon ID="TX.42113"><name>Clitellata</name><rank>no rank</rank><partof>TX.6340</partof></taxon><taxon ID="TX.50557"><name>Insecta</name><rank>class</rank><partof>TX.6960</partof></taxon><taxon ID="TX.85512"><name>Dicondylia</name><rank>no rank</rank><partof>TX.50557</partof></taxon><taxon ID="TX.88770"><name>Panarthropoda</name><rank>no rank</rank><partof>TX.33317</partof></taxon><taxon ID="TX.89593"><name>Craniata</name><rank>subphylum</rank><partof>TX.7711</partof></taxon><taxon ID="TX.117570"><name>Teleostomi</name><rank>no rank</rank><partof>TX.7776</partof></taxon><taxon ID="TX.117571"><name>Euteleostomi</name><rank>no rank</rank><partof>TX.117570</partof></taxon><taxon ID="TX.131221"><name>Streptophytina</name><rank>no rank</rank><partof>TX.35493</partof></taxon><taxon ID="TX.131567"><name>cellular organisms</name><rank>no rank</rank><partof>TX.1</partof></taxon><taxon ID="TX.193545"><name>Annelida/Echiura/Pogonophora group</name><rank>no rank</rank><partof>TX.33317</partof></taxon><taxon ID="TX.197562"><name>Pancrustacea</name><rank>no rank</rank><partof>TX.197563</partof></taxon><taxon ID="TX.197563"><name>Mandibulata</name><rank>no rank</rank><partof>TX.6656</partof></taxon><taxon ID="TX.436486"><name>Dinosauria</name><rank>no rank</rank><partof>TX.8492</partof></taxon><taxon ID="TX.436489"><name>Saurischia</name><rank>no rank</rank><partof>TX.436486</partof></taxon><taxon ID="TX.436491"><name>Theropoda</name><rank>no rank</rank><partof>TX.436489</partof></taxon><taxon ID="TX.436492"><name>Coelurosauria</name><rank>no rank</rank><partof>TX.436491</partof></taxon></taxonomy>
+	<primers>
+		<primer ID="PR.G">
+			<name>G</name>
+			<sequence>GGGCAATCCTGAGCCAA</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.H">
+			<name>H</name>
+			<sequence>CCATTGAGTCTCTGCACCTATC</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.ITS5">
+			<name>ITS5</name>
+			<sequence>GGAAGTAAAAGTCGTAACAAGG</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.58S_FUNGI">
+			<name>5.8S_fungi</name>
+			<sequence>CAAGAGATCCGTTGTTGAAAGTT</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.BRYO_P6F">
+			<name>bryo_P6F</name>
+			<sequence>GATTCAGGGAAACTTAGGTTG</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.BRYO_P6R">
+			<name>bryo_P6R</name>
+			<sequence>CCATTGAGTCTCTGCACC</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.ENCH_12SA">
+			<name>Ench_12Sa</name>
+			<sequence>GCTGCACTTTGACTTGAC</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.ENCH_12SC">
+			<name>Ench_12Sc</name>
+			<sequence>AGCCTGTGTACTGCTGTC</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.COLEOP_16SC">
+			<name>Coleop_16Sc</name>
+			<sequence>TGCAAAGGTAGCATAATMATTAG</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.COLEOP_16SD">
+			<name>Coleop_16Sd</name>
+			<sequence>TCCATAGGGTCTTCTCGTC</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.AVES_12SA">
+			<name>Aves_12Sa</name>
+			<sequence>GATTAGATACCCCACTATGC</sequence>
+			<coding>false</coding>
+		</primer>
+		<primer ID="PR.AVES_12SC">
+			<name>Aves_12Sc</name>
+			<sequence>GTTTTAAGCGTTTGTGCTCG</sequence>
+			<coding>false</coding>
+		</primer>
+	</primers>
+	<metabarcodes>
+		<metabarcode ID="MB.GH_P6_LOOP">
+			<name>GH</name>
+			<locus>LO.P6_LOOP</locus>
+			<forward>PR.G</forward>
+			<reverse>PR.H</reverse>
+			<targettaxon>TX.35493</targettaxon>
+			<targetlength>
+				<min>8</min>
+				<max>150</max>
+			</targetlength>
+			<references>
+				<describedin biblioid="BI.TABERLET_07_00"/>
+				<usedin biblioid="BI.YOCCOZ_12_00"/>
+			</references>
+		</metabarcode>
+		<metabarcode ID="MB.FUNGI_ITS1">
+			<name>Fungi_ITS1</name>
+			<locus>LO.ITS1</locus>
+			<forward>PR.ITS5</forward>
+			<reverse>PR.58S_FUNGI</reverse>
+			<targettaxon>TX.4751</targettaxon>
+			<references>
+				<describedin>BI.BELLEMAIN_10_00</describedin>
+				<usedin>BI.EPP_12_00</usedin></references>
+		</metabarcode>
+		<metabarcode ID="MB.BRYO_P6_LOOP">
+			<name>Bryophytes_GH</name>
+			<locus>LO.P6_LOOP</locus>
+			<forward>PR.BRYO_P6F</forward>
+			<reverse>PR.BRYO_P6R</reverse>
+			<targettaxon>TX.3208</targettaxon>
+			<references>
+				<describedin>BI.EPP_12_00</describedin></references>
+		</metabarcode>
+		<metabarcode ID="MB.ENCH_12S">
+			<name>Enchytraeids_12S</name>
+			<locus>LO.M12SRRNA</locus>
+			<forward>PR.ENCH_12SA</forward>
+			<reverse>PR.ENCH_12SC</reverse>
+			<targettaxon>TX.6388</targettaxon>
+			<references>
+				<describedin>BI.EPP_12_00</describedin></references>
+		</metabarcode>
+		<metabarcode ID="MB.COLEO_16S">
+			<name>Coleopters_16S</name>
+			<locus>LO.M16SRRNA</locus>
+			<forward>PR.COLEOP_16SC</forward>
+			<reverse>PR.COLEOP_16SD</reverse>
+			<targettaxon>TX.7041</targettaxon>
+			<references>
+				<describedin>BI.EPP_12_00</describedin></references>
+		</metabarcode>
+		<metabarcode ID="MB.AVES_12S">
+			<name>Birds_12S</name>
+			<locus>LO.M12SRRNA</locus>
+			<forward>PR.AVES_12SA</forward>
+			<reverse>PR.AVES_12SC</reverse>
+			<targettaxon>TX.8782</targettaxon>
+			<references>
+				<describedin>BI.EPP_12_00</describedin></references>
+		</metabarcode>
+	</metabarcodes>
+	<bibliography>
+		<mods:mods ID="BI.TABERLET_07_00">
+			<mods:titleInfo>
+				<mods:title>Power and limitations of the chloroplast trnL (UAA) intron for plant DNA barcoding.</mods:title>
+			</mods:titleInfo>
+			<mods:name type="personal">
+				<mods:namePart type="given">Pierre</mods:namePart>
+				<mods:namePart type="family">Taberlet</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Eric</mods:namePart>
+				<mods:namePart type="family">Coissac</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Francois</mods:namePart>
+				<mods:namePart type="family">Pompanon</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Ludovic</mods:namePart>
+				<mods:namePart type="family">Gielly</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Christian</mods:namePart>
+				<mods:namePart type="family">Miquel</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Alice</mods:namePart>
+				<mods:namePart type="family">Valentini</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Thierry</mods:namePart>
+				<mods:namePart type="family">Vermat</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Gerard</mods:namePart>
+				<mods:namePart type="family">Corthier</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Christian</mods:namePart>
+				<mods:namePart type="family">Brochmann</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Eske</mods:namePart>
+				<mods:namePart type="family">Willerslev</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:originInfo>
+				<mods:dateIssued>2007</mods:dateIssued>
+			</mods:originInfo>
+			<mods:typeOfResource>text</mods:typeOfResource>
+			<mods:genre>journal article</mods:genre>
+			<mods:relatedItem type="host">
+				<mods:titleInfo>
+					<mods:title>Nucleic Acids Research</mods:title>
+				</mods:titleInfo>
+				<mods:originInfo>
+					<mods:issuance>continuing</mods:issuance>
+				</mods:originInfo>
+				<mods:genre authority="marcgt">periodical</mods:genre>
+				<mods:genre>academic journal</mods:genre>
+			</mods:relatedItem>
+			<mods:identifier type="citekey">Taberlet:07:00</mods:identifier>
+			<mods:part>
+				<mods:date>2007</mods:date>
+				<mods:detail type="volume">
+					<mods:number>35</mods:number>
+				</mods:detail>
+				<mods:detail type="issue">
+					<mods:number>3</mods:number>
+				</mods:detail>
+				<mods:detail type="page">
+					<mods:number>e14</mods:number>
+				</mods:detail>
+			</mods:part>
+		</mods:mods>
+		<mods:mods ID="BI.YOCCOZ_12_00">
+			<mods:titleInfo>
+				<mods:title>DNA from soil mirrors plant taxonomic and growth form diversity</mods:title>
+			</mods:titleInfo>
+			<mods:name type="personal">
+				<mods:namePart type="given">N</mods:namePart>
+				<mods:namePart type="given">G</mods:namePart>
+				<mods:namePart type="family">Yoccoz</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">K</mods:namePart>
+				<mods:namePart type="given">A</mods:namePart>
+				<mods:namePart type="family">Bråthen</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">L</mods:namePart>
+				<mods:namePart type="family">Gielly</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">J</mods:namePart>
+				<mods:namePart type="family">Haile</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">M</mods:namePart>
+				<mods:namePart type="given">E</mods:namePart>
+				<mods:namePart type="family">Edwards</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">T</mods:namePart>
+				<mods:namePart type="family">Goslar</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">H</mods:namePart>
+				<mods:namePart type="family">Von Stedingk</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">A</mods:namePart>
+				<mods:namePart type="given">K</mods:namePart>
+				<mods:namePart type="family">Brysting</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">E</mods:namePart>
+				<mods:namePart type="family">Coissac</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">F</mods:namePart>
+				<mods:namePart type="family">Pompanon</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">J</mods:namePart>
+				<mods:namePart type="given">H</mods:namePart>
+				<mods:namePart type="family">Sønstebø</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">C</mods:namePart>
+				<mods:namePart type="family">Miquel</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">A</mods:namePart>
+				<mods:namePart type="family">Valentini</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">F</mods:namePart>
+				<mods:namePart type="family">De Bello</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">J</mods:namePart>
+				<mods:namePart type="family">Chave</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">W</mods:namePart>
+				<mods:namePart type="family">Thuiller</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">P</mods:namePart>
+				<mods:namePart type="family">Wincker</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">C</mods:namePart>
+				<mods:namePart type="family">Cruaud</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">F</mods:namePart>
+				<mods:namePart type="family">Gavory</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">M</mods:namePart>
+				<mods:namePart type="family">Rasmussen</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">M</mods:namePart>
+				<mods:namePart type="given">T</mods:namePart>
+				<mods:namePart type="given">P</mods:namePart>
+				<mods:namePart type="family">Gilbert</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">L</mods:namePart>
+				<mods:namePart type="family">Orlando</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">C</mods:namePart>
+				<mods:namePart type="family">Brochmann</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">E</mods:namePart>
+				<mods:namePart type="family">Willerslev</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">P</mods:namePart>
+				<mods:namePart type="family">Taberlet</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:originInfo>
+				<mods:dateIssued>2012-Aug</mods:dateIssued>
+			</mods:originInfo>
+			<mods:typeOfResource>text</mods:typeOfResource>
+			<mods:genre>journal article</mods:genre>
+			<mods:relatedItem type="host">
+				<mods:titleInfo>
+					<mods:title>Mol Ecol</mods:title>
+				</mods:titleInfo>
+				<mods:originInfo>
+					<mods:issuance>continuing</mods:issuance>
+				</mods:originInfo>
+				<mods:genre authority="marcgt">periodical</mods:genre>
+				<mods:genre>academic journal</mods:genre>
+			</mods:relatedItem>
+			<mods:identifier type="citekey">Yoccoz:12:00</mods:identifier>
+			<mods:part>
+				<mods:date>2012-Aug</mods:date>
+				<mods:detail type="volume">
+					<mods:number>21</mods:number>
+				</mods:detail>
+				<mods:detail type="issue">
+					<mods:number>15</mods:number>
+				</mods:detail>
+				<mods:extent unit="page">
+					<mods:start>3647</mods:start>
+					<mods:end>55</mods:end>
+				</mods:extent>
+			</mods:part>
+		</mods:mods>
+		<mods:mods xmlns:mods="http://www.loc.gov/mods/v3" ID="BI.EPP_12_00">
+			<mods:titleInfo>
+				<mods:title>New environmental metabarcodes for analysing soil DNA</mods:title>
+				<mods:subTitle>potential for studying past and present ecosystems</mods:subTitle>
+			</mods:titleInfo>
+			<mods:name type="personal">
+				<mods:namePart type="given">Laura</mods:namePart>
+				<mods:namePart type="given">S</mods:namePart>
+				<mods:namePart type="family">Epp</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Sanne</mods:namePart>
+				<mods:namePart type="family">Boessenkool</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Eva</mods:namePart>
+				<mods:namePart type="given">P</mods:namePart>
+				<mods:namePart type="family">Bellemain</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">James</mods:namePart>
+				<mods:namePart type="family">Haile</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Alfonso</mods:namePart>
+				<mods:namePart type="family">Esposito</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Tiayyba</mods:namePart>
+				<mods:namePart type="family">Riaz</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Christer</mods:namePart>
+				<mods:namePart type="family">Erséus</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Vladimir</mods:namePart>
+				<mods:namePart type="given">I</mods:namePart>
+				<mods:namePart type="family">Gusarov</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Mary</mods:namePart>
+				<mods:namePart type="given">E</mods:namePart>
+				<mods:namePart type="family">Edwards</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Arild</mods:namePart>
+				<mods:namePart type="family">Johnsen</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Hans</mods:namePart>
+				<mods:namePart type="given">K</mods:namePart>
+				<mods:namePart type="family">Stenøien</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Kristian</mods:namePart>
+				<mods:namePart type="family">Hassel</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Håvard</mods:namePart>
+				<mods:namePart type="family">Kauserud</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Nigel</mods:namePart>
+				<mods:namePart type="given">G</mods:namePart>
+				<mods:namePart type="family">Yoccoz</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Kari</mods:namePart>
+				<mods:namePart type="given">Anne</mods:namePart>
+				<mods:namePart type="family">Bråthen</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Eske</mods:namePart>
+				<mods:namePart type="family">Willerslev</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Pierre</mods:namePart>
+				<mods:namePart type="family">Taberlet</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Eric</mods:namePart>
+				<mods:namePart type="family">Coissac</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:name type="personal">
+				<mods:namePart type="given">Christian</mods:namePart>
+				<mods:namePart type="family">Brochmann</mods:namePart>
+				<mods:role>
+					<mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+				</mods:role>
+			</mods:name>
+			<mods:originInfo>
+				<mods:dateIssued>2012-Apr</mods:dateIssued>
+			</mods:originInfo>
+			<mods:typeOfResource>text</mods:typeOfResource>
+			<mods:genre>journal article</mods:genre>
+			<mods:relatedItem type="host">
+				<mods:titleInfo>
+					<mods:title>Molecular Ecology</mods:title>
+				</mods:titleInfo>
+				<mods:originInfo>
+					<mods:issuance>continuing</mods:issuance>
+				</mods:originInfo>
+				<mods:genre authority="marcgt">periodical</mods:genre>
+				<mods:genre>academic journal</mods:genre>
+			</mods:relatedItem>
+			<mods:identifier type="citekey">Epp:12:00</mods:identifier>
+			<mods:part>
+				<mods:date>2012-Apr</mods:date>
+				<mods:detail type="volume">
+					<mods:number>21</mods:number>
+				</mods:detail>
+				<mods:detail type="issue">
+					<mods:number>8</mods:number>
+				</mods:detail>
+				<mods:extent unit="page">
+					<mods:start>1821</mods:start>
+					<mods:end>1833</mods:end>
+				</mods:extent>
+			</mods:part>
+		</mods:mods>
+	<mods:mods xmlns:mods="http://www.loc.gov/mods/v3" ID="BI.BELLEMAIN_10_00">
+    <mods:titleInfo>
+        <mods:title>ITS as an environmental DNA barcode for fungi</mods:title>
+        <mods:subTitle>an in silico approach reveals potential PCR biases</mods:subTitle>
+    </mods:titleInfo>
+    <mods:name type="personal">
+        <mods:namePart type="given">Eva</mods:namePart>
+        <mods:namePart type="family">Bellemain</mods:namePart>
+        <mods:role>
+            <mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+        </mods:role>
+    </mods:name>
+    <mods:name type="personal">
+        <mods:namePart type="given">Tor</mods:namePart>
+        <mods:namePart type="family">Carlsen</mods:namePart>
+        <mods:role>
+            <mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+        </mods:role>
+    </mods:name>
+    <mods:name type="personal">
+        <mods:namePart type="given">Christian</mods:namePart>
+        <mods:namePart type="family">Brochmann</mods:namePart>
+        <mods:role>
+            <mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+        </mods:role>
+    </mods:name>
+    <mods:name type="personal">
+        <mods:namePart type="given">Eric</mods:namePart>
+        <mods:namePart type="family">Coissac</mods:namePart>
+        <mods:role>
+            <mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+        </mods:role>
+    </mods:name>
+    <mods:name type="personal">
+        <mods:namePart type="given">Pierre</mods:namePart>
+        <mods:namePart type="family">Taberlet</mods:namePart>
+        <mods:role>
+            <mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+        </mods:role>
+    </mods:name>
+    <mods:name type="personal">
+        <mods:namePart type="given">Håvard</mods:namePart>
+        <mods:namePart type="family">Kauserud</mods:namePart>
+        <mods:role>
+            <mods:roleTerm authority="marcrelator" type="text">author</mods:roleTerm>
+        </mods:role>
+    </mods:name>
+    <mods:originInfo>
+        <mods:dateIssued>2010</mods:dateIssued>
+    </mods:originInfo>
+    <mods:typeOfResource>text</mods:typeOfResource>
+    <mods:genre>journal article</mods:genre>
+    <mods:relatedItem type="host">
+        <mods:titleInfo>
+            <mods:title>BMC Microbiology</mods:title>
+        </mods:titleInfo>
+        <mods:originInfo>
+            <mods:issuance>continuing</mods:issuance>
+        </mods:originInfo>
+        <mods:genre authority="marcgt">periodical</mods:genre>
+        <mods:genre>academic journal</mods:genre>
+    </mods:relatedItem>
+    <mods:identifier type="citekey">Bellemain:10:00</mods:identifier>
+    <mods:part>
+        <mods:date>2010</mods:date>
+        <mods:detail type="volume"><mods:number>10</mods:number></mods:detail>
+        <mods:detail type="page"><mods:number>189</mods:number></mods:detail>
+    </mods:part>
+</mods:mods></bibliography>
+</obimetabarcodedb>

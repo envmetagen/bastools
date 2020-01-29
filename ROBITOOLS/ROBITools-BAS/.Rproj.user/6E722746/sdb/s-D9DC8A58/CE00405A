@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "library(ROBIBarcodes)\nlibrary(ROBITaxonomy)\nlibrary(ROBITools)\nlibrary(ROBIUtils)\n\n##COUNTING NAS AT THE MOMENT, NEED TO EXCLUDE. NOTE THAT THIS WILL OUTPUT A COUNT PER RANK OF TAXA, BUT LENGTH WILL\n#NOT EQUAL ORIGINAL LIST BECAUSE COUNTS WILL ONLY BE BASED ON WHAT WAS ASSIGNED\n\n##also be careful because some taxa, for instance, get assigned an order, but get NA for class\n#because in NCBI taxonomy, there is no class rank assigned. \n\nsetwd(\"C:/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ecoPCRoutput/USING 16S\")\ntaxo=read.taxonomy(\"taxdump\")\n\nget.classic.taxonomy.BAS = function(x, taxo) {\n  classic.taxo = c(\"kingdom\", \"phylum\", \"class\", \"order\", \"family\", \"genus\", \"species\")\n  taxids = x$taxid\n  out = as.data.frame(do.call(\"cbind\", lapply(classic.taxo, function(y) {\n  scientificname(taxo, taxonatrank(taxo,taxids,y))\n  })))\n  colnames(out) = paste(classic.taxo, \"_name_ok\", sep=\"\")\n  rownames(out) = row.names(x)\n  out$scientific_name_ok = scientificname(taxo, taxids)\n  out$taxonomic_rank_ok = taxonomicrank(taxo, taxids)\n  return(out)\n}\n\nsetwd(\"C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/WOLVES/Pipelines/From taxids to rank counts/\")\nFILE_LIST<-list.files()\n\nTab=NULL\nfor(file in FILE_LIST){\nprint(file)  \nPipeline_taxid_list<-read.table(file = file)\nPipeline_taxid_list$taxid<-Pipeline_taxid_list$V2\ntaxon.table=get.classic.taxonomy.BAS(Pipeline_taxid_list,taxo)\ncurcol=c(length(unique(taxon.table$kingdom_name_ok)), length(unique(taxon.table$phylum_name_ok)),\n         length(unique(taxon.table$class_name_ok)),length(unique(taxon.table$order_name_ok)),\n         length(unique(taxon.table$family_name_ok)),length(unique(taxon.table$genus_name_ok)),\n         length(unique(taxon.table$species_name_ok)))\nTab=cbind(Tab,curcol)                                                                                                                                               \nnewFname=gsub(pattern = \".txt\",replacement = \"_taxonTable.txt\",x = file)\nwrite.table(taxon.table, newFname, sep=\"\\t\")\n}\n\nTabOut=cbind(c(\"Taxonomy\",\"kingdom\",\"phylum\",\"class\",\"Order\",\"family\",\"genus\", \"species\"),\n             rbind(gsub(pattern = \"-taxID.txt\",replacement = \"\",x = FILE_LIST),Tab))\nwrite.table(TabOut, \"TaxonTableAllPipelines.txt\", sep=\"\\t\",row.names = F,col.names = F,quote = F)\n\n##to just import columns with taxids in the first place\nlibrary(\"data.table\", lib.loc=\"~/R/win-library/3.3\")\nPipeline_taxid_list<-fread(\"SINGLETAXID_DB_ALLFROGS_16S.tab\", select = 3)\ntaxon.table=get.classic.taxonomy.BAS(Pipeline_taxid_list,taxo)\n\n##remove or count species names that are aff., cf. or sp.\ntaxon.table$aff.<-str_count(taxon.table$species_name_ok,\"aff\\\\.\")\ntaxon.table$sp.<-str_count(taxon.table$species_name_ok,\"sp\\\\.\")\ntaxon.table$cf.<-str_count(taxon.table$species_name_ok,\"cf\\\\.\")\ntaxon.table$any_of_three.<-rowSums(taxon.table[,10:12])\ntaxon.table.without.cf.spp.aff<-subset(taxon.table, any_of_three. == 0)\n",
+    "created" : 1517923639615.000,
+    "dirty" : false,
+    "encoding" : "ISO-8859-1",
+    "folds" : "",
+    "hash" : "1684572181",
+    "id" : "CE00405A",
+    "lastKnownWriteTime" : 1508539214,
+    "last_content_update" : 1508539214,
+    "path" : "~/WORK/CIBIO/SCRIPTS/ROBITools scripts/Read taxids and produce taxon table outputs inc count by rank.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

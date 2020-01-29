@@ -1,0 +1,38 @@
+Package: ROBITools
+Type: Package
+Title: Metabarcoding data biodiversity analysis
+Version: 0.1
+Date: 2012-08-23
+Author: LECA - Laboratoire d'ecologie alpine
+Maintainer: LECA OBITools team <obitools@metabarcoding.org>
+Description: More about what it does (maybe more than one line)
+License: CeCILL v2.0
+LazyLoad: yes
+Roxygen: list(wrap = FALSE)
+Collate:
+    's3objects.R'
+    'ROBITools.R'
+    '02_class_metabarcoding.data.R'
+    'aggregate.R'
+    'choose.taxonomy.R'
+    'contaslayer.R'
+    'distrib.extrapol.R'
+    'experimental.section.R'
+    'export-metabarcoding.R'
+    'read.obitab.R'
+    'import.metabarcoding.R'
+    'import.ngsfilter.R'
+    'layers.metabarcoding.R'
+    'metabarcoding_threshold.R'
+    'mstat.R'
+    'obiclean.R'
+    'pcrslayer.R'
+    'plot.PCRplate.R'
+    'plot.seqinsample.R'
+    'rarefy.R'
+    'read.ngsfilter.R'
+    'read.sumatra.R'
+    'taxoDBtree.R'
+    'taxonomic.resolution.R'
+    'taxonomy_classic_table.R'
+RoxygenNote: 5.0.1

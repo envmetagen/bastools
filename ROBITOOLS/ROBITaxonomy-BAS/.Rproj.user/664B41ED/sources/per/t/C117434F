@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556306260614.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3301094127",
+    "id" : "C117434F",
+    "lastKnownWriteTime" : 1556310584,
+    "last_content_update" : 1556310584957,
+    "path" : "/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/tests.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "28,0",
+        "scrollLine" : "4",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

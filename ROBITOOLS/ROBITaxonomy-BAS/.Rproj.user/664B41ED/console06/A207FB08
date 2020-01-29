@@ -1,0 +1,70 @@
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ obitaxonomy 
+Traceback (most recent call last):
+  File "/home/tutorial/SCRIPTS/MBC_pipelines/MBC/bin/obitaxonomy", line 348, in <module>
+    ecoTaxonomyWriter(options.ecodb,options.taxonomy,onlyLocal=True)
+AttributeError: Values instance has no attribute 'ecodb'
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ ^V[K^V[Kobitaxonomy 
+Traceback (most recent call last):
+  File "/home/tutorial/SCRIPTS/MBC_pipelines/MBC/bin/obitaxonomy", line 348, in <module>
+    ecoTaxonomyWriter(options.ecodb,options.taxonomy,onlyLocal=True)
+AttributeError: Values instance has no attribute 'ecodb'
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ i[Kobihead -h
+Usage: obihead [options]
+
+***********
+* Options *
+***********
+  -h, --help            show this help message and exit
+  --DEBUG               Set logging in debug mode
+  --without-progress-bar
+                        desactivate progress bar
+  -n ###, --sequence-count=###
+                        Count of first sequences to print
+
+  *************************************
+  * Restriction to a sub-part options *
+  *************************************
+    Allow to limit analysis to a sub-part of the data file
+
+    --skip=<N>          skip the N first sequences
+    --only=<N>          treat only N sequences
+
+  ************************
+  * Input format options *
+  ************************
+    If not specified, a test is done to determine the file format
+
+    --genbank           Input file is in genbank format
+    --embl              Input file is in embl format
+    --skip-on-error     Skip sequence entries with parse error
+    --fasta             Input file is in fasta nucleic format (including
+                        obitools fasta extentions)
+    --ecopcr            Input file is in ecopcr format
+    --raw-fasta         Input file is in fasta format (but more tolerant to
+                        format variant)
+    --sanger            Input file is in sanger fastq nucleic format (standard
+                        fastq)
+    --solexa            Input file is in fastq nucleic format produced by
+                        solexa sequencer
+    --ecopcrdb          Input file is an ecopcr database
+    --nuc               Input file contains nucleic sequences
+    --prot              Input file contains protein sequences
+
+  *************************
+  * Output format options *
+  *************************
+    --fasta-output      Output sequences in obitools fasta format
+    --fastq-output      Output sequences in sanger fastq format
+    --ecopcrdb-output=ECOPCROUTPUT
+                        Output sequences in ecopcr database format (sequence
+                        records are not printed on standard output)
+    --uppercase         Print sequences in upper case (default is lower case)
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ obihead -h[K[K[K[K[K[K[K[K[K[K^V[Kecho $PATH
+/home/tutorial/SCRIPTS/MBC_pipelines/MBC/bin:/home/tutorial/SCRIPTS/MBC_pipelines/MBC/scripts:/home/tutorial/SCRIPTS/MBC_pipelines/MBC/python/bin:/home/tutorial/SCRIPTS/MBC_pipelines/MBC/bin:/home/tutorial/SCRIPTS/MBC_pipelines/MBC/scripts:/home/tutorial/SCRIPTS/MBC_pipelines/MBC/python/bin:/usr/local/bin:/usr/bin:/bin:/usr/games:/snap/bin:/home/tutorial/TOOLS/ncbi-blast-2.9.0+/bin:/home/tutorial/TOOlS:/home/tutorial/megan/tools:/home/tutorial/TOOLS/jdk1.8.0_201:/home/tutorial/SCRIPTS/MBC_pipelines/MBC/bin:/opt/bin:/home/tutorial/TOOLS/ecoprimers/src:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/games:bin/msys-ssh-1000-18:/home/tutorial/edirect:bin/msys-ssh-1000-18:/home/tutorial/edirect
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ ^C
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ ^C
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ ^C
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ ^C
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ ^C
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ ^C
+]0;/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAStutorial@tutorial-VirtualBox:/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS$ 

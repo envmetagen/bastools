@@ -1,0 +1,28 @@
+system(command = args)
+now="rma2info"
+args=c(now,"-h")
+
+blast2rma.BAS<-function(infile,format="BlastTab",blastMode="BlastN",outfile,reads=F,
+                        top=10.0, mdf=F,ms=50.0,me=0.01,mrc=70.0, ram="readCount",a2t=F,h=F){
+  if(reads==F) print("Running without a specified fasta file, which is fine, but resultant megan file will not contain as much information")
+  
+  if(h==T){
+    argsBas=c("blast2rma","-h")
+    system(command = argsBas, wait=T)
+    }
+  
+  if(h==F){
+    cb <- function(line, proc) {cat(line, "\n")}
+    argsBas<-c(" --in ", infile," --format",format," --blastMode ",blastMode,
+               " --reads ", reads," --out ",outfile," --topPercent ",top," -mdf ",mdf," -ms ",ms,
+               " -me ",me," -mrc ",mrc," -ram ",ram," -a2t ",a2t," -supp ",0)
+    argsBasF<-argsBas[-(grep(FALSE,argsBas)-1)]
+    argsBasF<-argsBasF[-grep(FALSE,argsBasF)]
+    system(command = c("blast2rma",arsBas))
+    processx::run(command = "blast2rma", args=argsBasF,stderr_line_callback = cb,echo_cmd = T,echo = F)}
+  b<-"SUCCESS!" #this is mainly to stop processx::run printing stdout and stderr to screen, which it does because we
+  #cannot explicitly redirect stdout because the command has an "out" option
+  return(b)
+}
+
+system("cat ~/.profile")

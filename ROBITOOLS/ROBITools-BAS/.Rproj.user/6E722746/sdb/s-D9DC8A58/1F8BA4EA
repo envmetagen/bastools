@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "#as output form my two separate scripts made the same filenames I had to run script 1, then the command below.\n#Then script 2 and then the second command, just to rename\nNT_database_Hits_only_frogs<-only.frog\nAnura_Database_Hits<-only.frog\n\ncombined_Hits<-rbind(NT_database_Hits_only_frogs,Anura_Database_Hits)\nlength(unique(combined_Hits$taxid))\n\ntaxo=read.taxonomy(\"taxdump\")\n\n#using nt database output, changing primer mismatches to 1\nPrimerMismatch<-subset(ecopcroutput,ecopcroutput$forward_mismatch<=1)\nPrimerMismatch<-subset(PrimerMismatch,PrimerMismatch$reverse_mismatch<=1)\nspecies.frame<-as.data.frame(PrimerMismatch$taxid)\nspecies.frame$species=species.frame$\"PrimerMismatch$taxid\"\nspecies.frame$\"PrimerMismatch$taxid\"=NULL\nspecies.frame$taxid<-species.frame$species\nprimermismatch.taxon.table=get.classic.taxonomy.BAS(species.frame,taxo)\nprimermismatch_is_a_frog=primermismatch.taxon.table$order_name_ok == \"Anura\"\nprimermismatch.only.frog=PrimerMismatch[primermismatch_is_a_frog,]\n\nlength(unique(primermismatch.only.frog$taxid))\n\n\n",
+    "created" : 1517923242245.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "311210785",
+    "id" : "1F8BA4EA",
+    "lastKnownWriteTime" : 23644241645862994,
+    "last_content_update" : 1517929470656,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

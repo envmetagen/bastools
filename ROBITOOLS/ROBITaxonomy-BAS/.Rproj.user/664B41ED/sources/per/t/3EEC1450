@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556280307811.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1010083971",
+    "id" : "3EEC1450",
+    "lastKnownWriteTime" : 1556225456,
+    "last_content_update" : 1556225456,
+    "path" : "/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/CHECKING_SCRIPT.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "64,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

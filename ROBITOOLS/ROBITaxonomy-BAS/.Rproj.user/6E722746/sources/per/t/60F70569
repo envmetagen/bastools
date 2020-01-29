@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1497629103121.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3440825741",
+    "id" : "60F70569",
+    "lastKnownWriteTime" : 1452675950,
+    "last_content_update" : 1452675950,
+    "path" : "~/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS/R/rank.R",
+    "project_path" : "R/rank.R",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

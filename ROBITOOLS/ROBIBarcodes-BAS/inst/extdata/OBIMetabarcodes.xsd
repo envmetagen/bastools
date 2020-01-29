@@ -1,0 +1,565 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="xs3p.xsl"?>
+
+<!-- 
+    
+    The OBIMetabarcode schema
+
+
+ -->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://metabarcoding.org/OBIMetabarcodes" xmlns:tns="http://metabarcoding.org/OBIMetabarcodes"
+	elementFormDefault="qualified" xmlns:mods="http://www.loc.gov/mods/v3">
+
+
+    <!-- ************************************************************* 
+    
+        We import the MODS schema which define the model
+        for bibliographic references produced by the library
+        of congress
+        
+        http://www.loc.gov/standards/mods/
+        
+        You can also check the CSL schema which can be use
+        for declaring way to present bibliography references
+        
+        http://citationstyles.org
+    
+      ************************************************************* -->
+
+	<xs:import namespace="http://www.loc.gov/mods/v3"
+		schemaLocation="mods-3-5.xsd" />
+		
+    <!-- ************************************************************* 
+	
+	    Declaration of the simple types
+	    
+      ************************************************************* -->
+     
+     <!-- documentation_t : subclass of xs:string for documentation elememts -->
+
+	<xs:simpleType name="documentation_t">
+        <xs:annotation>
+        	<xs:documentation>The documentation_t type is a string of characters allowing to document an instance in the database.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string"></xs:restriction>
+	</xs:simpleType>
+
+     <!-- organelle_t : subclass of xs:string for documentation elememts -->
+
+	<xs:simpleType name="organelle_t">
+		<xs:annotation>
+			<xs:documentation>
+				The organelle_t type allows to specify a value
+				indicating on which organelle is located another element
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="nucleus">
+				<xs:annotation>
+					<xs:documentation>
+						Indicates that the marker corresponds to a locus
+						belonging the nuclear genome
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="chloroplast">
+				<xs:annotation>
+					<xs:documentation>
+						Indicates that the marker corresponds to a locus
+						belonging the chloroplastic genome
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="mitochondria">
+				<xs:annotation>
+					<xs:documentation>
+						Indicates that the marker corresponds to a locus
+						belonging the mitochondrial genome
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+     <!-- identifier_t : subclass of xs:string for identifier -->
+     <!-- and its subclasses for each type of identifiers -->
+
+    <xs:simpleType name="identifier_t">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{2}\.[A-Z0-9_]+"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="locusid_t">
+        <xs:restriction base="tns:identifier_t">
+            <xs:pattern value="LO\..+"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="primerid_t">
+        <xs:restriction base="tns:identifier_t">
+            <xs:pattern value="PR\..+"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="biblioid_t">
+        <xs:restriction base="tns:identifier_t">
+            <xs:pattern value="BI\..+"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="taxid_t">
+        <xs:restriction base="tns:identifier_t">
+            <xs:pattern value="TX\.[0-9]+"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="metabarcodeid_t">
+        <xs:restriction base="tns:identifier_t">
+            <xs:pattern value="MB\..+"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="roottaxid_t">
+        <xs:restriction base="tns:taxid_t">
+            <xs:pattern value="TX\.1"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="rank_t">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="class"></xs:enumeration>
+            <xs:enumeration value="family"></xs:enumeration>
+            <xs:enumeration value="forma"></xs:enumeration>
+            <xs:enumeration value="genus"></xs:enumeration>
+            <xs:enumeration value="infraclass"></xs:enumeration>
+            <xs:enumeration value="infraorder"></xs:enumeration>
+            <xs:enumeration value="kingdom"></xs:enumeration>
+            <xs:enumeration value="no rank"></xs:enumeration>
+            <xs:enumeration value="order"></xs:enumeration>
+            <xs:enumeration value="parvorder"></xs:enumeration>
+            <xs:enumeration value="phylum"></xs:enumeration>
+            <xs:enumeration value="species"></xs:enumeration>
+            <xs:enumeration value="[species group"></xs:enumeration>
+            <xs:enumeration value="species subgroup"></xs:enumeration>
+            <xs:enumeration value="subclass"></xs:enumeration>
+            <xs:enumeration value="subfamily"></xs:enumeration>
+            <xs:enumeration value="subgenus"></xs:enumeration>
+            <xs:enumeration value="subkingdom"></xs:enumeration>
+            <xs:enumeration value="suborder"></xs:enumeration>
+            <xs:enumeration value="subphylum"></xs:enumeration>
+            <xs:enumeration value="subspecies"></xs:enumeration>
+            <xs:enumeration value="subtribe"></xs:enumeration>
+            <xs:enumeration value="superclass"></xs:enumeration>
+            <xs:enumeration value="superfamily"></xs:enumeration>
+            <xs:enumeration value="superkingdom"></xs:enumeration>
+            <xs:enumeration value="superorder"></xs:enumeration>
+            <xs:enumeration value="superphylum"></xs:enumeration>
+            <xs:enumeration value="tribe"></xs:enumeration>
+            <xs:enumeration value="varietas"></xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="rootrank_t">
+        <xs:restriction base="tns:rank_t">
+            <xs:enumeration value="no rank"></xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="iupac_t">
+        <xs:annotation>
+            <xs:documentation>
+                The iupc_t type is a string of characters symbolizing
+                nucleotides in the iupac system, and thus belonging to
+                the folowing list of letters:
+                A,C,G,T,U,R,Y,M,K,W,S,B,D,H,V,N. The type also contrains
+                the sequence to be written in upper cases.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[ACGTRYMKWSBDHVN]+"></xs:pattern>
+            <xs:minLength value="15"></xs:minLength>
+            <xs:whiteSpace value="collapse"></xs:whiteSpace>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- ************************************************************* 
+    
+        Declaration of the complex types
+        
+      ************************************************************* -->
+     
+     <!-- obimetabarcodedb_t : the main type of the schema -->
+     
+	<xs:complexType name="obimetabarcodedb_t">
+		<xs:sequence>
+			<xs:element name="metadata" type="tns:metadata_t"
+				maxOccurs="1" minOccurs="1">
+			</xs:element>
+			<xs:element name="taxonomy" type="tns:taxa_t" maxOccurs="1" minOccurs="1"></xs:element>
+			<xs:element name="primers" type="tns:primers_t"
+				maxOccurs="1" minOccurs="1">
+			</xs:element>
+			<xs:element name="metabarcodes" type="tns:metabarcodes_t"
+				maxOccurs="1" minOccurs="1">
+			</xs:element>
+			<xs:element name="bibliography"
+				type="mods:modsCollectionDefinition" maxOccurs="1" minOccurs="0">
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+     <!-- metadata_t : contains the metadata related to the database -->
+
+	<xs:complexType name="metadata_t">
+		<xs:sequence>
+			<xs:element name="loci" type="tns:loci_t" maxOccurs="1"
+				minOccurs="1"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+     <!-- The metabarcode descriptions by themselves -->
+
+	<xs:complexType name="metabarcodes_t">
+		<xs:sequence>
+			<xs:element name="metabarcode" type="tns:metabarcode_t"
+				maxOccurs="unbounded" minOccurs="0">
+				
+			             <!-- insure that the same primer is not used twice -->
+                
+                <xs:unique name="uniqbarcodeprimer">
+                    <xs:selector xpath="tns:forward|tns:reverse" />
+                    <xs:field xpath="." />
+                </xs:unique>    
+			
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="metabarcode_t">
+		<xs:sequence>
+
+
+			<xs:element name="name" type="xs:string" maxOccurs="1"
+				minOccurs="1">
+			</xs:element>
+
+			<xs:element name="locus" type="tns:locusid_t" maxOccurs="1"
+				minOccurs="1">
+			</xs:element>
+
+			<xs:element name="forward" type="tns:primerid_t"
+				maxOccurs="unbounded" minOccurs="1">
+			</xs:element>
+
+			<xs:element name="reverse" type="tns:primerid_t"
+				maxOccurs="unbounded" minOccurs="1">
+			</xs:element>
+
+			<xs:element name="targettaxon" type="tns:taxid_t"
+				maxOccurs="unbounded" minOccurs="1">
+			</xs:element>
+
+			<xs:element name="excludedtaxon" type="tns:taxid_t"
+				maxOccurs="unbounded" minOccurs="0">
+			</xs:element>
+
+            <xs:element name="targetlength" type="tns:interval_t" maxOccurs="1" minOccurs="0"></xs:element>
+            <xs:element name="documentation" type="tns:documentation_t"
+				maxOccurs="1" minOccurs="0">
+			</xs:element>
+
+			<xs:element name="references" type="tns:references_t"
+				maxOccurs="1" minOccurs="0">
+
+				<!-- insure that the same bibliographic reference is not used twice -->
+
+				<xs:unique name="uniqbarcodereference">
+					<xs:selector xpath="tns:describedin|tns:usedin" />
+					<xs:field xpath="@biblioid" />
+				</xs:unique>
+
+			</xs:element>
+
+		</xs:sequence>
+
+		<xs:attribute name="ID" type="tns:metabarcodeid_t" use="required"></xs:attribute>
+
+	</xs:complexType>  <!-- end of metabarcode_t -->
+
+
+
+	<xs:complexType name="loci_t">
+		<xs:sequence>
+			<xs:element name="abstractlocus" type="tns:abstractlocus_t"
+				maxOccurs="unbounded" minOccurs="0">
+			</xs:element>
+			<xs:element name="locus" type="tns:locus_t" maxOccurs="unbounded" minOccurs="0"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="locus_t">
+		<xs:complexContent>
+			<xs:extension base="tns:abstractlocus_t">
+				<xs:sequence>
+					<xs:element name="organelle" type="tns:organelle_t" maxOccurs="1" minOccurs="1"></xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+
+
+	<xs:complexType name="primers_t">
+        <xs:annotation>
+        	<xs:documentation>The primers_t type gathers several (usually two) primer_t elements</xs:documentation>
+        </xs:annotation>
+		<xs:sequence>
+			<xs:element name="primer" type="tns:primer_t" maxOccurs="unbounded"
+				minOccurs="0">
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="primer_t">
+        <xs:annotation>
+        	<xs:documentation>
+        	This type describes a PCR primer. 
+            It has a mandatory attribut "name" containing a unique identifier.
+            Primer is described by ...
+            The primer_t type has an attribute name specifying its name, 
+            and includes a sequence element specifying its nucleotide sequence.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+        	<xs:element name="name" type="xs:string" maxOccurs="1"
+        		minOccurs="1">
+        	</xs:element>
+        	<xs:element name="sequence" type="tns:iupac_t" maxOccurs="1"
+        		minOccurs="1">
+        		<xs:annotation>
+        			<xs:documentation>
+        				The nucleic sequence of the primer. The primer
+        				length must be greater than 15bp
+        			</xs:documentation>
+        		</xs:annotation>
+        	</xs:element>
+        	<xs:element name="coding" type="xs:boolean" maxOccurs="1"
+        		minOccurs="1">
+        	</xs:element>
+        	<xs:element name="documentation" type="tns:documentation_t"
+        		maxOccurs="1" minOccurs="0">
+        	</xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="tns:primerid_t" use="required">
+			<xs:annotation>
+				<xs:documentation>The name of the primer</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="references_t">
+		<xs:sequence>
+			<xs:element name="describedin" type="tns:reference_t"
+				maxOccurs="1" minOccurs="0">
+			</xs:element>
+			<xs:element name="usedin" type="tns:reference_t"
+				maxOccurs="unbounded" minOccurs="0"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+
+	<xs:complexType name="reference_t">
+		<xs:simpleContent>
+			<xs:extension base="tns:documentation_t">
+				<xs:attribute name="biblioid" type="tns:biblioid_t"></xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+
+    <xs:complexType name="taxa_t">
+        <xs:sequence>
+            <xs:element name="root" type="tns:roottaxon_t" maxOccurs="1" minOccurs="1"></xs:element>
+            <xs:element name="taxon" type="tns:taxon_t" maxOccurs="unbounded" minOccurs="0"></xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="abstracttaxon_t" abstract="true">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"></xs:element>
+            <xs:element name="rank" type="tns:rank_t"></xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="tns:taxid_t"></xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="taxon_t">
+        <xs:complexContent>
+            <xs:extension base="tns:abstracttaxon_t">
+                <xs:sequence>
+                    <xs:element name="partof" type="tns:taxid_t"></xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="roottaxon_t">
+        <xs:complexContent>
+            <xs:restriction base="tns:abstracttaxon_t">
+                <xs:sequence>
+                    <xs:element name="name">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:pattern value="Root"></xs:pattern>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="rank" type="tns:rootrank_t"></xs:element>
+                </xs:sequence>
+                <xs:attribute name="ID" type="tns:roottaxid_t"></xs:attribute>
+            </xs:restriction>
+        </xs:complexContent>
+    </xs:complexType>
+    
+
+
+	<!-- The root xs:element of the library -->
+
+	<xs:element name="obimetabarcodedb" type="tns:obimetabarcodedb_t">
+
+		<!-- Unicity constraints -->
+
+		<xs:unique name="uniqprimer">
+			<xs:selector xpath="./tns:primers/tns:primer" />
+			<xs:field xpath="tns:sequence" />
+		</xs:unique>
+
+
+		<!-- Primary key constraints -->
+
+		<xs:key name="barcodeid">
+			<xs:selector xpath="./tns:metabarcodes/tns:metabarcode" />
+			<xs:field xpath="@ID" />
+		</xs:key>
+
+		<xs:key name="abstractlocusid">
+			<xs:selector xpath="./tns:metadata/tns:loci/tns:abstractlocus|./tns:metadata/tns:loci/tns:locus" />
+			<xs:field xpath="@ID" />
+		</xs:key>
+
+        <xs:key name="locusid">
+            <xs:selector xpath="./tns:metadata/tns:loci/tns:locus" />
+            <xs:field xpath="@ID" />
+        </xs:key>
+
+		<xs:key name="primerid">
+			<xs:selector xpath="./tns:primers/tns:primer" />
+			<xs:field xpath="@ID" />
+		</xs:key>
+
+		<xs:key name="biblioid">
+			<xs:selector xpath="./tns:bibliography/mods:mods" />
+			<xs:field xpath="@ID" />
+		</xs:key>
+
+        <xs:key name="roottaxid">
+            <xs:selector xpath="./tns:taxonomy/tns:taxon|./tns:taxonomy/tns:root" />
+            <xs:field xpath="@ID" />
+        </xs:key>
+
+        <xs:key name="taxid">
+            <xs:selector xpath="./tns:taxonomy/tns:taxon" />
+            <xs:field xpath="@ID" />
+        </xs:key>
+
+
+
+		<!-- Foreign key constaints -->
+
+		<!-- Constraint on forward and reverse primers -->
+
+		<xs:keyref name="forward_ref" refer="tns:primerid">
+			<xs:selector xpath="./tns:metabarcodes/tns:metabarcode"></xs:selector>
+			<xs:field xpath="tns:forward"></xs:field>
+		</xs:keyref>
+
+		<xs:keyref name="reverse_ref" refer="tns:primerid">
+			<xs:selector xpath="./tns:metabarcodes/tns:metabarcode"></xs:selector>
+			<xs:field xpath="tns:reverse"></xs:field>
+		</xs:keyref>
+
+        <xs:keyref name="target_ref" refer="tns:taxid">
+            <xs:selector xpath="./tns:metabarcodes/tns:metabarcode"></xs:selector>
+            <xs:field xpath="tns:targettaxon"></xs:field>
+        </xs:keyref>
+
+        <xs:keyref name="excluded_ref" refer="tns:taxid">
+            <xs:selector xpath="./tns:metabarcodes/tns:metabarcode"></xs:selector>
+            <xs:field xpath="tns:excludedtaxon"></xs:field>
+        </xs:keyref>
+
+		<xs:keyref name="describedin_ref" refer="tns:biblioid">
+			<xs:selector
+				xpath="./tns:metabarcodes/tns:metabarcode/tns:references/tns:describedin"></xs:selector>
+			<xs:field xpath="@biblioid"></xs:field>
+		</xs:keyref>
+
+		<xs:keyref name="usedin_ref" refer="tns:biblioid">
+			<xs:selector
+				xpath="./tns:metabarcodes/tns:metabarcode/tns:references/tns:usedin"></xs:selector>
+			<xs:field xpath="@biblioid"></xs:field>
+		</xs:keyref>
+
+        <xs:keyref name="partof_ref" refer="tns:abstractlocusid">
+            <xs:selector
+                xpath="./tns:metadata/tns:loci/tns:abstractlocus|./tns:metadata/tns:loci/tns:locus"></xs:selector>
+            <xs:field xpath="tns:partof"></xs:field>
+        </xs:keyref>
+
+        <xs:keyref name="barcodelocus_ref" refer="tns:locusid">
+            <xs:selector
+                xpath="./tns:metabarcodes/tns:metabarcode"></xs:selector>
+            <xs:field xpath="tns:locus"></xs:field>
+        </xs:keyref>
+
+        <xs:keyref name="taxopartof_ref" refer="tns:roottaxid">
+            <xs:selector xpath="./tns:metabarcodes/tns:taxonomy/tns:taxon"></xs:selector>
+            <xs:field xpath="@ID"></xs:field>
+        </xs:keyref>
+
+	</xs:element>
+
+    <!-- ************************************************************* 
+    
+        Declaration of the root element of the document
+        
+      ************************************************************* -->
+
+    <xs:complexType name="abstractlocus_t">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string" maxOccurs="1" minOccurs="1"></xs:element>
+            <xs:element name="partof" type="tns:locusid_t" maxOccurs="1"
+                minOccurs="0">
+            </xs:element>
+            <xs:element name="documentation" type="tns:documentation_t"
+                maxOccurs="1" minOccurs="0">
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="tns:locusid_t" use="required"></xs:attribute>
+    </xs:complexType>
+
+
+    <xs:complexType name="computedproperties_t">
+    </xs:complexType>
+
+    <xs:complexType name="computedproperty_t"></xs:complexType>
+
+
+    <xs:complexType name="interval_t">
+    	<xs:sequence>
+    		<xs:element name="min" type="xs:positiveInteger" maxOccurs="1" minOccurs="1"></xs:element>
+    		<xs:element name="max" type="xs:positiveInteger" maxOccurs="1" minOccurs="1"></xs:element>
+    	</xs:sequence>
+    </xs:complexType>
+</xs:schema>

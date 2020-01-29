@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556278376439.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4140690314",
+    "id" : "3EED9439",
+    "lastKnownWriteTime" : 1556281178,
+    "last_content_update" : 1556281178236,
+    "path" : "/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/bastools_dir/bastools/R/taxonomy_dbs_foos.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "43,23",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

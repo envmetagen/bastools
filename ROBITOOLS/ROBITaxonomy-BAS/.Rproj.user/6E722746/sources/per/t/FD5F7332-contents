@@ -1,0 +1,20 @@
+Package: ROBITaxonomy
+Type: Package
+Title: Metabarcoding data biodiversity analysis
+Version: 0.1
+Date: 2012-08-23
+Author: LECA - Laboratoire d'ecologie alpine
+Maintainer: LECA OBITools team <obitools@metabarcoding.org>
+Description: More about what it does (maybe more than one line)
+License: CeCILL v2.0
+LazyLoad: yes
+Roxygen: list(wrap = FALSE)
+Collate:
+    'ROBITaxonomy.R'
+    'taxonomy.R'
+    'basic.R'
+    'default.R'
+    'distance.R'
+    'lca.R'
+    'rank.R'
+RoxygenNote: 5.0.1

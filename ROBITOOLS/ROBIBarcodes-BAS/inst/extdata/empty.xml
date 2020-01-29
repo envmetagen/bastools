@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<obimetabarcodedb 
+    xmlns="http://metabarcoding.org/OBIMetabarcodes"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:mods="http://www.loc.gov/mods/v3"
+    xsi:schemaLocation="http://metabarcoding.org/OBIMetabarcodes OBIMetabarcodes.xsd">
+    <metadata>
+    	<loci>
+    	</loci>
+    </metadata>
+    <taxonomy>
+       <root ID="TX.1">
+           <name>Root</name>
+           <rank>no rank</rank>
+       </root>
+    </taxonomy>
+    <primers>
+    </primers>
+    <metabarcodes>
+    </metabarcodes>
+</obimetabarcodedb>

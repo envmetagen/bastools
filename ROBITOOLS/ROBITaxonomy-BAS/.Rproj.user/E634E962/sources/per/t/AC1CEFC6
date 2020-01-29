@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1574168274750.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1434022722",
+    "id" : "AC1CEFC6",
+    "lastKnownWriteTime" : 1574089247,
+    "last_content_update" : 1574089247,
+    "path" : "~/git_bastools/bastools/illumina_post_MBC_script2.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "154,4",
+        "scrollLine" : "140"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

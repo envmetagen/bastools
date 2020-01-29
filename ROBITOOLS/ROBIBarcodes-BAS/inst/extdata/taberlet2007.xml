@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<modsCollection xmlns="http://www.loc.gov/mods/v3">
+<mods ID="Taberlet:07:00">
+    <titleInfo>
+        <title>Power and limitations of the chloroplast trnL (UAA) intron for plant DNA barcoding.</title>
+    </titleInfo>
+    <name type="personal">
+        <namePart type="given">Pierre</namePart>
+        <namePart type="family">Taberlet</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">E</namePart>
+        <namePart type="family">Coissac</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Francois</namePart>
+        <namePart type="family">Pompanon</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Ludovic</namePart>
+        <namePart type="family">Gielly</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Christian</namePart>
+        <namePart type="family">Miquel</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Alice</namePart>
+        <namePart type="family">Valentini</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Thierry</namePart>
+        <namePart type="family">Vermat</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Gerard</namePart>
+        <namePart type="family">Corthier</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Christian</namePart>
+        <namePart type="family">Brochmann</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <name type="personal">
+        <namePart type="given">Eske</namePart>
+        <namePart type="family">Willerslev</namePart>
+        <role>
+            <roleTerm authority="marcrelator" type="text">author</roleTerm>
+        </role>
+    </name>
+    <originInfo>
+        <dateIssued>2007</dateIssued>
+    </originInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre>journal article</genre>
+    <relatedItem type="host">
+        <titleInfo>
+            <title>Nucleic Acids Res</title>
+        </titleInfo>
+        <originInfo>
+            <issuance>continuing</issuance>
+        </originInfo>
+        <genre authority="marcgt">periodical</genre>
+        <genre>academic journal</genre>
+    </relatedItem>
+    <identifier type="citekey">Taberlet:07:00</identifier>
+    <part>
+        <date>2007</date>
+        <detail type="volume"><number>35</number></detail>
+        <detail type="issue"><number>3</number></detail>
+        <detail type="page"><number>e14</number></detail>
+    </part>
+</mods>
+</modsCollection>

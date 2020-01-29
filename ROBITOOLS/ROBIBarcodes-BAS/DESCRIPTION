@@ -1,0 +1,26 @@
+Package: ROBIBarcodes
+Type: Package
+Title: Metabarcoding barcode database
+Version: 0.1
+Date: 2013-10-24
+Author: LECA - Laboratoire d'ecologie alpine
+Maintainer: LECA OBITools team <obitools@metabarcoding.org>
+Description: More about what it does (maybe more than one line)
+License: CeCILL v2.0
+LazyLoad: yes
+RoxygenNote: 5.0.1
+Collate:
+    'ROBIBarcodes.R'
+    'xmlMods.R'
+    'bibliography.R'
+    'ecopcr.R'
+    'emptydb.R'
+    'logo.R'
+    'mismatchplot.R'
+    'piexy.R'
+    'primer_table.R'
+    'primers.R'
+    'resolution.R'
+    'taxonomy.R'
+    'taxonomy_table.R'
+    'xmlspare.R'

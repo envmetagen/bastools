@@ -1,0 +1,73 @@
+#A WORKFLOW SHOWING A FULL USE OF THIS PACKAGE
+
+library(bastools)
+
+###################FUNCTION GROUP 1A - PREPARING/UPDATING NECESSARY FILES################
+#Update NCBI taxonomy
+
+#convert NCBI taxonomy to obitools format
+
+
+#######################FUNCTION GROUP 1B - FINDING MBC PRIMERS, CHECKING COVERAGE, ADDING DEGENERACIES#####################
+#######################what about non-targets, logo plots, resolution?
+#presuming ecoPrimers was run first (build in to package?)
+
+############should make a new folder for examples (and eventually add as datasets)
+#######would also be great to easily make starting datasets (e.g. primerminer)
+
+setwd("C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/")
+
+data()
+
+#import ecoprimer results and export results as a table of primer names and sequences (e.g. for geneious)
+EcoPrimers<-read.ecoprimers("12S-16S.minion.ecoprimers")
+write.ecoprimers(EcoPrimers,file = "12S-16S.minion.ecoprimers.csv")
+
+#manually in geneious, map EcoPrimers to a reference sequence, identify candidate binding sites, take a representative sequence for
+#one forward and one reverse primer, then run ecoPCR (build in to package?).
+
+#check ecopcroutput and make tables of amplification hits (one chosen primer pair)
+MinionALL<-ecopcr.hit.table2("C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/45F-63R_4Mis_ALLVERTS_REFSEQ.ecopcroutput",
+                          "C:/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ecoPCRoutput/USING_16S/taxdump/taxdump",
+                          "C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/ALL_VERTS_REFSEQ_MTDNA_1Kbp-COX1-1Kbp.taxids.ecopcrdb.tab",
+                          out = "HT")
+
+a<-MinionALL$ecopcroutput_clean
+b<-MinionALL$ecopcroutput_uncleaned
+c<-MinionALL$ecopcrdb_clean
+d<-MinionALL$HT
+e<-MinionALL$HT_PC
+
+#plot hits
+plot.ecopcr.hit.table(MinionALL$HT)
+plot.ecopcr.hit.table(MinionALL$HT_PC)
+
+#check potential places to add degeneracies
+test1<-base.table.forward(MinionALL$ecopcroutput_clean, primer = "TAGTTAACAGCTAAACGC")
+test2<-base.table.reverse(MinionALL$ecopcroutput_clean,primer = "TTCGATTCCTTCCTTTCT")
+
+#make degenerate primers
+degen_F<-degenerise(test1,p=2)
+degen_R<-degenerise(test2,p=2)
+
+#get GC content and Tm of degenerate primers
+plot.GC.degenerates(degen_F,degen_R)
+plot.Tm.degenerates(degen_F,degen_R)
+
+#######################FUNCTION GROUP TWO - PROCESSING TAXONOMY FOR FINAL FASTAS#####################
+
+#convert BLAST results into a megan file
+#setwd("C:/Users/basti/Documents/WORK/CIBIO/RUNS/MINION/2019_TEST1_POOL_ABC/e0.1m1000/")
+setwd("/media/sf_Documents/WORK/CIBIO/RUNS/MINION/2019_TEST1_POOL_ABC/e0.1m1000/")
+blast2rma.BAS("B2.wPrimers.blast.tab",outfile = "B2.wPrimers.blast.R.rma6",mrc = 85.0,
+              a2t = "/media/sf_Documents/WORK/CIBIO/STATS_AND_CODE/megan/nucl_acc2tax-Nov2018.abin", reads="B2.wPrimers.fasta")
+
+#convert megan file to taxonomy
+taxonomyMap<-rma2info.BAS2("B2.wPrimers.blast.R.rma6")
+
+#merge obitab and megan
+taxon.table<-merge.tab.taxon(obitab.txt = "B2.wPrimers.tab",megan.taxa = taxonomyMap)
+
+#######################FUNCTION GROUP THREE - make plots and stats based on taxonomy table and an additional metadata file#####################
+
+

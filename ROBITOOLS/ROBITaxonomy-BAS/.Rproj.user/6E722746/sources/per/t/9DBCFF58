@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1497629094618.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2346017305",
+    "id" : "9DBCFF58",
+    "lastKnownWriteTime" : 1452675950,
+    "last_content_update" : 1452675950,
+    "path" : "~/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ROBITOOLS/ROBITaxonomy-BAS/R/basic.R",
+    "project_path" : "R/basic.R",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

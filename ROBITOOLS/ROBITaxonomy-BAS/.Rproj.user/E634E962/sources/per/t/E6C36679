@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1574168294913.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2472500490",
+    "id" : "E6C36679",
+    "lastKnownWriteTime" : 1573567468,
+    "last_content_update" : 1573567468,
+    "path" : "~/git_bastools/bastools/merge_MBC_otutab_with_bin_blast.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "9,2",
+        "scrollLine" : "19"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
