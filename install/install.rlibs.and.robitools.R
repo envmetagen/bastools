@@ -16,11 +16,11 @@ for(i in 1:length(robitools)){
 }
 
 #bas.install.robitools
-path_to_parent<-"/home/tutorial/TOOLS/ROBITOOLS"
+path_to_parent<-"/home/tutorial/TOOLS/bastools/ROBITOOLS"
 file.remove(list.files(path = path_to_parent,recursive = T,full.names = T,pattern = "\\.o$"))
 
 folders<-list.files(path = path_to_parent,full.names = T)
-folders<-folders[-grep(".zip",folders)]
+if(length(grep(".zip",folders))>0) folders<-folders[-grep(".zip",folders)]
 folders<-folders[c(grep("ROBITaxonomy",folders),grep("ROBIUtils",folders),grep("ROBIBarcodes",folders),grep("ROBITools",folders))]
 folders[4]<-paste0(grep("ROBITools",folders,value = T),"/ROBITools")
 
