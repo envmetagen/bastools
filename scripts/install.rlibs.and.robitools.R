@@ -1,10 +1,11 @@
 
-packages.needed<-c("dplyr","googlesheets4","processx","httpuv","treemap","igraph","XML","data.tree","DT","ggplot2")
+packages.needed<-c("dplyr","googlesheets4","processx","httpuv","treemap","igraph","XML","data.tree","DT","ggplot2","vegan"
+                   ,"stringr")
 
 for(i in 1:length(packages.needed)){
   if(!packages.needed[i] %in% rownames(installed.packages())) {
     message(paste(packages.needed[i],"not found. Installing..."))
-    install.packages(packages.needed[i],dependencies = T)
+    install.packages(packages.needed[i])
   }
 }
 
@@ -15,7 +16,7 @@ for(i in 1:length(robitools)){
 }
 
 #bas.install.robitools
-path_to_parent<-"/home/bastian.egeter/ROBITOOLS"
+path_to_parent<-"/home/tutorial/TOOLS/ROBITOOLS"
 file.remove(list.files(path = path_to_parent,recursive = T,full.names = T,pattern = "\\.o$"))
 
 folders<-list.files(path = path_to_parent,full.names = T)
@@ -28,3 +29,8 @@ for(i in 1:length(folders)){
 }
 
 #use ctrl+shift+F10 to restart R
+
+#get taxonomy dbs
+source("/home/tutorial/TOOLS/bastools/master_functions.R")
+getNCBItaxonomy(path = "/home/tutorial/DATABASES/nt_taxdump")
+NCBI2obitaxonomy(path = "/home/tutorial/DATABASES/nt_taxdump",out = "/home/tutorial/DATABASES/obitaxdb_Jan2020")

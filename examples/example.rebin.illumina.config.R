@@ -44,6 +44,9 @@ ncbiTaxDir<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/Jan2020/"
 #full path to obitools taxonomy - this is the stem filename of the obitaxonomy files
 obitaxdb<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/obitaxdump/Jan2020/obitaxdb_jan_2020" 
 
+#full path to Krona exec
+KronaPath<-"/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
+
 project_name<-"IRAN-" #INCLUDE THE DASH HERE
 
 #Use force=T to ignore any contributor entries where no levels were disabled when consistency checking. 
@@ -63,4 +66,4 @@ abspident=80
 #to filter taxatable by %taxon (0.1=0.1%) 
 filterpc=0.1
 
-source("/home/bastian.egeter/git_bastools/bastools/rebin.pipe.illumina.R")
+source("/home/tutorial/TOOLS/bastools/scripts/rebin.pipe.illumina.R")

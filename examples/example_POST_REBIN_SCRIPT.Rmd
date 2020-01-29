@@ -12,11 +12,13 @@ output: html_document
 ## load functions
 
 ```{r, eval=TRUE, results='hide',echo=F}
-bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
+bastoolsDir<-"/home/tutorial/TOOLS/bastools/"
 setwd(bastoolsDir)
 source("master_functions.R")
 library(ggplot2)
 library(googlesheets4)
+library(dplyr)
+library(stringr)
 sheets_auth(email = "basegeter@gmail.com")
 options(httr_oob_default = TRUE)
 ```
@@ -24,7 +26,7 @@ options(httr_oob_default = TRUE)
 ## settings 
 ```{r, eval=TRUE}
 #can be multiple
-taxatabs<-c("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/2020_01/rebins/IRAN-2020_01_none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.txt")
+taxatabs<-c("/home/tutorial/RUN_Mkit_200113/2020_01/rebins/IRAN-2020_01_none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.txt")
 
 #datasheet
 ss_url<-"https://docs.google.com/spreadsheets/d/1Kw8ONKtlX1hGr0LM-FvkowXYElEJ_taFNu2ZSXqp_n8/edit#gid=1531090624"
@@ -36,10 +38,10 @@ subsetlist<-list(experiment_id=c("2020_01"))
 ```{r, eval=TRUE,echo=F}
 #settings counts
 #files for doing counts (currently processes one run*primer combo only)
- MBCtsvDir<-"/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/2020_01/MBC_OUT_12SV1_X2/"
- otutab<-"/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/2020_01/none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.otutab.tsv"
- illumina_script_taxatab<-"/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/2020_01/rebins/2020_01_none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.txt"
- illumina_script_taxatab_tf<-"/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/2020_01/rebins/2020_01_none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.txt"
+ MBCtsvDir<-"/home/tutorial/RUN_Mkit_200113/2020_01/MBC_OUT_12SV1/"
+ otutab<-"/home/tutorial/RUN_Mkit_200113/2020_01/illuminaScript2_OUT_12SV1/none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.otutab.tsv"
+ illumina_script_taxatab<-"/home/tutorial/RUN_Mkit_200113/2020_01/rebins/IRAN-2020_01_none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.txt"
+ illumina_script_taxatab_tf<-"/home/tutorial/RUN_Mkit_200113/2020_01/rebins/IRAN-2020_01_none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.txt"
 ```
 
 
