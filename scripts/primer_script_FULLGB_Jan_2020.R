@@ -29,12 +29,13 @@
 
 message("settings:
         ")
-ls.str()
+print(ls.str())
 message("script being used:
         ")
-readLines(script)
+print(readLines(script))
 
 source("/home/bastian.egeter/git_bastools/bastools/master_functions.R")
+source("/home/bastian.egeter/git_bastools/bastools/bin.blast.R")
 library(processx)
 library(dplyr)
 obitaxoR<-ROBITaxonomy::read.taxonomy(dbname = obitaxo)
@@ -123,27 +124,71 @@ if("step6" %in% stepstotake){
   #run final ecopcr without buffer option
   ecoPCR.Bas(Pf,Pr,ecopcrdb = "final.ecopcrdb",max_error = max_error_ecopcr,
              min_length,max_length,out = "final.ecopcr.hits.txt")
-  #convert final ecopcrdb to tab
-  system2(command = "obitab", args=c("-o","final.ecopcrdb"), stdout="final.ecopcrdb.tab", wait = T)
   
   #tidy ecopcrfile
   modify.ecopcroutput(ecopcrfile = "final.ecopcr.hits.txt",out = out_mod_ecopcrout_file,min_length,max_length)
   
-  #DO STATS
-  make.primer.bias.tables(originaldbtab = "final.ecopcrdb.tab",mod_ecopcrout_file = out_mod_ecopcrout_file,
-                          out_bias_file = out_bias_file,
-                          Pf = Pf, Pr = Pr,
-                          obitaxoR = obitaxoR,min_length = min_length,max_length = max_length)
-  
   message("STEP6 COMPLETE")
+}
 
+#step 7 - add primer stats to ecopcroutput
+if("step7" %in% stepstotake){
+  
+  message("RUNNING STEP7")
+  
+  #Add stats to ecopcrfile
+  mod_ecopcrout<-data.table::fread(out_mod_ecopcrout_file,data.table = F)
+  ecopcrout.wstats<-add.stats.ecopcroutput(mod_ecopcrout,ncbiTaxDir,Ta,add.3pmm = T,Pf,Pr)
+  write.table(ecopcrout.wstats,out_mod_ecopcrout_file,append = F,quote = F,sep = "\t",row.names = F)
+  
+  message("STEP7 COMPLETE")
+}
+
+#step 8 - add bas resolution
+if("step8" %in% stepstotake){
+  
+  message("RUNNING STEP8")
+  
+  #Add resolution (bas2)
+  add.res.bas2(mod_ecopcrout_file = out_mod_ecopcrout_file,makeblastdb_exec,ncbiTaxDir,blast_exec,obitaxdb = obitaxo,top = top)
+  
+  message("STEP8 COMPLETE")
+}
+
+#step 8a - add obi resolution
+  if("step8a" %in% stepstotake){
+    
+  message("RUNNING STEP8a")
+    
+  #keeping robitools resolution for now
+  ecopcrout.wstats<-data.table::fread(out_mod_ecopcrout_file,data.table = F)
+  ecopcrout.wstats<-add.res.Bas(ecopcrout.wstats,obitaxo)
+  write.table(x = ecopcrout.wstats,file = out_mod_ecopcrout_file,append = F,quote = F,sep = "\t",row.names = F)
+  
+  message("STEP8a COMPLETE")
+}
+
+#step 9 - Make family primer bias tables
+if("step9" %in% stepstotake){
+  
+  message("RUNNING STEP9")
+  #Make family primer bias tables
+    #convert final ecopcrdb to tab
+    system2(command = "obitab", args=c("-o","final.ecopcrdb"), stdout="final.ecopcrdb.tab", wait = T)
+  
+    make.primer.bias.table(originaldbtab = "final.ecopcrdb.tab",mod_ecopcrout_file = out_mod_ecopcrout_file,
+                            out_bias_file = out_bias_file,
+                            Pf = Pf, Pr = Pr,
+                            obitaxoR = obitaxoR,min_length = min_length,max_length = max_length)
+  
+  message("STEP9 COMPLETE")
 }
 
 #######################################################
-#step 6a - run ecopcr with increased length to see what might have been excluded due to length
+#step 10 - run ecopcr with increased length to see what might have been excluded due to length
 
-if("step6a" %in% stepstotake){
-  message("RUNNING STEP6")
+if("step10" %in% stepstotake){
+  message("RUNNING STEP10")
   
   ecoPCR.Bas(Pf,Pr,ecopcrdb = "formatted.minL.lineage.goodfam.uid.ecopcrdb",max_error = max_error_buildrefs,
              min_length,max_length = long_length,out = "all.ecopcr.hits.long.txt",  buffer = buffer)
@@ -151,16 +196,16 @@ if("step6a" %in% stepstotake){
   #tidy ecopcrfile
   modify.ecopcroutput(ecopcrfile = "all.ecopcr.hits.long.txt",out = "mod.all.ecopcr.hits.long.txt",min_length,long_length)
   
-  message("STEP6a COMPLETE")
+  message("STEP10 COMPLETE")
   
 }
 
 #######################################################
-#step 7 - add counts to bias file
+#step 11 - add counts to bias file
 
-if("step7" %in% stepstotake){
+if("step11" %in% stepstotake){
   
-  message("RUNNING STEP7")
+  message("RUNNING STEP11")
   biastemp<-add.counts.to.biasfile(ncbiTaxDir = ncbiTaxDir,download.fasta = catted_DLS
                         ,after.minL.fasta = gsub(".fasta",".minL.fasta",catted_DLS)
                         ,after.checks.fasta = gsub(".fasta",".checked.lin.minL.fasta",catted_DLS)
@@ -170,24 +215,8 @@ if("step7" %in% stepstotake){
   
   write.table(x = biastemp,file = out_bias_file,quote = F,row.names = F,sep = "\t")
   
-  message("STEP7 COMPLETE")
+  message("STEP11 COMPLETE")
 
 }
-
-#######################################################
-#step 8 - use ecotaxspecificty instead of Robitools
-
-if("step8" %in% stepstotake){
-  
-  message("RUNNING STEP8")
-  
-  
-  
- # write.table(x = biastemp,file = out_bias_file,quote = F,row.names = F,sep = "\t")
-  
-  message("STEP8 COMPLETE")
-  
-}
-
 
 warnings()

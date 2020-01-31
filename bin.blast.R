@@ -45,7 +45,7 @@
 bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
                      obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,
                      disabledTaxaFiles=NULL,disabledTaxaOut=NULL,
-                     force=F){
+                     force=F,consider_sp.=F){
   t1<-Sys.time()
   
   if(is.null(out)) stop("out not specified")
@@ -143,16 +143,20 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   
   #species-level assignments
   message("binning at species level")
-  message("Not considering species with 'sp.', numbers or more than one space")
+  
   btabsp<-btab[btab$S!="unknown",]
   
   if(!is.null(disabledTaxaFiles)){
     btabsp<-btabsp[!btabsp$taxids %in% unique(c(childrenS,childrenG,childrenF)),]
   }
   
-  if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
-  if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]
-  if(length(grep("[0-9]",btabsp$S))>0) btabsp<-btabsp[-grep("[0-9]",btabsp$S),]
+  if(consider_sp.==F){
+    message("Not considering species with 'sp.', numbers or more than one space")
+    if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
+    if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]
+    if(length(grep("[0-9]",btabsp$S))>0) btabsp<-btabsp[-grep("[0-9]",btabsp$S),]
+  } else(message("Considering species with 'sp.', numbers or more than one space"))
+  
   btabsp<-btabsp[btabsp$pident>spident,]
   if(length(btabsp$taxids)>0){
     lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
@@ -487,7 +491,7 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
   message("applying global top threshold")
   if(length(btab[,1])==0) stop("No hits passing min_qcovs and max_evalue thresholds")
   topdf<-aggregate(x = btab[,colnames(btab) %in% c("qseqid","pident")],by=list(btab$qseqid),FUN = max)
-  topdf$min_pident<-topdf$pident-topdf$pident*top/100
+  topdf$min_pident<-topdf$pident-top
   btab<-merge(btab,topdf[,c(2,4)],by = "qseqid", all.y = T) #can definitely do this differently and faster
   btab<-btab[btab$pident>btab$min_pident,]
   
@@ -653,12 +657,9 @@ bin.blast.lite<-function(filtered_blastfile,ncbiTaxDir,obitaxdb,out){
   qseqids$`unique(btab$qseqid)`=NULL
   
   message("binning")
-  message("Not considering species with 'sp.', numbers or more than one space, or with species=unknown")
   btabsp<-btab[btab$S!="unknown",]
   
-  if(length(grep(" sp\\.",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" sp\\.",btabsp$S,ignore.case = T),]
-  if(length(grep(" .* .*",btabsp$S,ignore.case = T))>0) btabsp<-btabsp[-grep(" .* .*",btabsp$S,ignore.case = T),]
-  if(length(grep("[0-9]",btabsp$S))>0) btabsp<-btabsp[-grep("[0-9]",btabsp$S),]
+  message("Considering species with 'sp.', numbers or more than one space")
   
   if(length(btabsp$taxids)>0){
     lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))

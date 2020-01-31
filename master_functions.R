@@ -195,15 +195,15 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T,printnegs=T){
 }
 
 #remove contaminant taxa from samples, based on occurrences in negatives
-remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code,printcontaminations=T){
+remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,printcontaminations=T){
   
   totalstart<-sum(taxatab[,-1,drop=F])
   
-  for(i in 1:length(negatives)){
+  for(j in 1:length(negatives)){
     
-    negdf<-negatives[[i]]
+    negdf<-negatives[[j]]
     
-    negative_type<-names(negatives)[i]
+    negative_type<-names(negatives)[j]
     
     if(length(negdf)!=0){
       
@@ -213,21 +213,18 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code,prin
         sumnegtaxa<-sum(negtaxa[,-1,drop=F])
         negtaxa<-as.character(negtaxa[rowSums(negtaxa[,-1,drop=F])>0,"taxon"])
         
-        
-        #get site of a sample
-        group.id<-master_sheet[grep(neg,master_sheet[,"ss_sample_id"]),group.code]
-        #get other samples in site
-        group.samples<-master_sheet[master_sheet[,group.code]==group.id,"ss_sample_id"]
+        #get group of a sample
+        group.id<-master_sheet[grep(neg,master_sheet[,"ss_sample_id"]),group.codes[j]]
+        #get other samples in group
+        group.samples<-master_sheet[master_sheet[,group.codes[j]]==group.id,"ss_sample_id"]
         group.samples<-group.samples[!is.na(group.samples)]
         
-        #temp
-        #negtaxa<-as.character(taxatab$taxon)
         
         message(paste("Based on",negative_type,neg, ", Removing detections of"))
         print(negtaxa)
         message("if it occurred in any of the following samples")
         print(group.samples)
-        message(paste("which all belong to",group.code,":",group.id))
+        message(paste("which all belong to",group.codes[j],":",group.id))
         
         sumb4<-sum(taxatab[,-1])
         
@@ -252,13 +249,53 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.code,prin
   return(taxatab)
 }
 
-#keep only species-level assignments
-keep.only.spL.assigns<-function(taxatab){
-  #if(level=="species"){
-  taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
-  taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
-  taxatab<-rm.0readtaxSam(taxatab)
+#keep only xLevel assignments
+keep.below.xLevel.assigns<-function(taxatab,xLevel="species"){
+  message("Broken without full 7-level path ")
+  
+  if(xLevel=="species"){
+    taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
+    taxatab<-rm.0readtaxSam(taxatab)
+  }
+  
+  if(xLevel=="genus"){
+    taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
+    taxatab<-rm.0readtaxSam(taxatab)
+  }
+  
+  if(xLevel=="family"){
+    taxatab<-taxatab[-grep(";NA;NA;NA$",taxatab$taxon),]
+    taxatab<-rm.0readtaxSam(taxatab)
+  }
+  
   return(taxatab)
+}
+
+aggregate.at.xLevel<-function(taxatab,xLevel){
+  
+  if(!xLevel %in% c("genus","family","order")) stop("Only allowable at genus, family or order level")
+  
+  splittaxonomy<-as.data.frame(do.call(rbind,stringr::str_split(taxatab[,1],";")))
+  
+  if(xLevel=="genus"){
+    xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3],";",splittaxonomy[,4],";",splittaxonomy[,5],
+                 ";",splittaxonomy[,6])
+  }
+  
+  if(xLevel=="family"){
+    xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3],";",splittaxonomy[,4],";",splittaxonomy[,5])
+  }
+  
+  if(xLevel=="order"){
+    xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3],";",splittaxonomy[,4])
+  }
+  
+  taxatab<-aggregate(taxatab[,-1],by = list(xPath),FUN=sum)
+  
+  colnames(taxatab)[1]<-"taxon"
+  
+  taxatab
+  
 }
 
 adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratum=NULL){
@@ -1212,8 +1249,8 @@ taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",fact
     if(!longnames) if(!shortnames) message("No names added")
     if(longnames) if(!shortnames) p<- p + geom_text(data = loadings, aes(x=V1, y=V2, label=colnames(taxatab2)))
     if(shortnames) if(!longnames){
-      taxa<-do.call(rbind,str_split(colnames(taxatab2),";"))
-      taxa<-cbind(taxa,do.call(rbind,str_split(taxa[,7]," ")))
+      taxa<-do.call(rbind,stringr::str_split(colnames(taxatab2),";"))
+      taxa<-cbind(taxa,do.call(rbind,stringr::str_split(taxa[,7]," ")))
       taxa<-as.data.frame(substr(taxa,start = 1,stop = 3))
       taxa<-apply(taxa,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],".",x[9]))
       p<- p + geom_text(data = loadings, aes(x=V1, y=V2, label=taxa))
@@ -2030,15 +2067,20 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
                                  mapped.fasta,out_bias_file,long.ecopcr.file){
   
   #catted DLS
+  message("counting families in cattedDLS")
   cattedDLS<-count.fams.in.fasta(download.fasta,ncbiTaxDir)
   
   #after minL
+  message("counting families after minL")
   afterminL<-count.fams.in.fasta(after.minL.fasta,ncbiTaxDir)
   
   #after rm fams and checks
+  message("counting families after checks")
   afterchecks<-count.fams.in.fasta(after.checks.fasta,ncbiTaxDir)
   
   #after first ecopcr
+  message("counting families after 1st ecopcr")
+  
   firstecopcr<-data.table::fread(first.ecopcr.hit.table,sep = "\t")
   firstecopcr<-firstecopcr[!firstecopcr$amplicon_length>max_length,]
   firstecopcr$taxids<-firstecopcr$taxid
@@ -2050,8 +2092,10 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   firstecopcr<-a
   
   #after long ecopcr
+  message("counting families in long ecopcr")
+  
   long.ecopcr<-data.table::fread(long.ecopcr.file,data.table = F)
-  long.ecopcr<-long.ecopcr[long.ecopcr$amplicon_length>max_length & long.ecopcr$amplicon_length<max_length+200,]
+  long.ecopcr<-long.ecopcr[long.ecopcr$amplicon_length>max_length & long.ecopcr$amplicon_length<long_length,]
   long.ecopcr$taxids<-long.ecopcr$taxid
   long.ecopcr<-add.lineage.df(long.ecopcr,ncbiTaxDir)
   long.ecopcr$count<-1
@@ -2066,9 +2110,11 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   long.ecopcr2<-a
   
   #after mapping back
+  message("counting families after mapping back")
   aftermapping<-count.fams.in.fasta(mapped.fasta,ncbiTaxDir)
   
   #merge all
+  message("merging with bias table")
   merged<-merge(cattedDLS,afterminL,by = "Family",all = T)
   colnames(merged)<-gsub("nseqs.x","downloaded",colnames(merged))
   colnames(merged)<-gsub("nseqs.y","after_min_length",colnames(merged))
@@ -2090,14 +2136,12 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   sum(merged$downloaded,na.rm = T)
   sum(merged$after_min_length,na.rm = T)
   sum(merged$after_checks,na.rm = T)
-  sum(merged$firstecopcr,na.rm = T)
+  sum(merged$first_ecopcr,na.rm = T)
   sum(merged$after_mapping,na.rm = T)
   
   biastemp<-data.table::fread(out_bias_file,sep = "\t")
-  biastemp$path<-paste(biastemp$K,biastemp$P,biastemp$C,biastemp$O,biastemp$in.odb,sep = ";")
-  
-  mergedbias<-merge(merged,biastemp,by.x ="Family",by.y = "path",all = T)
-  mergedbias$in.odb=NULL
+
+  mergedbias<-merge(merged,biastemp,by.x ="Family",by.y = "in.odb",all = T)
   mergedbias$nseqs.odb=NULL
   
   #fixing taxonomy columns
@@ -2106,9 +2150,12 @@ add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,afte
   mergedbias$P<-splittaxonomy[,2]
   mergedbias$C<-splittaxonomy[,3]
   mergedbias$O<-splittaxonomy[,4]
-  mergedbias$Family<-splittaxonomy[,5]
+  mergedbias$F<-splittaxonomy[,5]
   
-  mergedbias<-mergedbias %>% select(K,P,C,O,everything())
+  mergedbias$path<-mergedbias$Family
+  mergedbias$Family=NULL
+  
+  mergedbias<-mergedbias %>% select(path,K,P,C,O,F,everything())
   
   return(mergedbias)
 }
@@ -2235,6 +2282,10 @@ ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr,min_length=NULL,max_lengt
 }
 
 add.3pmms<-function(ecopcroutput,Pf,Pr){
+  
+  message("Adding f_mismatches_3prime: the no. of mismatches in the 3 prime half of the forward primer")
+  message("Adding r_mismatches_3prime: the no. of mismatches in the 3 prime half of the reverse primer")
+  
   #add 3' mismatches to ecopcroutput
   f_mismatch_table<-mismatch.table(ecopcroutput,Pf,"f")
   f_mismatches_3prime<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)/2):nchar(Pf)]))
@@ -2244,6 +2295,9 @@ add.3pmms<-function(ecopcroutput,Pf,Pr){
   colnames(r_mismatches_3prime)<-"r_mismatches_3prime"
   ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime,r_mismatches_3prime)
   
+  message("Adding f_mismatches_3prime6: the no. of mismatches in the 3 prime 6bp of the forward primer")
+  message("Adding r_mismatches_3prime6: the no. of mismatches in the 3 primer 6bp of the reverse primer")
+  
   #add 3' mismatches to ecopcroutput - 6bp
   f_mismatches_3prime6<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)-5):nchar(Pf)]))
   colnames(f_mismatches_3prime6)<-"f_mismatches_3prime6"
@@ -2252,22 +2306,8 @@ add.3pmms<-function(ecopcroutput,Pf,Pr){
   ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime6,r_mismatches_3prime6)
 }
 
-add.res.ecopcroutput<-function(ecopcroutput){
-  #add taxonomic resolution to ecopcroutput
-  ecopcroutput.res<-add.res.Bas(ecopcroutput,obitaxdb=obitaxoR)
-  
-  #remove extra columns
-  ecopcroutput.res$genus=NULL
-  ecopcroutput.res$genus_name=NULL
-  ecopcroutput.res$species_name=NULL
-  ecopcroutput.res$species=NULL
-  ecopcroutput.res$forward_tm=NULL
-  ecopcroutput.res$reverse_tm=NULL
-  
-  ecopcroutput.res
-}
-
 add.tm.ecopcroutput<-function(ecopcroutput){
+  message("Calculating Tm for forward & reverse primer binding sites: 1) full binding site 2) 3 prime half 3) 3 primer last 6bp")
   ecopcroutput$fTms<-Tm.calc(ecopcroutput$forward_match)
   ecopcroutput$rTms<-Tm.calc(ecopcroutput$reverse_match)
   ecopcroutput$fTms3primehalf<-Tm.calc(substr(x = ecopcroutput$forward_match,
@@ -2287,6 +2327,7 @@ add.tm.ecopcroutput<-function(ecopcroutput){
 }
 
 add.gc.ecopcroutput<-function(ecopcroutput){
+  message("Calculating % gc for each primer binding site")
   ecopcroutput$fgc<-gc.calc(ecopcroutput$forward_match)
   ecopcroutput$rgc<-gc.calc(ecopcroutput$reverse_match)
   ecopcroutput
@@ -2316,6 +2357,8 @@ gc.calc<-function(primerVec){
 
 #add taxonomic resolution to ecopcroutput
 add.res.Bas<-function(ecopcroutput,obitaxdb){
+  message("Adding resolution using Robitools method. Note that it fails when rank=no rank")
+  
   if (class(obitaxdb)[1]!="obitools.taxonomy") obitaxdb2=ROBITaxonomy::read.taxonomy(obitaxdb)
   if (class(obitaxdb)[1]=="obitools.taxonomy") obitaxdb2=obitaxdb
   res=ROBIBarcodes::resolution(taxonomy = obitaxdb2,ecopcr = ecopcroutput)
@@ -2337,11 +2380,18 @@ add.res.Bas<-function(ecopcroutput,obitaxdb){
 }
 
 #function to calculate % species with family or lower res
-res.fam.or.better<-function(ecopcroutput){
-  (length(ecopcroutput$res[ecopcroutput$res=="family"])+
-     length(ecopcroutput$res[ecopcroutput$res=="genus"])+
-     length(ecopcroutput$res[ecopcroutput$res=="species"])) /
-    (length(ecopcroutput$res))
+res.fam.or.better.basres<-function(ecopcroutput,column="resolution.bas"){
+  (length(ecopcroutput[,column][ecopcroutput[,column]=="family"])+
+     length(ecopcroutput[,column][ecopcroutput[,column]=="genus"])+
+     length(ecopcroutput[,column][ecopcroutput[,column]=="species"])) /
+    (length(ecopcroutput[,column]))
+}
+
+res.fam.or.better.obi<-function(ecopcroutput,column="res"){
+  (length(ecopcroutput[,column][ecopcroutput[,column]=="family"])+
+     length(ecopcroutput[,column][ecopcroutput[,column]=="genus"])+
+     length(ecopcroutput[,column][ecopcroutput[,column]=="species"])) /
+    (length(ecopcroutput[,column]))
 }
 
 
@@ -2382,24 +2432,30 @@ calc.3pmms.fam<-function(ecopcroutput,Pf,Pr){
   list(fam_f_mismatches_3prime,fam_r_mismatches_3prime,fam_f_mismatches_3prime6,fam_r_mismatches_3prime6)
 }
 
-calc.fam.res<-function(ecopcroutput){
+calc.fam.res<-function(ecopcroutput,res="bas2"){
   #calculate percentage species that have tax res to family or better
-  famsplit<-split(ecopcroutput,f = ecopcroutput$family_name)
-  b<-lapply(X = famsplit,FUN = res.fam.or.better)
+  famsplit<-split(ecopcroutput,f = ecopcroutput$path)
+  if(res=="bas2") {
+    b<-lapply(X = famsplit,FUN = res.fam.or.better.basres)
+  } else {
+    b<-lapply(X = famsplit,FUN = res.fam.or.better.obi)
+  }
+  
   pc.res<-as.data.frame(t(as.data.frame(b)))
   pc.res$family<-names(famsplit)
   colnames(pc.res)<-gsub("V1","pc_res_fam_or_better",colnames(pc.res))
   pc.res
 }
-variable="r_mismatches_3prime6"
-appliedstat=var
+
 calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
   if(appliedstat=="mean"){
-    a<-as.data.frame(aggregate(x =  ecopcroutput[,..variable], by = list(ecopcroutput$family_name),FUN = mean))
-    colnames(a)<-c("family_name",paste0("mean_",colnames(a)[2]))}
+    a<-as.data.frame(aggregate(x =  ecopcroutput[,variable], by = list(ecopcroutput$path),FUN = mean))
+    colnames(a)<-c("path",paste0("mean_",variable))
+    }
   if(appliedstat=="var"){
-    a<-as.data.frame(aggregate(x =  ecopcroutput[,..variable], by = list(ecopcroutput$family_name),FUN = var))
-    colnames(a)<-c("family_name",paste0("var_",colnames(a)[2]))}
+    a<-as.data.frame(aggregate(x =  ecopcroutput[,variable], by = list(ecopcroutput$path),FUN = var))
+    colnames(a)<-c("path",paste0("var_",variable))
+    }
   a
 }
 
@@ -2426,56 +2482,57 @@ modify.ecopcroutput<-function(ecopcrfile,out,min_length=NULL,max_length=NULL){
 }
 
 #DO CALCULATIONS AND STATS
-make.primer.bias.tables<-function(originaldbtab,
+make.primer.bias.table<-function(originaldbtab,
                                   out_bias_file,mod_ecopcrout_file,Pf,Pr, obitaxoR,min_length,
                                   max_length){
   
-  ecopcroutput<-data.table::fread(mod_ecopcrout_file,sep = "\t")
+  ecopcroutput<-data.table::fread(mod_ecopcrout_file,sep = "\t",data.table = F)
   
   ##########################################
-  #READ ORIGINAL DB
+  #READ ECOPCRDB and add lineages
   originaldb<-as.data.frame(data.table::fread(originaldbtab,header = TRUE,sep = "\t"))
   colnames(originaldb)<-gsub("taxid","taxids",colnames(originaldb))
   originaldb<-add.lineage.df(originaldb,ncbiTaxDir)
   ##########################################
-  #LIST FAMILIES IN ODB
-  all_primer_bias<-data.frame(row.names = 1:length(unique(originaldb$F)))
-  all_primer_bias$in.odb<-unique(originaldb$F)[order(as.character(unique(originaldb$F)))]
+  #LIST FAMILIES IN ODB, use full path as some families have same names
+  originaldb$path<-paste(originaldb$K,originaldb$P,originaldb$C,originaldb$O,originaldb$F,sep = ";")
+  all_primer_bias<-data.frame(row.names = 1:length(unique(originaldb$path)))
+  all_primer_bias$in.odb<-unique(originaldb$path)[order(as.character(unique(originaldb$path)))]
   ##########################################
   #COUNT NO. SEQS IN ORIGINALDB 
   originaldb$n<-1
-  nseqs.odb<-aggregate(originaldb$n,by=list(originaldb$F),FUN = sum)
+  nseqs.odb<-aggregate(originaldb$n,by=list(originaldb$path),FUN = sum)
   colnames(nseqs.odb)<-c("in.odb","nseqs.odb")
   all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
   ##########################################
   #COUNT No. Taxa IN ORIGINALDB 
-  originaldb$path<-paste0(originaldb$F,";",originaldb$G,originaldb$S)
+  originaldb$path<-paste(originaldb$K,originaldb$P,originaldb$C,originaldb$O,originaldb$F,originaldb$G,originaldb$S,sep = ";")
   originaldb.taxa<-originaldb[!duplicated(originaldb$path),c("path","n")]
+  aa<-do.call(rbind,stringr::str_split(originaldb.taxa$path,";"))
+  originaldb.taxa$path<-paste(aa[,1],aa[,2],aa[,3],aa[,4],aa[,5],sep = ";")
   nseqs.odb<-aggregate(originaldb.taxa$n,by=list(originaldb.taxa$path),FUN = sum)
-  colnames(nseqs.odb)<-c("path","nseqs.odb.taxa")
-  nseqs.odb$F<-do.call(rbind,strsplit(nseqs.odb$path,";"))[,1]
-  nseqs.odb<-aggregate(nseqs.odb$n,by=list(nseqs.odb$F),FUN = sum)
   colnames(nseqs.odb)<-c("in.odb","ntaxa.odb")
   all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
   ##########################################
   #ADD LOGICAL IF FAMILY AMPED
-  all_primer_bias$amplified<-all_primer_bias$in.odb %in% unique(ecopcroutput$family_name) #there can be diff families with same names
+  ecopcroutput$path<-paste(ecopcroutput$K,ecopcroutput$P,ecopcroutput$C,ecopcroutput$O,ecopcroutput$F,sep = ";")
+  all_primer_bias$amplified<-all_primer_bias$in.odb %in% unique(ecopcroutput$path) 
   ##########################################
   #COUNT NO. SEQS THAT AMPED 
   ecopcroutput$n<-1
-  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$family_name),FUN = sum)
+  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$path),FUN = sum)
   colnames(nseqs.amped)<-c("in.odb","nseqs.amped")
   all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
   ##########################################
   #COUNT No. Taxa THAT AMPED
-  ecopcroutput$path<-paste0(ecopcroutput$family_name,";",ecopcroutput$genus_name,ecopcroutput$species_name)
+  ecopcroutput$path<-paste(ecopcroutput$K,ecopcroutput$P,ecopcroutput$C,ecopcroutput$O,ecopcroutput$F,ecopcroutput$G,ecopcroutput$S,sep = ";")
   ecopcroutput.taxa<-ecopcroutput[!duplicated(ecopcroutput$path),c("path","n")]
-  nseqs.amped<-aggregate(ecopcroutput.taxa$n,by=list(ecopcroutput.taxa$path),FUN = sum)
-  colnames(nseqs.amped)<-c("path","nseqs.amped.taxa")
-  nseqs.amped$F<-do.call(rbind,strsplit(nseqs.amped$path,";"))[,1]
-  nseqs.amped<-aggregate(nseqs.amped$n,by=list(nseqs.amped$F),FUN = sum)
-  colnames(nseqs.amped)<-c("in.odb","ntaxa.amped")
-  all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
+  aa<-do.call(rbind,stringr::str_split(ecopcroutput.taxa$path,";"))
+  ecopcroutput.taxa$path<-paste(aa[,1],aa[,2],aa[,3],aa[,4],aa[,5],sep = ";")
+  nseqs.odb<-aggregate(ecopcroutput.taxa$n,by=list(ecopcroutput.taxa$path),FUN = sum)
+  colnames(nseqs.odb)<-c("in.odb","ntaxa.amped")
+  all_primer_bias<-merge(all_primer_bias,nseqs.odb,by = "in.odb",all.x = T)
+  
   ##########################################
   #percentage seqs amped
   all_primer_bias$pc_seqs_amped<-round(all_primer_bias$nseqs.amped/all_primer_bias$nseqs.odb*100,digits = 2)
@@ -2483,49 +2540,20 @@ make.primer.bias.tables<-function(originaldbtab,
   all_primer_bias$pc_taxa_amped<-round(all_primer_bias$ntaxa.amped/all_primer_bias$ntaxa.odb*100,digits = 2)
   ##########################################
   
-  
-  ##########################################
   #for rest of stats keep only unique barcodes for each family
-  message("dereplicating by family")
-  ecopcroutput$fullseq<-paste0(ecopcroutput$forward_match,ecopcroutput$sequence,ecopcroutput$reverse_match)
-  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput[,c("family_name","fullseq")]),]
-  message("Total_unique_barcodes=",length(ecopcroutput$AC))
-  message("Total_families_odb=",length(all_primer_bias$in.odb))
-  message("Total_families_amped=",sum(all_primer_bias$amplified))
-  ##########################################
-  ##########################################
-  ##########################################
-  ##########################################
+  message("Dereplicating by family. Bias tables are based on dereplicated seqeunces only")
+  ecopcroutput$path<-paste(ecopcroutput$K,ecopcroutput$P,ecopcroutput$C,ecopcroutput$O,ecopcroutput$F,sep = ";")
+  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput[,c("path","fullseq")]),]
+  
   #COUNT NO. UNIQUE BARCODES THAT AMPED 
-  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$family_name),FUN = sum)
+  nseqs.amped<-aggregate(ecopcroutput$n,by=list(ecopcroutput$path),FUN = sum)
   colnames(nseqs.amped)<-c("in.odb","n.uniq.brcds.amped")
   all_primer_bias<-merge(all_primer_bias,nseqs.amped,by = "in.odb",all.x = T)
-  ##########################################
-  #ADD LINEAGES TO ALL_PRIMER_BIAS AND ECOPCROUTPUT
-  y=originaldb[,c("K","P","C","O","F")]
-  y=y[!duplicated(y),]
-  all_primer_bias<-merge(x = all_primer_bias,y = y,by.x = "in.odb",by.y = "F",all.y = F)
-  ecopcroutput<-merge(x = ecopcroutput,y = y,by.x = "family_name",by.y = "F",all.y = F)
   
-  ##########################################################################################
-  #add 3 prime mms to ecopcroutput
-  ecopcroutput<-add.3pmms(ecopcroutput,Pf,Pr) 
-  #add tm
-  ecopcroutput<-add.tm.ecopcroutput(ecopcroutput)
-  #diff tm
-  ecopcroutput$diff_tm<-ecopcroutput$fTms-ecopcroutput$rTms
-  #add gc content
-  ecopcroutput<-add.gc.ecopcroutput(ecopcroutput)
-  #gc clamp present?###########
-  #add diff ta tm
-  ecopcroutput$tm.ta_fw<-ecopcroutput$fTms-Ta
-  ecopcroutput$tm.ta_rv<-ecopcroutput$rTms-Ta  
-  #Tm of last 6 bp of fw primer divided by overall Tm (%)
-  ecopcroutput$tm_fw_3p6_perc<-ecopcroutput$fTms3prime6/ecopcroutput$fTms*100
-  ecopcroutput$tm_rv_3p6_perc<-ecopcroutput$rTms3prime6/ecopcroutput$rTms*100
-  #add taxonomic resolution
-  ecopcroutput<-add.res.ecopcroutput(ecopcroutput)
+  
   ###########################################################################################
+  #CALCULATE MEANS
+  
   #mean no. primer mismatches fw
   mean_mms_fw<-calc.stat.ecopcroutput(ecopcroutput,variable="forward_mismatch","mean")
   #mean no. primer mismatches rv
@@ -2551,9 +2579,13 @@ make.primer.bias.tables<-function(originaldbtab,
   #mean rTm for 3' half - 6bp  
   mean_rtm3P6<-calc.stat.ecopcroutput(ecopcroutput,variable="rTms3prime6","mean")  
   #% of unqiue seqs that get to fam or better
-  mean_fam.res<-calc.fam.res(ecopcroutput)
+  mean_fam.res.bas<-calc.fam.res(ecopcroutput,res = "bas2")
+  colnames(mean_fam.res.bas)<-gsub("pc_res_fam_or_better", "res.fam.plus.bas",colnames(mean_fam.res.bas))
+  #% of unqiue seqs that get to fam or better
+  mean_fam.res.obi<-calc.fam.res(ecopcroutput,res = "obi")
+  colnames(mean_fam.res.obi)<-gsub("pc_res_fam_or_better", "res.fam.plus.obi",colnames(mean_fam.res.obi))
   #mean amplicon length
-  mean_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$family_name),FUN = mean)
+  mean_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$path),FUN = mean)
   colnames(mean_amplicon.len)<-gsub("x","mean_amplicon.len",colnames(mean_amplicon.len))
   #mean gc_fw
   mean_fgc<-calc.stat.ecopcroutput(ecopcroutput,variable="fgc","mean")
@@ -2578,7 +2610,7 @@ make.primer.bias.tables<-function(originaldbtab,
   #var no. primer mismatches total
   var_mms_total<-calc.stat.ecopcroutput(ecopcroutput,variable="total_mismatches","var")
   #var amplicon length
-  var_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$family_name),FUN = var)
+  var_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$path),FUN = var)
   colnames(var_amplicon.len)<-gsub("x","var_amplicon.len",colnames(var_amplicon.len))
   #var gc_fw
   var_fgc<-calc.stat.ecopcroutput(ecopcroutput,variable="fgc","var")
@@ -2619,9 +2651,8 @@ make.primer.bias.tables<-function(originaldbtab,
   #compile all
   all_primer_bias<-merge(all_primer_bias,all_mean_and_var,all.x = T,by.x = "in.odb", by.y = "Group.1")
   
-  #remove extraneous columns
-  ecopcroutput$path=NULL
-  ecopcroutput$n=NULL
+  #remove extraneuos
+  all_primer_bias<-all_primer_bias[,-grep("path",colnames(all_primer_bias))]
   
   #write primer bias file
   write.table(x=all_primer_bias,file = out_bias_file,quote = F,sep = "\t",row.names = F)
@@ -2892,7 +2923,7 @@ family.mean.mismatch<-function(ecopcroutput_clean,primer.seq=NULL,primer.directi
     sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$forward_match), ""))))}
   if(primer.direction=="r"){
     sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$reverse_match), ""))))}
-  sst$family_name<-ecopcroutput_clean$family_name
+  sst$path<-ecopcroutput_clean$path
   rownames(sst)<-NULL
   
   #split subject primer into list
@@ -2929,7 +2960,7 @@ family.mean.mismatch<-function(ecopcroutput_clean,primer.seq=NULL,primer.directi
   })
   
   #split ecopcroutput_clean by family
-  splitdf<-split(sst, f = sst$family_name)
+  splitdf<-split(sst, f = sst$path)
   
   #check if query primer is in subject primer
   #function to apply %in% to one data.frame
@@ -3166,19 +3197,37 @@ ecopcr2fasta<-function(mod_ecopcrout,out){
   phylotools::dat2fasta(ecopcr[,c("seq.name","seq.text")],outfile = out)
 }
 
-add.res.bas2<-function(mod_ecopcrout,makeblastdb_exec="makeblastdb",ncbiTaxDir,blast_exec="blastn",obitaxdb){
+add.res.bas2<-function(mod_ecopcrout_file,makeblastdb_exec="makeblastdb",ncbiTaxDir,blast_exec="blastn",obitaxdb, top=1){
   
   t1<-Sys.time()
   
+  message("Adding resolution attained by fragment.
+          Note: Runs a self-blast of inserts in ecopcroutput. From blast results;
+          1) keeps only top hit (which will always be 100% identical) and anything within user-defined % (default=1) identity of top hit
+          2) keeps only hits with >99% query cover
+          3) bins remaining reads to lca & checks the rank of the lca
+          
+          i.e. using default top, 
+          if a sequence has multiple hits that are all over 99% identity across 99% of the insert,
+           and those hits are from different species within the same genus, the rank will be 
+          assigned genus. If those hits are from the same species, the rank will be species.
+          
+          Note2: Perahps by running this multiple times with different 'tops'  we can plot resolution by % identity to tell
+          us ... something.
+
+          Note3: Need to keep this to uniques in future, veyr slow now (122k seqs in 30min)
+          
+          ")
+  
   out="resolution_test_files"
   
-  ecopcr2fasta(mod_ecopcrout,paste0(out,".fasta"))
+  ecopcr2fasta(mod_ecopcrout_file,paste0(out,".fasta"))
   
   make.blastdb.bas(infasta = paste0(out,".fasta"),makeblastdb_exec = makeblastdb_exec,ncbiTaxDir = ncbiTaxDir,dbversion = 5)
   
   blast.min.bas(infastas = paste0(out,".fasta"),refdb = out,blast_exec = blast_exec)
   
-  filter.blast(blastfile = paste0(out,".blast.txt"),ncbiTaxDir = ncbiTaxDir,out = paste0(out,".blast.filt.txt"),top=1,min_qcovs = 97)
+  filter.blast(blastfile = paste0(out,".blast.txt"),ncbiTaxDir = ncbiTaxDir,out = paste0(out,".blast.filt.txt"),top=top,min_qcovs = 99)
   
   bin.blast.lite(filtered_blastfile = paste0(out,".blast.filt.txt"),ncbiTaxDir = ncbiTaxDir
                  ,obitaxdb = obitaxdb, out = paste0(out,".bins.txt"))           
@@ -3197,16 +3246,16 @@ add.res.bas2<-function(mod_ecopcrout,makeblastdb_exec="makeblastdb",ncbiTaxDir,b
   bins$resolution.bas<-temprank
   
   #merge with ecopcr output
-  ecopcrout<-data.table::fread(mod_ecopcrout,data.table = F)  
+  ecopcrout<-data.table::fread(mod_ecopcrout_file,data.table = F)  
   ecopcroutput<-merge(ecopcrout,bins[,c("qseqid","resolution.bas")],by.x = "AC",by.y = "qseqid")
   
   #write
-  write.table(ecopcroutput,file = mod_ecopcrout,sep = "\t",append = F,quote = F,row.names = F)
+  write.table(ecopcroutput,file = mod_ecopcrout_file,sep = "\t",append = F,quote = F,row.names = F)
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
   
-  message(paste0("Resolution added to ",mod_ecopcrout," in ",t3," mins."))
+  message(paste0("Resolution added to ",mod_ecopcrout_file," in ",t3," mins."))
 }
 
 
@@ -3282,3 +3331,81 @@ google.make.MBC.sheet<-function(tokenDir,email,url,out,subsetlist){
 }
 
 
+add.stats.ecopcroutput<-function(ecopcroutput,ncbiTaxDir,Ta=NULL,add.3pmm=F,Pf,Pr){
+  
+  #change taxid to taxids, for next function
+  colnames(ecopcroutput)<-gsub("taxid","taxids",colnames(ecopcroutput))
+  
+  #add full amplicon, including primers
+  message("Adding full amplicon to fullseq, including primers")
+  ecopcroutput$fullseq<-paste0(ecopcroutput$forward_match,ecopcroutput$sequence,ecopcroutput$reverse_match)
+  
+  #add taxonomy using taxonkit
+  message("Adding full taxonomy")
+  ecopcroutput<-add.lineage.df(df = ecopcroutput,ncbiTaxDir = ncbiTaxDir,as.taxids = F)
+  
+  #add 3 prime mismtaches to ecopcroutput 
+  #adds 4 columns: 3prime mismatches for half the primer, 3prime mismatches for last 6bp only,
+  #for both forward and reverse primers
+  if(add.3pmm) ecopcroutput<-add.3pmms(ecopcroutput,Pf,Pr) 
+  
+  #add tm
+  #adds 6 columns: tm for full primer, 3prime half, 3primer6; for both primers. Uses basic equation
+  ecopcroutput<-add.tm.ecopcroutput(ecopcroutput)
+  
+  #add diff tm: the difference in Tm between forward and reverse primers
+  message("Calculating the difference in Tm between forward and reverse primer binding sites")
+  ecopcroutput$diff_tm<-ecopcroutput$fTms-ecopcroutput$rTms
+  
+  #calculate gc% for primer binding sites (forward and reverse)
+  ecopcroutput<-add.gc.ecopcroutput(ecopcroutput)
+  
+  #gc clamp present?###########
+  message("Add function for presence of GC clamp?")
+  # gc.clamp<-function(primerVec){
+  #   gc<-vector()
+  #   for (i in 1:length(primerVec)){
+  #     gc[i]<-(stringr::str_count(primerVec[i],"G")+stringr::str_count(primerVec[i],"C"))/
+  #       (nchar(primerVec[i]))*100
+  #   }
+  #   return(gc)
+  # }
+  
+  #add diff ta tm
+  if(!is.null(Ta)){
+    message("Calculating difference between primer binding site and annealing temperature used")
+    ecopcroutput$tm.ta_fw<-ecopcroutput$fTms-Ta
+    ecopcroutput$tm.ta_rv<-ecopcroutput$rTms-Ta  
+  }
+  
+  #add Tm of last 6 bp of fw primer divided by overall Tm (%)
+  message("Calculating Tm of last 6 bp of fw primer divided by overall Tm (%)")
+  ecopcroutput$tm_fw_3p6_perc<-ecopcroutput$fTms3prime6/ecopcroutput$fTms*100
+  ecopcroutput$tm_rv_3p6_perc<-ecopcroutput$rTms3prime6/ecopcroutput$rTms*100
+  
+  #remove extraneous columns and sort
+  ecopcroutput<- subset(ecopcroutput,select = -c(rank,species,species_name,genus,genus_name,family,family_name,
+                                                  superkingdom, superkingdom_name,forward_tm,reverse_tm))
+  
+  ecopcroutput<-ecopcroutput %>% select(AC,taxids,K,P,C,O,F,G,S,amplicon_length,everything())
+  ecopcroutput<-ecopcroutput %>% select(-sequence,sequence)
+}
+
+remove.google.dups<-function(master_sheet){
+  if(length(grep("\\.\\.\\.",colnames(master_sheet),value = T))>0) {
+    message("Removing duplicated columns")
+    a<-grep("\\.\\.\\.",colnames(master_sheet),value = T)
+    b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
+    d<-b[duplicated(b[,1]),]
+    e<-paste0(d[,1],"...",d[,2])
+    master_sheet<-master_sheet[,!colnames(master_sheet) %in% e]
+    colnames(master_sheet)<-gsub("\\.\\.\\..*","",colnames(master_sheet))
+  }
+  master_sheet
+}
+
+#changing sample_type too to match functions
+fix.google.colnames<-function(master_sheet){
+  colnames(master_sheet)<-gsub("Sample_Type","sample_type",colnames(master_sheet))
+  master_sheet
+}
