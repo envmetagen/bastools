@@ -9,11 +9,13 @@ output: html_document
 
 # CRAY COI
 
-## settings. Run this line by line first to get google access 
+## read settings
+```{r, eval=TRUE, results='hide',echo=F}
+source("/home/bastian.egeter/git_bastools/bastools/examples/example_POST_REBIN_SCRIPT.config.R")
+```
+
 
 ```{r, eval=TRUE, results='hide',echo=F}
-bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #change to your bastools directory
-
 setwd(bastoolsDir)
 source("master_functions.R")
 library(ggplot2)
@@ -21,21 +23,6 @@ library(googlesheets4)
 library(dplyr)
 library(stringr)
 options(httr_oob_default = TRUE)
-
-sheets_auth(email = "basegeter@gmail.com") #change to your email for google account
-
-#can be multiple
-taxatabs<-c("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/POST_TAXONOMY_CHECK/CRAY_REBIN/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.txt")
-
-#datasheet
-ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
-
-#options for subsetting master sheet 
-subsetlist<-list(experiment_id="HSJUN19BAS",primer_set="LERAY-XT",MPLX="N",sample_type=c("Extraction_Negative","GIT_contents","PCR_negative"),Replicate_Name=c("ZYMO"))
-
-filter_dxn = 100
-
-real = "GIT_contents"
 ```
 
 ## organise mastersheet
@@ -57,8 +44,6 @@ ms_ss<-subset_mastersheet(master_sheet, subsetlist)
 #check again to see the subset made sense
 master_xtabs(ms_ss,columns=c(names(subsetlist)))
 
-#specifically for HS run
-ms_ss$ss_sample_id<-gsub("-HSBAS","",ms_ss$ss_sample_id)
 ```
 
 # Make counts at various steps of MBC and illumina script
@@ -73,7 +58,6 @@ all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
 #make new taxa table based on subsetted master sheet
 all.taxatabs.ss<-cbind(taxon=all.taxatabs$taxon,all.taxatabs[colnames(all.taxatabs) %in% ms_ss$ss_sample_id])
-colnames(all.taxatabs.ss)
 ```
 
 ## remove samples/taxa with 0 reads
@@ -81,123 +65,129 @@ colnames(all.taxatabs.ss)
 all.taxatabs.ss<-rm.0readtaxSam(all.taxatabs.ss)
 ```
 
-## summary ---this is pre-grouping - please inspect, look at groupings and look at post-grouping table. Can more grouping be done, is anything wrong?
+## summary ---this is pre-grouping - please inspect, add groupings to config file as necessary and look at post-grouping table. Can more grouping be done, is anything wrong?
 ```{r, eval=TRUE,echo=F}
-DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T,scrollX=T))
+DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 100, scrollX=T))
 ```
 
-## group taxa, where possible - Do you both agree with these: e.g. if we have reads at genus level Discoglossus, we can join them to D. galganoi - same for all the joining done below
+## group taxa, where possible
 ```{r, eval=TRUE}
-# all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon="Eukaryota;Chordata;Amphibia;Anura;Alytidae;Discoglossus;NA",
-#                                        jointo="Eukaryota;Chordata;Amphibia;Anura;Alytidae;Discoglossus;Discoglossus galganoi")
-# 
-# 
-# all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon="Eukaryota;Chordata;Amphibia;Anura;Bufonidae;Epidalea;NA",
-#                                        jointo="Eukaryota;Chordata;Amphibia;Anura;Bufonidae;Epidalea;Epidalea calamita")
-# 
-# all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon="Eukaryota;Chordata;Amphibia;Anura;Alytidae;Alytes;NA",
-#                                        jointo="Eukaryota;Chordata;Amphibia;Anura;Alytidae;Alytes;Alytes obstetricans")
-# 
-# all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon="Eukaryota;Chordata;Amphibia;Anura;Pelobatidae;NA;NA",
-#                                        jointo="Eukaryota;Chordata;Amphibia;Anura;Pelobatidae;Pelobates;Pelobates cultripes")
+for(i in 1:nrow(taxa.to.group)){
+  all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon=as.character(taxa.to.group[i,1]), jointo=as.character(taxa.to.group[i,2]))
+}
 ```
 
 ## summary--post-grouping
 ```{r, eval=TRUE,echo=F}
-DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T,scrollX=T))
+DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 100, scrollX=T))
 ```
 
 ## apply taxon and sample filters
 ```{r, eval=TRUE,echo=F}
 #Filter samples before removing the NAs and no_hits (0.1%)
-all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = 0.1)
-all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=0.1)
+all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
+all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=samplepc)
 ```
 
 ## remove the NAs and no_hits
 ```{r, eval=TRUE,echo=F}
+message("Removing NAs and no_hits")
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="NA;NA;NA;NA;NA;NA;NA",]
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 #countdf$'After project taxon and sample filter'<-sum(all.taxatabs.ss[,-1])
 ```
 
 ## apply detection filter
-## check negatives (this is a check only, not removing contaminants at this point). 
-## Check removing contaminants (this is a check only, not removing contaminants at this point)
 ```{r, eval=TRUE,echo=F}
 #check with removing detections
 message("Applying detection filter")
 all.taxatabs.ss.joined.dxn<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
+```
 
-#check negatives
+## check negatives and save results
+```{r, eval=TRUE,echo=F}
 message("Checking negs")
 negatives<-negs.stats(taxatab=all.taxatabs.ss.joined.dxn,ms_ss = ms_ss,real=real,ex_hominidae=F)
-
-#just to look:
-message("Checking effects of contaminant filter")
-notprinting<-remove.contaminant.taxa(taxatab = all.taxatabs.ss.joined.dxn,master_sheet = ms_ss,negatives = negatives,group.codes = c("Sample_Plate","Sample_Well")) #groups must be in the corresponding order to the object 'negatives' 
-
-#countdf$'After detection filter'<-sum(all.taxatabs.ss.joined.dxn[,-1])
-
 ```
 
-## remove contaminants from relevant groups - agree with these decisions? Basically remove Alytes obs then run contaminant script.
-```{r, eval=TRUE}
+## remove contaminants from relevant groups
+```{r, eval=TRUE,echo=F}
+message("Applying contaminant filter")
 all.taxatabs.ss.joined.dxn.rmcons<-remove.contaminant.taxa(taxatab = all.taxatabs.ss.joined.dxn,master_sheet = ms_ss,negatives = negatives,group.codes = c("Sample_Plate","Sample_Well"))
+#groups must be in the corresponding order to the object 'negatives' 
 
 #check negatives again, just to be sure
-negatives<-negs.stats(taxatab=all.taxatabs.ss.joined.dxn.rmcons,ms_ss = ms_ss,real=c("faecal_sample"),ex_hominidae=F)
-
-#countdf$'After remove contaminants'<-sum(all.taxatabs.ss.joined.dxn.rmcons[,-1])
+negatives<-negs.stats(taxatab=all.taxatabs.ss.joined.dxn.rmcons,ms_ss = ms_ss,real=real,ex_hominidae=F)
 ```
 
-## collapse at family level and keep only family-level taxa 
+## aggregate at chosen level and keep only that-level taxa 
 ```{r, eval=TRUE,echo=F}
-all.taxatabs.ss.joined.dxn.rmcons.fam<-aggregate.at.xLevel(taxatab=all.taxatabs.ss.joined.dxn.rmcons,xLevel = "family")
+all.taxatabs.ss.joined.dxn.rmcons.xlev<-aggregate.at.xLevel(taxatab=all.taxatabs.ss.joined.dxn.rmcons,xLevel = xLevel)
 
-all.taxatabs.ss.joined.dxn.rmcons.fam<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss.joined.dxn.rmcons.fam,xLevel = "family")
-#NEED TO HANDLE UNKNOWN ALSO
+all.taxatabs.ss.joined.dxn.rmcons.xlev<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss.joined.dxn.rmcons,xLevel = xLevel)
+```
+## remove detection in less than 2 reps (order for this?)
+```{r, eval=TRUE,echo=F}
+all.taxatabs.ss.joined.dxn.rmcons.xlev.rmsingdxns<-rm.single.rep.detections(all.taxatabs.ss.joined.dxn.rmcons.xlev,ms_ss = ms_ss,grouping = rep.rm)
 ```
 
-## summary and some barplots
+## sum reps
+```{r, eval=TRUE,echo=F}
+all.taxatabs.ss.joined.dxn.rmcons.xlev.rmsingdxns<-sumreps(all.taxatabs.ss.joined.dxn.rmcons.xlev.rmsingdxns,master_sheet = ms_ss,by = sumrepsby)
+```                                                        
+                                                           ```
+
+## summary 
 ```{r, eval=TRUE,echo=F}
 #summary
-DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss.joined.dxn.rmcons.spL), rownames = FALSE, 
-              #filter="top",
-          options = list(pageLength = 50, scrollX=T,scrollX=T))
+DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss.joined.dxn.rmcons.xlev), rownames = FALSE, 
+                        options = list(pageLength = 100, scrollX=T))
+```
 
-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.spL,master_sheet = ms_ss,column = "predator",as.percent = F,as.dxns = T)
+## some barplots
+```{r, eval=TRUE,echo=F}
+plotlist<-list()
+for(i in 1:length(stackplot.vars)){
+plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,column = stackplot.vars[i],as.percent = F,as.dxns = T,hidelegend = T)
+print(plotlist[[1]][[1]])
+print(plotlist[[1]][[2]])
+}
 
-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.spL,master_sheet = ms_ss,column = "predator",as.percent = T,as.dxns = F)
+for(i in 1:length(stackplot.vars)){
+plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,column = stackplot.vars[i],as.percent = T,as.dxns = F,hidelegend = T)
+print(plotlist[[1]][[1]])
+print(plotlist[[1]][[2]])
+}
 
-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.spL,master_sheet = ms_ss,column = "biomaterial",as.percent = F,as.dxns = F)
+for(i in 1:length(stackplot.vars)){
+plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,column = stackplot.vars[i],as.percent = F,as.dxns = F,hidelegend = T)
+print(plotlist[[1]][[1]])
+print(plotlist[[1]][[2]])
+}
 
-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.spL,master_sheet = ms_ss,column = "individual",as.percent = F,as.dxns = F,facetcol = "predator")
-
-countdf$'After keeping only species-level taxa'<-sum(all.taxatabs.ss.joined.dxn.rmcons.spL[,-1])
 ```
 
 
 ## pca plot (just an example, not interesting in this case)
 ```{r, eval=TRUE,echo=F}
 #just an example, not interesting in this case
-p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss.joined.dxn.rmcons.spL,master_sheet = ms_ss,MS_colID = "ss_sample_id",lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = "predator")
+p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,MS_colID = "ss_sample_id",lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = "predator")
 p
 ```
 
 ## plot counts
 ```{r, eval=TRUE,echo=F}
-long<-as.data.frame(t(countdf))
-long$step<-rownames(long)
-long$step<-factor(long$step,levels=long$step)
-colnames(long)[1]<-"reads"
-p<-ggplot(long,aes(x=step,y=reads,label = long$reads))+geom_bar(stat = "identity") +
-   theme(axis.text.x = element_text(angle = 45,hjust=1))+
-   theme(axis.line = element_line(colour = "black"))+
-   theme(panel.background = element_blank())+
-   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-  scale_y_continuous(labels = scales::comma)
-p
+# long<-as.data.frame(t(countdf))
+# long$step<-rownames(long)
+# long$step<-factor(long$step,levels=long$step)
+# colnames(long)[1]<-"reads"
+# p<-ggplot(long,aes(x=step,y=reads,label = long$reads))+geom_bar(stat = "identity") +
+#    theme(axis.text.x = element_text(angle = 45,hjust=1))+
+#    theme(axis.line = element_line(colour = "black"))+
+#    theme(panel.background = element_blank())+
+#    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+#   scale_y_continuous(labels = scales::comma)
+# p
 
 #save plot, outside of rmd
 # ggplot2::ggsave(filename = "read.counts.plot.tiff",p,device = "tiff",dpi = "print",)

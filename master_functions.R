@@ -251,22 +251,24 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
 
 #keep only xLevel assignments
 keep.below.xLevel.assigns<-function(taxatab,xLevel="species"){
-  message("Broken without full 7-level path ")
+  if(!xLevel %in% c("species","genus","family","order")) stop("Only allowable at genus, family, order or species level")
+  message("Reminder: this changes 'unknown' and 'collapsed' to 'NA'")
   
-  if(xLevel=="species"){
-    taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
-    taxatab<-rm.0readtaxSam(taxatab)
-  }
+  taxatab$taxon<-gsub("unknown","NA",taxatab$taxon)
+  taxatab$taxon<-gsub("collapsed","NA",taxatab$taxon)
   
-  if(xLevel=="genus"){
-    taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
-    taxatab<-rm.0readtaxSam(taxatab)
-  }
+  message("Removing NAs and no_hits")
+  taxatab<-taxatab[taxatab$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  taxatab<-taxatab[taxatab$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+
+  taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon),]
+  taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA$",taxatab$taxon),]
+  taxatab<-taxatab[-grep(";NA;NA;NA;NA$",taxatab$taxon),]
+  if(xLevel=="family" | xLevel=="genus" | xLevel=="species" )  taxatab<-taxatab[-grep(";NA;NA;NA$",taxatab$taxon),]
+  if(xLevel=="genus" | xLevel=="species" ) taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
+  if(xLevel=="species")  taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
   
-  if(xLevel=="family"){
-    taxatab<-taxatab[-grep(";NA;NA;NA$",taxatab$taxon),]
-    taxatab<-rm.0readtaxSam(taxatab)
-  }
+  taxatab<-rm.0readtaxSam(taxatab)
   
   return(taxatab)
 }
@@ -280,19 +282,25 @@ aggregate.at.xLevel<-function(taxatab,xLevel){
   if(xLevel=="genus"){
     xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3],";",splittaxonomy[,4],";",splittaxonomy[,5],
                  ";",splittaxonomy[,6])
+    leftover<-c(";collapsed")
   }
   
   if(xLevel=="family"){
     xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3],";",splittaxonomy[,4],";",splittaxonomy[,5])
+    leftover<-c(";collapsed;collapsed")
   }
   
   if(xLevel=="order"){
     xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3],";",splittaxonomy[,4])
+    leftover<-c(";collapsed;collapsed;collapsed")
+    
   }
   
   taxatab<-aggregate(taxatab[,-1],by = list(xPath),FUN=sum)
   
   colnames(taxatab)[1]<-"taxon"
+  
+  taxatab[,1]<-paste(taxatab[,1],leftover,sep = "")
   
   taxatab
   
@@ -1853,7 +1861,7 @@ dxns.by.rank<-function(taxatab){
 }
 
 sumreps<-function(taxatab,master_sheet,by="Sample_Name"){
-
+  message("Broken, maybe, copy from rm.single.rep.detections")
   grouping<-master_sheet[match(colnames(taxatab[,-1]),table = master_sheet[,"ss_sample_id"]),by]
   
   taxatab2<-taxatab
@@ -3408,4 +3416,35 @@ remove.google.dups<-function(master_sheet){
 fix.google.colnames<-function(master_sheet){
   colnames(master_sheet)<-gsub("Sample_Type","sample_type",colnames(master_sheet))
   master_sheet
+}
+
+#remove detection in less than 2 reps
+rm.single.rep.detections<-function(taxatab,ms_ss,grouping="biomaterial"){
+  message("If a detection was identified in more than one PCR replicate, all detections are kept.
+          If only one PCR replicate is available,read counts are put to zero.")
+  
+  reads<-sum(taxatab[,-1])
+  dxns<-length( which( taxatab[,-1] > 0 ) )
+  
+  #get group ids
+  mapping<-ms_ss[match(colnames(taxatab[,-1]),ms_ss$ss_sample_id),grouping]
+  
+  clean<-list()
+  for(i in 1:length(unique(colnames(taxatab)))){
+    df2<-taxatab[, c(FALSE,mapping %in% unique(mapping)[i])]
+    #find detection in count detections each taxon
+    if(length(colnames(df2))==1) df2[,1] = 0 #if only one rep, put all to 0
+    if(length(colnames(df2))==2) df2[df2[,1] == 0 | df2[,2] == 0,]<-0 #if either rep is zero, put both to zero
+    if(length(colnames(df2))>2) stop("havent written for more than two replicates yet")
+    clean[[i]]<-df2
+  }
+  
+  out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))
+  
+  reads2<-sum(out[,-1])
+  dxns2<-length( which( out[,-1] > 0 ) )
+  
+  message(paste(reads-reads2,"reads and",dxns-dxns2,"detections removed, from", reads,"reads and",dxns,"dxns"))
+  
+  out
 }

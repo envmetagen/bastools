@@ -1,6 +1,6 @@
 
 packages.needed<-c("dplyr","googlesheets4","processx","httpuv","treemap","igraph","XML","data.tree","DT","ggplot2","vegan"
-                   ,"stringr","phylotools")
+                   ,"stringr","phylotools","htmlwidgets")
 
 for(i in 1:length(packages.needed)){
   if(!packages.needed[i] %in% rownames(installed.packages())) {
