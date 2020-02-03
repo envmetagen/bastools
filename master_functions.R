@@ -3428,7 +3428,7 @@ taxatab.sumStats<-function(taxatab,stepname="this_step"){
   dfsum<-data.frame(detections=sum(taxatab1$n.samples),reads=sum(taxatab1$total.reads),
                     taxa=length(taxatab1$taxon),samples=length(colnames(taxatab[,-1])))
   
-  taxa<-taxatab[,1,drop=F]
+  taxa<-taxatab1[,c("taxon","total.reads")]
   
   sumStats.list[[1]]<-dfsum
   sumStats.list[[2]]<-taxa

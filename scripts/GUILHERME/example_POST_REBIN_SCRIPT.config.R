@@ -11,7 +11,12 @@
 # Apply taxon and sample filters (doing this after problem taxa/NAs/no_hits to be more conservative in removals)
 # Apply detection filter (this is an absolute value applied at the PCR replicate level)
 # Produce a mini-report on taxa/reads in negatives
-# Run the remove contaminants filter and output report (is this the correct time to do this?)********Doesnt work post sum reps anyway
+
+# Run the remove contaminants filter and output report (is this the correct time to do this?)********Doesnt work post sum reps anyway. A benefit of applying
+##detection filter before this step, is that minor negative will be removed first so then full taxa will not be removed from dataset usng rm.contaminants step.
+##So, good to remove as many contanminatnts from negs before running remove contaminant script!!!
+##That said, look at output of contaminant script first (without applying detection filter). If output looks good/reasonable, then dont apply dxn filter.
+
 # Remove detection occurring in one replicate only (should probably go before contaminants filter)**********but if it does, then we shouldnt 
 #   remove single PCR negs. would need to modify function to recognize negs. 
 #   In fact this could go after taxon/sample filters. It is a major cull, but a strongly supported one.
@@ -49,7 +54,7 @@ bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools directory
 # write.table(test,file="/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt",append = F,row.names = F,quote = F,sep = "\t")
 
 
-#Once settings are changed, open bastools/CRAY_POST_REBIN_SCRIPT.Rmd
+#Once settings are changed, open bastools/scripts/GUILHERME/CRAY_POST_REBIN_SCRIPT.Rmd
 #change line 14 to match the path to this config file. Run CRAY_POST_REBIN_SCRIPT.Rmd (via Run All or knit). Run all is better for seeing some objects being created 
 #along the way. Knit is better for viewing overall r.eport
 
@@ -75,8 +80,8 @@ taxonpc = 0.1
 samplepc=0.1
 #the absolute value for removing detections in pcr reps (maybe not necessary here, wait til after sumreps...?, as we consider anything in 2 reps to be true)
 filter_dxn = 0
-#the absolute value for removing detections after summing replicate level (not sure of level, could leave very low, as we consider anything in 2 reps to be true)
-filter_dxn2 = 4
+#the absolute value for removing detections after summing replicate level (maybe not necessary, could leave very low, as we consider anything in 2 reps to be true)
+filter_dxn2 = 0
 #sample_type used to descirbe your real samples (not negatives)
 real = c("GIT_contents")
 #negative types (as detailed in master sheet) and groups to which each one belongs (must be same order)
@@ -91,7 +96,7 @@ xLevel<-"family"
 #unwanted taxa - non-targets that are not required for final analysis. This is applied last. This is a grep, so 
 #form the taxa path accordingly and make sure you are only removing what you want (by checking output).
 unwantedTaxa<-c("^Bacteria;","omycota;")
-#this should be a dataframe with the taxon to group in column 1 and taxon to group to in column 2. Done last.
+#this should be a dataframe with the taxon to group in column 1 and taxon to group to in column 2. 
 #Can be made separately,e.g. in excel, this is just example. Ensure the order is correct
 taxa.to.group<-data.frame(taxa.to.group=c("Eukaryota;Chordata;Amphibia;Anura;Alytidae;Discoglossus;NA"
                                            ,"Eukaryota;Chordata;Amphibia;Anura;Bufonidae;Epidalea;NA"),

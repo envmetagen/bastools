@@ -1,5 +1,5 @@
 
-bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools dir
+bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools dir. must have trailing "/"
 
 update.taxonomies=F #change to T if needed and amend directories below to desired locations
 

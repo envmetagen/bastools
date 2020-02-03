@@ -11,7 +11,7 @@ output: html_document
 
 ## read settings
 ```{r, eval=TRUE,echo=F}
-source("/home/tutorial/TOOLS/bastools/examples/example_POST_REBIN_SCRIPT.config.R")
+source("/home/tutorial/TOOLS/bastools/scripts/GUILHERME/example_POST_REBIN_SCRIPT.config.R")
 
 message("settings:
         ")
@@ -127,7 +127,6 @@ all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet 
 
 #check negatives again, just to be sure
 message("Checking that all negatives are now clean")
-
 negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
 
 stepcounter<-stepcounter+1
@@ -246,7 +245,6 @@ print(p)
 ```{r, eval=TRUE,echo=F}
 #counts
 message("Note that detections/samples after sumreps will be fewer because reps are joined")
-
 all.counts<-do.call(rbind,lapply(all.stats, `[[`, 1))
 all.counts$step<-"not_assigned"
 for(i in 1:length(all.stats)){
@@ -274,14 +272,13 @@ for(i in 2:(grep("aggregate_by_xLevel_taxa",namesSteps)-1)){
   colnames(taxaSteps2)[length(colnames(taxaSteps2))]<-namesSteps[i]
 }
 
-DT::datatable(taxaSteps2, rownames = TRUE, options = list(pageLength = 50, scrollX=T,scrollY=T))
+DT::datatable(taxaSteps2, rownames = TRUE, options = list(pageLength = 10, scrollX=T,scrollY=T))
 
 ```
 
 ## plot counts
 ```{r, eval=TRUE,echo=F}
 message("Note that detections/samples after sumreps will be fewer because reps are joined")
-
 all.counts$step <- factor(all.counts$step,levels = all.counts$step)
 
 stepPlot<-function(all.counts,type="reads"){
