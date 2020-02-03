@@ -1,0 +1,25 @@
+taxon	MOCK-MockBal-A	MOCK-MockNV-A	MOCK-MockV-A
+Eukaryota;Arthropoda;Arachnida;Scorpiones;Caraboctonidae;NA;NA	0	1559	0
+Eukaryota;Arthropoda;Arachnida;Scorpiones;NA;NA;NA	0	672	0
+Eukaryota;Chordata;Actinopteri;Centrarchiformes;Kyphosidae;NA;NA	10687	21132	18411
+Eukaryota;Chordata;Actinopteri;Centrarchiformes;NA;NA;NA	624	445	279
+Eukaryota;Chordata;Aves;Passeriformes;Nectariniidae;Cyanomitra;Cyanomitra verticalis	0	624	959
+Eukaryota;Chordata;Aves;Passeriformes;Passeridae;Passer;Passer hispaniolensis	2091	967	2339
+Eukaryota;Chordata;Aves;Passeriformes;Turdidae;Turdus;Turdus pelios	8448	6030	9412
+Eukaryota;Chordata;Mammalia;Didelphimorphia;Didelphidae;NA;NA	0	559	495
+Eukaryota;Chordata;Mammalia;Primates;Atelidae;Alouatta;Alouatta caraya	68190	19633	18106
+Eukaryota;Chordata;Mammalia;Primates;Atelidae;Alouatta;NA	811	291	3092
+Eukaryota;Chordata;Mammalia;Primates;Atelidae;NA;NA	291	0	191
+Eukaryota;Chordata;Mammalia;Primates;Cebidae;Callithrix;NA	1236	1482	1218
+Eukaryota;Chordata;Mammalia;Primates;Cebidae;NA;NA	254	0	0
+Eukaryota;Chordata;Mammalia;Primates;NA;NA;NA	1275	253	208
+Eukaryota;Chordata;Mammalia;Primates;Pitheciidae;Callicebus;Callicebus nigrifrons	0	1984	1001
+Eukaryota;Chordata;Mammalia;Rodentia;Cricetidae;NA;NA	0	281	292
+Eukaryota;Chordata;Mammalia;Rodentia;Cricetidae;Sigmodon;Sigmodon hispidus	0	12514	10208
+Eukaryota;Chordata;Mammalia;Rodentia;NA;NA;NA	0	1459	1229
+Eukaryota;Chordata;unknown;Squamata;Chamaeleonidae;NA;NA	691	348	168
+Eukaryota;Chordata;unknown;Squamata;Scincidae;Pygomeles;Pygomeles trivittatus	0	0	184
+Eukaryota;Chordata;unknown;Testudines;Pelomedusidae;Pelomedusa;Pelomedusa subrufa	16585	10429	16431
+Eukaryota;Chordata;unknown;unknown;NA;NA;NA	0	0	171
+Eukaryota;Mollusca;Gastropoda;Stylommatophora;NA;NA;NA	37413	123057	59179
+Eukaryota;Mollusca;Gastropoda;unknown;NA;NA;NA	1085	4433	2773

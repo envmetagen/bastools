@@ -11,7 +11,7 @@ output: html_document
 
 ## read settings
 ```{r, eval=TRUE,echo=F}
-source("/home/tutorial/TOOLS/bastools/examples/example_POST_REBIN_SCRIPT.config.R")
+source("/home/tutorial/TOOLS/bastools/project_configs/MOCK_POST_REBIN_SCRIPT.config.R")
 
 message("settings:
         ")
@@ -31,10 +31,10 @@ stepcounter<-0
 ## organise mastersheet
 ```{r, eval=TRUE,echo=F}
 master_sheet<-google.read.master.url(ss_url)
-#remove duplicate columns (should functionise this)
+#remove duplicate columns 
 master_sheet<-remove.google.dups(master_sheet)
 
-#changing sample_type too to match functions
+#changing sample_type and Primer_set to match functions
 master_sheet<-fix.google.colnames(master_sheet)
 
 ##subset master sheet for this study 
@@ -64,13 +64,13 @@ all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = 
 
 ## remove problem taxa - usually human, predator, NAs and no_hits
 ```{r, eval=TRUE,echo=F}
-message("Removing NAs and no_hits")
+message("Removing no_hits")
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.nohits")
 
-message("Removing NAs - seqqunes that had blast hits but were not assigned to any taxon")
+message("Removing NAs - sequences that had blast hits but were not assigned to any taxon")
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="NA;NA;NA;NA;NA;NA;NA",]
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="unknown;unknown;unknown;unknown;NA;NA;NA",]
 
@@ -116,22 +116,28 @@ negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominid
 
 ## remove contaminants from relevant groups
 ```{r, eval=TRUE,echo=F}
-message("Applying contaminant filter")
-group.codes2<-list()
-for(i in 1:length(negatives)){
-group.codes2[[i]]<-neg.groups[match(names(negatives)[i],neg.types)]
-}
-group.codes2<-do.call(c,group.codes2)
 
-all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.codes = group.codes2)
+if(is.null(negatives)) {
+  message("No negatives with reads, skipping contaminant filter")
+  } else {
 
-#check negatives again, just to be sure
-message("Checking that all negatives are now clean")
-
-negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.contaminants")
+    message("Applying contaminant filter")
+    group.codes2<-list()
+    for(i in 1:length(negatives)){
+    group.codes2[[i]]<-neg.groups[match(names(negatives)[i],neg.types)]
+    }
+    group.codes2<-do.call(c,group.codes2)
+    
+    all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.codes = group.codes2)
+    
+    #check negatives again, just to be sure
+    message("Checking that all negatives are now clean")
+    
+    negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+    
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.contaminants")
+  }
 ```
 
 ## remove detection in less than 2 reps 
@@ -161,14 +167,22 @@ all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter
 
 ## aggregate at chosen level and keep only that-level taxa 
 ```{r, eval=TRUE,echo=F}
-all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
-
-all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = xLevel)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_xLevel") 
+if(is.null(xLevel)) {
+  message("Skipping aggregate of taxa at xLevel")
+  
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
+  
+} else {
+  all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
+  
+  all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = xLevel)
+  
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_xLevel") 
+}
 ```
                                                         
 
@@ -188,12 +202,17 @@ DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options 
 
 ## group taxa, where possible
 ```{r, eval=TRUE}
-for(i in 1:nrow(taxa.to.group)){
-  all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon=as.character(taxa.to.group[i,1]), jointo=as.character(taxa.to.group[i,2]))
+if(is.null(taxa.to.group)){
+  message("Skipping grouping of taxa")
+} else {
+  
+  for(i in 1:nrow(taxa.to.group)){
+    all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon=as.character(taxa.to.group[i,1]), jointo=as.character(taxa.to.group[i,2]))
+  }
+  
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "group_taxa")
 }
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "group_taxa")
 ```
 
 ## summary--post-grouping
@@ -274,7 +293,7 @@ for(i in 2:(grep("aggregate_by_xLevel_taxa",namesSteps)-1)){
   colnames(taxaSteps2)[length(colnames(taxaSteps2))]<-namesSteps[i]
 }
 
-DT::datatable(taxaSteps2, rownames = TRUE, options = list(pageLength = 50, scrollX=T,scrollY=T))
+DT::datatable(taxaSteps2, rownames = TRUE, options = list(pageLength = 10, scrollX=T,scrollY=T,fixedColumns = list(leftColumns = 2, rightColumns = 0)),extensions = c('FixedColumns'))
 
 ```
 
@@ -307,5 +326,5 @@ stepPlot(all.counts,type="samples")
 
 ## write final table
 ```{r, eval=TRUE,echo=F}
-#write.table(all.taxatabs.ss.joined.dxn.rmcons.spL,"all.taxatabs.ss.joined.dxn.rmcons.spL.12S1.txt",quote = F, row.names = F,col.names = T,sep = "\t")
+#write.table(all.taxatabs.ss,"all.taxatabs.ss.txt",quote = F, row.names = F,col.names = T,sep = "\t")
 ```

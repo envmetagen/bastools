@@ -1144,7 +1144,7 @@ taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factor1,lin
   taxatab2<-binarise.taxatab(taxatab2)
   distance_matrix<-taxatab2bray(taxatab2)
   
-  cmds<-cmdscale(distance_matrix,k=4, list. = T, eig = T)
+  cmds<-cmdscale(distance_matrix,list. = T, eig = T)
   cor.cmds<-cor(taxatab2,cmds$points)
   VarExplainedPC1<-round(cor(vegan::vegdist(cmds$points[,1],method = "euclidean"),distance_matrix)^2,digits = 2)
   VarExplainedPC2<-round(cor(vegan::vegdist(cmds$points[,2],method = "euclidean"),distance_matrix)^2,digits = 2)
@@ -3367,6 +3367,7 @@ remove.google.dups<-function(master_sheet){
 #changing sample_type too to match functions
 fix.google.colnames<-function(master_sheet){
   colnames(master_sheet)<-gsub("Sample_Type","sample_type",colnames(master_sheet))
+  colnames(master_sheet)<-gsub("Primer_set","primer_set",colnames(master_sheet))
   master_sheet
 }
 
@@ -3386,10 +3387,17 @@ rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name"){
   clean<-list()
   for(i in 1:length(unique(mapping))){
     df2<-taxatab[, c(FALSE,mapping %in% unique(mapping)[i]),drop=F]
-    #find detection in count detections each taxon
+
     if(length(colnames(df2))==1) df2[,1] = 0 #if only one rep, put all to 0
     if(length(colnames(df2))==2) df2[df2[,1] == 0 | df2[,2] == 0,]<-0 #if either rep is zero, put both to zero
-    if(length(colnames(df2))>2) stop("havent written for more than two replicates yet")
+    if(length(colnames(df2))==3) {
+      for(j in 1:nrow(df2)){
+        if(sum(df2[j,1:3] %in% 0)>1) df2[j,1:3]<-0  #if more than one rep is zero, put all to zero 
+      }
+    }
+    
+    if(length(colnames(df2))>3) stop("havent written for more than three replicates yet")
+      
     clean[[i]]<-df2
   }
   
