@@ -116,7 +116,7 @@ sum.reads.by.taxon<-function(taxatab){
 range.dxns.by.taxon<-function(taxatab){
   taxatab2<-taxatab[,-1]
   taxatab2[taxatab2==0]<-NA
-  rangetab<-apply(taxatab2,1,function(x) range(x,na.rm = T))
+  rangetab<-suppressWarnings(apply(taxatab2,1,function(x) range(x,na.rm = T)))
   return(data.frame(taxon=taxatab$taxon,low=rangetab[1,],high=rangetab[2,]))
 }
 
@@ -1084,7 +1084,9 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
   unlink(list.files(pattern = "*krona.txt"))
 }
 
-taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F){
+taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F,grouping="ss_sample_id"){
+  message("If column names are not ss_sample_ids using 'grouping' to specify what they are")
+  
   taxa<-do.call(rbind,stringr::str_split(taxatab$taxon,";"))
   taxa<-cbind(taxa,do.call(rbind,stringr::str_split(taxa[,7]," ")))
   taxa2<-as.data.frame(substr(taxa,start = 1,stop = 3))
@@ -1096,14 +1098,14 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   long<-long[long$value>0,]
   
   if(!is.null(master_sheet)) {
-    long<-merge(x = long,y = master_sheet[,c(grep("ss_sample_id",colnames(master_sheet)),
+    long<-merge(x = long,y = master_sheet[,c(grep(grouping,colnames(master_sheet)),
                                              grep(column,colnames(master_sheet)))],
-                by.x="variable",by.y="ss_sample_id")
+                by.x="variable",by.y=grouping)
     
     if(!is.null(facetcol)){
-      long<-merge(x = long,y = master_sheet[,c(grep("ss_sample_id",colnames(master_sheet)),
+      long<-merge(x = long,y = master_sheet[,c(grep(grouping,colnames(master_sheet)),
                                                grep(facetcol,colnames(master_sheet)))],
-                  by.x="variable",by.y="ss_sample_id")
+                  by.x="variable",by.y=grouping)
     }
     
     long$variable<-long[,grep(column,colnames(long))]
@@ -1133,73 +1135,13 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   }else return(a)
 }
 
-
 #Plotting bray distance matrix PCA
-taxatab.pca.plot<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
-  taxatab<-rm.0readtaxSam(taxatab)
-  taxatab2<-binarise.taxatab(taxatab)
-  distance_matrix<-taxatab2bray(taxatab2)
+taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
+  message("Assuming grouping has already been done")
   
-  cmds<-cmdscale(distance_matrix,k=4, list. = T, eig = T)
-  cor.cmds<-cor(taxatab2,cmds$points)
-  VarExplainedPC1<-round(cor(vegan::vegdist(cmds$points[,1],method = "euclidean"),distance_matrix)^2,digits = 2)
-  VarExplainedPC2<-round(cor(vegan::vegdist(cmds$points[,2],method = "euclidean"),distance_matrix)^2,digits = 2)
-  
-  #create loadings for plotting
-  loadings<-as.data.frame(cor.cmds)
-  cmdspoints<-as.data.frame(cmds$points)
-  cmdspoints$ss_sample_id<-rownames(cmdspoints)
-  cmdspoints<-merge(cmdspoints,master_sheet,by=MS_colID,all.x = T)
-  
-  p<-ggplot(cmdspoints,aes(x=V1,y=V2))+
-    geom_point(aes(size=1,colour=cmdspoints[,factor1]))+
-    #geom_jitter(position = )
-    xlab(bquote("Variance explained =" ~ .(VarExplainedPC1)))+
-    ylab(bquote("Variance explained =" ~ .(VarExplainedPC2))) +
-    theme_bw()+
-    guides(size = FALSE)+
-    theme(legend.title = element_blank())+
-    theme(legend.text=element_text(size=12))+
-    theme(legend.spacing.x = unit(0.2, 'cm'))+
-    theme(axis.title = element_text(size = 12))
-  
-  message("Principal Component Analysis plot of community similarity using Bray-Curtis distances")
-  
-  if(lines){
-    p<- p +geom_segment(data = loadings, aes(x=0,y=0,xend=V1,yend=V2),arrow=arrow(length=unit(0.1,"cm")))
-    if(longnames) if(shortnames) stop("Can only use EITHER long OR short names")
-    if(!longnames) if(!shortnames) message("No names added")
-    if(longnames) if(!shortnames) p<- p + geom_text(data = loadings, aes(x=V1, y=V2, label=colnames(taxatab2)))
-    if(shortnames) if(!longnames){
-      taxa<-do.call(rbind,str_split(colnames(taxatab2),";"))
-      taxa<-cbind(taxa,do.call(rbind,str_split(taxa[,7]," ")))
-      taxa<-as.data.frame(substr(taxa,start = 1,stop = 3))
-      taxa<-apply(taxa,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],".",x[9]))
-      p<- p + geom_text(data = loadings, aes(x=V1, y=V2, label=taxa))
-    }
-  }
-  
-  if(ellipse){
-    p<- p +stat_ellipse(aes(linetype=cmdspoints[,factor1]),type = "norm", level=0.90) 
-    message("ellipses are drawn with a confidence level of 0.90")
-  }
-  
-  p
-}
-
-#Plotting bray distance matrix PCA
-taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",factor1,lines=F,longnames=F,shortnames=F,ellipse=T){
-  
-  if(MS_colID!="ss_sample_id") {
-    taxatab2<-sumreps(taxatab = taxatab,master_sheet = master_sheet,by = MS_colID) 
-  } else {
-    taxatab2<-taxatab
-    }
-  
+  taxatab2<-taxatab
   taxatab2<-rm.0readtaxSam(taxatab2)
-  
   taxatab2<-binarise.taxatab(taxatab2)
-  
   distance_matrix<-taxatab2bray(taxatab2)
   
   cmds<-cmdscale(distance_matrix,k=4, list. = T, eig = T)
@@ -1210,8 +1152,8 @@ taxatab.pca.plot.col<-function(taxatab,master_sheet,MS_colID="ss_sample_id",fact
   #create loadings for plotting
   loadings<-as.data.frame(cor.cmds)
   cmdspoints<-as.data.frame(cmds$points)
-  cmdspoints[,MS_colID]<-rownames(cmdspoints)
-  cmdspoints<-merge(cmdspoints,master_sheet,by=MS_colID,all.x = T)
+  cmdspoints[,grouping]<-rownames(cmdspoints)
+  cmdspoints<-merge(cmdspoints,ms_ss,by=grouping,all.x = T)
 
   #plot
   # The palette with grey:
@@ -1821,6 +1763,7 @@ reads.by.rank<-function(taxatab){
   
   #add rank
   temprank<-stringr::str_count(a$taxon,";NA")
+  message("Dont think this is right")
   temprank<-gsub(0,"species",temprank)
   temprank<-gsub(1,"genus",temprank)
   temprank<-gsub(2,"family",temprank)
@@ -1860,26 +1803,35 @@ dxns.by.rank<-function(taxatab){
   return(d)
 }
 
-sumreps<-function(taxatab,master_sheet,by="Sample_Name"){
-  message("Broken, maybe, copy from rm.single.rep.detections")
-  grouping<-master_sheet[match(colnames(taxatab[,-1]),table = master_sheet[,"ss_sample_id"]),by]
+sumreps<-function(taxatab,ms_ss,grouping="Sample_Name",discard=T){
+  if(discard) { 
+    message("If only one rep, will discard the rep completely")
+  } else { message("If only one rep, will keep that rep") }
   
-  taxatab2<-taxatab
-  colnames(taxatab2)<-c("taxon",grouping)
+  #get group ids
+  mapping<-ms_ss[match(colnames(taxatab[,-1]),ms_ss$ss_sample_id),grouping]
   
-  summed<-list()
-  for(i in 1:length(unique(grouping))){
-    taxatab.temp<-as.data.frame(taxatab2[,grep(unique(grouping)[i],colnames(taxatab2)),drop=F])
-    if(length(colnames(taxatab.temp))>1) taxatab.temp$sum<-rowSums(taxatab.temp) else taxatab.temp$sum<-taxatab.temp[,1]
+  clean<-list()
+  for(i in 1:length(unique(mapping))){
+    df2<-taxatab[, c(FALSE,mapping %in% unique(mapping)[i]),drop=F]
+
+    if(length(colnames(df2))==1) if(discard==F) {
+      df3<-df2
+    } else {
+      df3=NULL
+    }
     
-    taxatab.temp2<-taxatab.temp[,"sum",drop=F]
     
-    colnames(taxatab.temp2)<-gsub("sum",unique(grouping)[i],colnames(taxatab.temp2))
+    if(length(colnames(df2))>1) df3<-as.data.frame(rowSums(df2))
     
-    summed[[i]]<-taxatab.temp2
+    if(!is.null(df3)) colnames(df3)<-unique(mapping)[i]
+    clean[[i]]<-df3
   }
   
-  taxatab.out<-cbind(taxon=taxatab$taxon,do.call(cbind, summed))
+  out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))
+  
+  out<-rm.0readtaxSam(taxatab = out)
+
 }
 
 names2taxids<-function(vector,ncbiTaxDir){
@@ -3419,8 +3371,10 @@ fix.google.colnames<-function(master_sheet){
 }
 
 #remove detection in less than 2 reps
-rm.single.rep.detections<-function(taxatab,ms_ss,grouping="biomaterial"){
+rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name"){
+  
   message("If a detection was identified in more than one PCR replicate, all detections are kept.
+  If a detection was identified in only one PCR replicate, that detection is put to zero.
           If only one PCR replicate is available,read counts are put to zero.")
   
   reads<-sum(taxatab[,-1])
@@ -3430,8 +3384,8 @@ rm.single.rep.detections<-function(taxatab,ms_ss,grouping="biomaterial"){
   mapping<-ms_ss[match(colnames(taxatab[,-1]),ms_ss$ss_sample_id),grouping]
   
   clean<-list()
-  for(i in 1:length(unique(colnames(taxatab)))){
-    df2<-taxatab[, c(FALSE,mapping %in% unique(mapping)[i])]
+  for(i in 1:length(unique(mapping))){
+    df2<-taxatab[, c(FALSE,mapping %in% unique(mapping)[i]),drop=F]
     #find detection in count detections each taxon
     if(length(colnames(df2))==1) df2[,1] = 0 #if only one rep, put all to 0
     if(length(colnames(df2))==2) df2[df2[,1] == 0 | df2[,2] == 0,]<-0 #if either rep is zero, put both to zero
@@ -3441,6 +3395,8 @@ rm.single.rep.detections<-function(taxatab,ms_ss,grouping="biomaterial"){
   
   out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))
   
+  out<-rm.0readtaxSam(taxatab = out)
+  
   reads2<-sum(out[,-1])
   dxns2<-length( which( out[,-1] > 0 ) )
   
@@ -3448,3 +3404,38 @@ rm.single.rep.detections<-function(taxatab,ms_ss,grouping="biomaterial"){
   
   out
 }
+
+rm.taxa<-function(taxatab,taxaGrep){
+  taxatab2<-taxatab
+  for(i in 1:length(taxaGrep)){
+    removals<-grep(taxaGrep[i],taxatab2$taxon, value = T)
+    
+    if(length(removals)>0) {
+      message("Removing taxa:")
+      print(removals)
+      taxatab2<-taxatab2[! taxatab2$taxon %in% removals,]
+    }
+  }
+  taxatab2
+}
+
+taxatab.sumStats<-function(taxatab,stepname="this_step"){
+  
+  sumStats.list<-list()
+  
+  taxatab1<-summary.dxns.by.taxon(taxatab)
+  
+  dfsum<-data.frame(detections=sum(taxatab1$n.samples),reads=sum(taxatab1$total.reads),
+                    taxa=length(taxatab1$taxon),samples=length(colnames(taxatab[,-1])))
+  
+  taxa<-taxatab[,1,drop=F]
+  
+  sumStats.list[[1]]<-dfsum
+  sumStats.list[[2]]<-taxa
+  
+  names(sumStats.list)<-c(paste0(stepname,"_counts"),paste0(stepname,"_taxa"))
+  
+  sumStats.list
+}
+  
+  

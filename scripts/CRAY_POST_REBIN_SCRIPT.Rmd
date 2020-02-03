@@ -10,19 +10,22 @@ output: html_document
 # CRAY COI
 
 ## read settings
-```{r, eval=TRUE, results='hide',echo=F}
-source("/home/bastian.egeter/git_bastools/bastools/examples/example_POST_REBIN_SCRIPT.config.R")
+```{r, eval=TRUE,echo=F}
+source("/home/tutorial/TOOLS/bastools/examples/example_POST_REBIN_SCRIPT.config.R")
+
+message("settings:
+        ")
+print(ls.str())
 ```
 
 
 ```{r, eval=TRUE, results='hide',echo=F}
-setwd(bastoolsDir)
-source("master_functions.R")
+source(paste0(bastoolsDir,"master_functions.R"))
 library(ggplot2)
-library(googlesheets4)
 library(dplyr)
-library(stringr)
 options(httr_oob_default = TRUE)
+all.stats<-list()
+stepcounter<-0
 ```
 
 ## organise mastersheet
@@ -34,21 +37,12 @@ master_sheet<-remove.google.dups(master_sheet)
 #changing sample_type too to match functions
 master_sheet<-fix.google.colnames(master_sheet)
 
-#check on number of samples in each category
-message("Showing xtabs for entire datasheet, including Sample_Type by default")
-master_xtabs(master_sheet,columns=c(names(subsetlist)))
-colnames(master_sheet)
 ##subset master sheet for this study 
 message("Subsetting datasheet")
 ms_ss<-subset_mastersheet(master_sheet, subsetlist)
 #check again to see the subset made sense
 master_xtabs(ms_ss,columns=c(names(subsetlist)))
 
-```
-
-# Make counts at various steps of MBC and illumina script
-```{r, eval=TRUE,echo=F}
-#countdf<-count.MBC(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_script_taxatab_tf)
 ```
 
 ## import taxatabs
@@ -58,11 +52,128 @@ all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
 #make new taxa table based on subsetted master sheet
 all.taxatabs.ss<-cbind(taxon=all.taxatabs$taxon,all.taxatabs[colnames(all.taxatabs) %in% ms_ss$ss_sample_id])
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = "start")
 ```
 
 ## remove samples/taxa with 0 reads
 ```{r, eval=TRUE,echo=F}
 all.taxatabs.ss<-rm.0readtaxSam(all.taxatabs.ss)
+```
+
+## remove problem taxa - usually human, predator, NAs and no_hits
+```{r, eval=TRUE,echo=F}
+message("Removing NAs and no_hits")
+all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.nohits")
+
+message("Removing NAs - seqqunes that had blast hits but were not assigned to any taxon")
+all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="unknown;unknown;unknown;unknown;NA;NA;NA",]
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.non-assigned")
+
+message("Removing problem taxa")
+all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxaGrep = problemTaxa)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.problem")
+```
+
+## apply taxon and sample filters
+```{r, eval=TRUE,echo=F}
+#Filter samples before removing the NAs and no_hits (0.1%)
+all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "taxonpc")
+
+all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=samplepc)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "samplepc")
+```
+
+## apply detection filter
+```{r, eval=TRUE,echo=F}
+#check with removing detections
+message("Applying detection filter")
+all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
+```
+
+## check negatives and save results
+```{r, eval=TRUE,echo=F}
+message("Checking negs")
+negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+```
+
+## remove contaminants from relevant groups
+```{r, eval=TRUE,echo=F}
+message("Applying contaminant filter")
+group.codes2<-list()
+for(i in 1:length(negatives)){
+group.codes2[[i]]<-neg.groups[match(names(negatives)[i],neg.types)]
+}
+group.codes2<-do.call(c,group.codes2)
+
+all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.codes = group.codes2)
+
+#check negatives again, just to be sure
+negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.contaminants")
+```
+
+## remove detection in less than 2 reps 
+```{r, eval=TRUE,echo=F}
+all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter")
+```
+
+## sum reps
+```{r, eval=TRUE,echo=F}
+all.taxatabs.ss<-sumreps(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,discard = T)
+```
+## apply 2nd detection filter (possibly makes more sense here?)
+```{r, eval=TRUE,echo=F}
+#check with removing detections
+message("Applying detection filter")
+all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn2)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter2")
+```
+
+## aggregate at chosen level and keep only that-level taxa 
+```{r, eval=TRUE,echo=F}
+all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
+
+all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = xLevel)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_xLevel") 
+```
+                                                        
+
+## remove unwanted taxa for analysis
+```{r, eval=TRUE,echo=F}
+message("Removing unwanted taxa")
+all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxa = unwantedTaxa)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "unwanted")
 ```
 
 ## summary ---this is pre-grouping - please inspect, add groupings to config file as necessary and look at post-grouping table. Can more grouping be done, is anything wrong?
@@ -75,6 +186,9 @@ DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options 
 for(i in 1:nrow(taxa.to.group)){
   all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon=as.character(taxa.to.group[i,1]), jointo=as.character(taxa.to.group[i,2]))
 }
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "group_taxa")
 ```
 
 ## summary--post-grouping
@@ -82,85 +196,24 @@ for(i in 1:nrow(taxa.to.group)){
 DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 100, scrollX=T))
 ```
 
-## apply taxon and sample filters
-```{r, eval=TRUE,echo=F}
-#Filter samples before removing the NAs and no_hits (0.1%)
-all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
-all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=samplepc)
-```
-
-## remove the NAs and no_hits
-```{r, eval=TRUE,echo=F}
-message("Removing NAs and no_hits")
-all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="NA;NA;NA;NA;NA;NA;NA",]
-all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
-#countdf$'After project taxon and sample filter'<-sum(all.taxatabs.ss[,-1])
-```
-
-## apply detection filter
-```{r, eval=TRUE,echo=F}
-#check with removing detections
-message("Applying detection filter")
-all.taxatabs.ss.joined.dxn<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
-```
-
-## check negatives and save results
-```{r, eval=TRUE,echo=F}
-message("Checking negs")
-negatives<-negs.stats(taxatab=all.taxatabs.ss.joined.dxn,ms_ss = ms_ss,real=real,ex_hominidae=F)
-```
-
-## remove contaminants from relevant groups
-```{r, eval=TRUE,echo=F}
-message("Applying contaminant filter")
-all.taxatabs.ss.joined.dxn.rmcons<-remove.contaminant.taxa(taxatab = all.taxatabs.ss.joined.dxn,master_sheet = ms_ss,negatives = negatives,group.codes = c("Sample_Plate","Sample_Well"))
-#groups must be in the corresponding order to the object 'negatives' 
-
-#check negatives again, just to be sure
-negatives<-negs.stats(taxatab=all.taxatabs.ss.joined.dxn.rmcons,ms_ss = ms_ss,real=real,ex_hominidae=F)
-```
-
-## aggregate at chosen level and keep only that-level taxa 
-```{r, eval=TRUE,echo=F}
-all.taxatabs.ss.joined.dxn.rmcons.xlev<-aggregate.at.xLevel(taxatab=all.taxatabs.ss.joined.dxn.rmcons,xLevel = xLevel)
-
-all.taxatabs.ss.joined.dxn.rmcons.xlev<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss.joined.dxn.rmcons,xLevel = xLevel)
-```
-## remove detection in less than 2 reps (order for this?)
-```{r, eval=TRUE,echo=F}
-all.taxatabs.ss.joined.dxn.rmcons.xlev.rmsingdxns<-rm.single.rep.detections(all.taxatabs.ss.joined.dxn.rmcons.xlev,ms_ss = ms_ss,grouping = rep.rm)
-```
-
-## sum reps
-```{r, eval=TRUE,echo=F}
-all.taxatabs.ss.joined.dxn.rmcons.xlev.rmsingdxns<-sumreps(all.taxatabs.ss.joined.dxn.rmcons.xlev.rmsingdxns,master_sheet = ms_ss,by = sumrepsby)
-```                                                        
-                                                           ```
-
-## summary 
-```{r, eval=TRUE,echo=F}
-#summary
-DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss.joined.dxn.rmcons.xlev), rownames = FALSE, 
-                        options = list(pageLength = 100, scrollX=T))
-```
-
 ## some barplots
 ```{r, eval=TRUE,echo=F}
+message("Making barplots")
 plotlist<-list()
-for(i in 1:length(stackplot.vars)){
-plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,column = stackplot.vars[i],as.percent = F,as.dxns = T,hidelegend = T)
+for(i in 1:length(plotting.vars)){
+plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = T,hidelegend = T,grouping = sumrepsby)
 print(plotlist[[1]][[1]])
 print(plotlist[[1]][[2]])
 }
 
-for(i in 1:length(stackplot.vars)){
-plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,column = stackplot.vars[i],as.percent = T,as.dxns = F,hidelegend = T)
+for(i in 1:length(plotting.vars)){
+plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,as.dxns = F,hidelegend = T,grouping = sumrepsby)
 print(plotlist[[1]][[1]])
 print(plotlist[[1]][[2]])
 }
 
-for(i in 1:length(stackplot.vars)){
-plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,column = stackplot.vars[i],as.percent = F,as.dxns = F,hidelegend = T)
+for(i in 1:length(plotting.vars)){
+plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = F,hidelegend = T,grouping = sumrepsby)
 print(plotlist[[1]][[1]])
 print(plotlist[[1]][[2]])
 }
@@ -171,27 +224,73 @@ print(plotlist[[1]][[2]])
 ## pca plot (just an example, not interesting in this case)
 ```{r, eval=TRUE,echo=F}
 #just an example, not interesting in this case
-p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss.joined.dxn.rmcons.xlev,master_sheet = ms_ss,MS_colID = "ss_sample_id",lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = "predator")
-p
+message("Plotting pca plot with lines")
+for(i in 1:length(plotting.vars)){
+p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
+print(p)
+}
+
+message("Plotting pca plot without lines")
+for(i in 1:length(plotting.vars)){
+p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
+print(p)
+}
+```
+
+## combine counts and taxalists
+```{r, eval=TRUE,echo=F}
+#counts
+all.counts<-do.call(rbind,lapply(all.stats, `[[`, 1))
+all.counts$step<-"not_assigned"
+for(i in 1:length(all.stats)){
+  all.counts$step[i]<-names(all.stats[[i]])[1]  
+}
+all.counts$step<-gsub("_counts","",all.counts$step)
+
+print(all.counts)
+
+#taxalists
+message("This needs more work, depends on collapsed taxa, need to split nto 2 tables, pre and post collapse")
+
+taxaSteps<-data.frame(start=all.stats[[1]][2][[1]]$taxon)
+rownames(taxaSteps)<-taxaSteps$start
+#pre-collapse
+namesSteps<-"names"
+for(i in 1:length(all.stats)){
+  namesSteps[i]<-names(all.stats[[i]])[2]  
+}
+
+for(i in 1:(grep("aggregate_by_xLevel_taxa",namesSteps)-1)){
+  taxaSteps[,i]<-rownames(taxaSteps) %in% all.stats[[i]][2][[1]]$taxon
+}
+
+colnames(taxaSteps)<-namesSteps[1:(grep("aggregate_by_xLevel_taxa",namesSteps)-1)]
+
 ```
 
 ## plot counts
 ```{r, eval=TRUE,echo=F}
-# long<-as.data.frame(t(countdf))
-# long$step<-rownames(long)
-# long$step<-factor(long$step,levels=long$step)
-# colnames(long)[1]<-"reads"
-# p<-ggplot(long,aes(x=step,y=reads,label = long$reads))+geom_bar(stat = "identity") +
-#    theme(axis.text.x = element_text(angle = 45,hjust=1))+
-#    theme(axis.line = element_line(colour = "black"))+
-#    theme(panel.background = element_blank())+
-#    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-#   scale_y_continuous(labels = scales::comma)
-# p
+all.counts$step <- factor(all.counts$step,levels = all.counts$step)
 
-#save plot, outside of rmd
-# ggplot2::ggsave(filename = "read.counts.plot.tiff",p,device = "tiff",dpi = "print",)
+stepPlot<-function(all.counts,type="reads"){
+  ggplot(all.counts,aes(x=step,y=all.counts[,type],label = all.counts[,type]))+geom_bar(stat = "identity") +
+   theme(axis.text.x = element_text(angle = 45,hjust=1))+
+   theme(axis.line = element_line(colour = "black"))+
+   theme(panel.background = element_blank())+
+   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+   scale_y_continuous(labels = scales::comma)+
+   ylab(type)
+}
 
+stepPlot(all.counts,type="reads")
+stepPlot(all.counts,type="detections")
+stepPlot(all.counts,type="taxa")
+stepPlot(all.counts,type="samples")
+```
+
+## a few final sentences would be good 
+```{r, eval=TRUE,echo=F}
+#e.g. from x ss_sample_id belonging to real, negs etc,...y had detections, reads etc.
 ```
 
 ## write final table

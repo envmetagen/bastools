@@ -2,25 +2,55 @@
 
 #usually will be for one primer/run, but if all settings can be applied globally then multiple tables can be provided
 
+#It is intended that this is an iterative process. Run, inspect, change settings, run again, repeat.
+
+#STEPS
+# Download and subset master sheet
+# Import taxatabs (and merge if necessary) and subset according to subsetted master sheet
+# Remove problem taxa - usually human, predator (along with NAs, nohits)
+# Apply taxon and sample filters (doing this after problem taxa/NAs/no_hits to be more conservative in removals)
+# Apply detection filter (this is an absolute value applied at the PCR replicate level)
+# Produce a mini-report on taxa/reads in negatives
+# Run the remove contaminants filter and output report (is this the correct time to do this?)********Doesnt work post sum reps anyway
+# Remove detection occurring in one replicate only (should probably go before contaminants filter)**********but if it does, then we shouldnt 
+#   remove single PCR negs. would need to modify function to recognize negs. 
+#   In fact this could go after taxon/sample filters. It is a major cull, but a strongly supported one.
+# Sum replicates at chosen group (usually Sample_Name or biomaterial) 
+# Apply 2nd detection filter (this is an absolute value applied at the summed rep level)
+# Aggregate reads at chosen level, e.g. family
+# Keep only taxa that reached chosen level
+# Remove unwanted taxa (non-targets that we dont care about)
+# Provide summary pre-grouping
+# Do grouping (e.g. group a genus to a species because we know from local knowledge it couldnt be anything else in that genus)
+# Provide summary post-grouping
+# Produce some plots using desired variables (e.g. Site, biomaterial, date)
+# Produce table/plot of step counts
+
+
+#Potential improvements
+#make steps optional
+#make re-ordering of steps an option
+#update single rep detection removal, see above
+#make table of taxa at each step (already a table made up to aggregating taxa. Any way of plotting this?)
+#should 2nd detection filter remove dxns below threshold if taxon was found in both reps? 
+
 #############################################################################
 
 #change setting below as necessary
-
+bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools directory
 #before running for the very first time run this, then hash them out again:
 # email="your.name@email.com"
-# bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #change for your path to bastoolDir
 # setwd(bastoolsDir) 
 # googlesheets4::sheets_auth(email = email)
 
 #colnames do not match current for hiseq so do
-#test<-data.table::fread(taxatabs,data.table = F)
-#colnames(test)<-c("taxon",paste(colnames(test[,-1]),"-HSBAS",sep = ""))
-#write.table(test,file=taxatabs,append = F,row.names = F,quote = F,sep = "\t")
+# test<-data.table::fread(taxatabs,data.table = F)
+# colnames(test)<-c("taxon",paste(colnames(test[,-1]),"-HSBAS",sep = ""))
+# write.table(test,file="/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt",append = F,row.names = F,quote = F,sep = "\t")
 
-bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #change to your bastools directory
 
 #can be multiple
-taxatabs<-c("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/POST_TAXONOMY_CHECK/CRAY_REBIN/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.txt")
+taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt")
 
 #datasheet url
 ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
@@ -32,31 +62,36 @@ ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYIT
 subsetlist<-list(experiment_id="HSJUN19BAS",primer_set="LERAY-XT",MPLX="N",sample_type=c("Extraction_Negative","GIT_contents","PCR_negative"),
                  Replicate_Name=c("ZYMO"))
 
+#problem taxa - specific taxa in high reads that are not targets, usually human, predator. This is applied early on. This is a grep, so 
+#form the taxa path accordingly and make sure you are only removing what you want (by checking output). 
+problemTaxa<-c("Eukaryota;Arthropoda;Malacostraca;Decapoda;")
 #Detection below taxonpc % of taxon read count will be removed (0.1=0.1%)
 taxonpc = 0.1
 #Detection below samplepc % of sample read count will be removed (0.1=0.1%)
 samplepc=0.1
-
-#the absolute value for removing detections
-filter_dxn = 100
-
+#the absolute value for removing detections in pcr reps
+filter_dxn = 0
+#the absolute value for removing detections after summing replicate level
+filter_dxn2 = 100
 #sample_type used to descirbe your real samples (not negatives)
-real = "GIT_contents"
-
+real = c("GIT_contents")
+#negative types (as detailed in master sheet) and groups to which each one belongs (must be same order)
+neg.types=c("PCR_negative", "Extraction_Negative")
+neg.groups=c("Sample_Plate","Sample_Well")
+#grouping for removing detections in <1 rep
+rep.rm<-"Sample_Name"
+#sum reps by
+sumrepsby<-"biomaterial"
+#collapse all taxa at this level. Also used for subsequently keeping only taxa that attain this level 
+xLevel<-"order"
+#unwanted taxa - non-targets that are not required for final analysis. This is applied last. This is a grep, so 
+#form the taxa path accordingly and make sure you are only removing what you want (by checking output).
+unwantedTaxa<-c("^Bacteria;","omycota;")
 #this should be a dataframe with the taxon to group in column 1 and taxon to group to in column 2. 
-#Can be made separately, this is just example. Ensure the order is correct
+#Can be made separately,e.g. in excel, this is just example. Ensure the order is correct
 taxa.to.group<-data.frame(taxa.to.group=c("Eukaryota;Chordata;Amphibia;Anura;Alytidae;Discoglossus;NA"
                                            ,"Eukaryota;Chordata;Amphibia;Anura;Bufonidae;Epidalea;NA"),
                            group.to=c("Eukaryota;Chordata;Amphibia;Anura;Alytidae;Discoglossus;Discoglossus galganoi"
                                       ,"Eukaryota;Chordata;Amphibia;Anura;Bufonidae;Epidalea;Epidalea calamita"))
-
-xLevel<-"family"
-
-#variables to use as x axis for barplots
-stackplot.vars<-c("Exact Site")
-
-#grouping for removing detections in <1 rep
-rep.rm<-"Sample_Name"
-
-#sum reps by
-sumrepsby<-"biomaterial"
+#variables to use as groups for plots
+plotting.vars<-c("Exact Site")
