@@ -184,7 +184,7 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T,printnegs=T){
       
       if(printnegs==T){
       if(length(colnames(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]]))>0){
-        print(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]])
+        print(taxatab.negs.list[grep(unique(negs$sample_type)[i],names(taxatab.negs.list))][[1]],row.names = F,right = F)
         }
       }
     }
@@ -238,7 +238,7 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
         message(paste(sumb4-sumafter,"reads removed from",sum(contaminations[,-1,drop=F]>0),"detection(s) in",
                       length(colnames(contaminations[,-1,drop=F])),"sample(s), of which",sumnegtaxa,"were in the negative. See table below for details:"))
         if(printcontaminations==T) {
-          print(contaminations)
+          print(contaminations,right = F,row.names=F)
           }else(message("Not printing contamination table"))
         }
     }
@@ -261,12 +261,20 @@ keep.below.xLevel.assigns<-function(taxatab,xLevel="species"){
   taxatab<-taxatab[taxatab$taxon!="NA;NA;NA;NA;NA;NA;NA",]
   taxatab<-taxatab[taxatab$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 
-  taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon),]
-  taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA$",taxatab$taxon),]
-  taxatab<-taxatab[-grep(";NA;NA;NA;NA$",taxatab$taxon),]
-  if(xLevel=="family" | xLevel=="genus" | xLevel=="species" )  taxatab<-taxatab[-grep(";NA;NA;NA$",taxatab$taxon),]
-  if(xLevel=="genus" | xLevel=="species" ) taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
-  if(xLevel=="species")  taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
+  if(length(grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon),]
+  if(length(grep(";NA;NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA$",taxatab$taxon),]
+  if(length(grep(";NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA$",taxatab$taxon),]
+  
+  if(xLevel=="family" | xLevel=="genus" | xLevel=="species" )  {
+    if(length(grep(";NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA$",taxatab$taxon),]
+  }
+  if(xLevel=="genus" | xLevel=="species" ) {
+    if(length(grep(";NA;NA$",taxatab$taxon))>0)  taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
+  }
+  
+  if(xLevel=="species") {
+    if(length(grep(";NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA$",taxatab$taxon),]
+  }
   
   taxatab<-rm.0readtaxSam(taxatab)
   
@@ -3355,7 +3363,7 @@ remove.google.dups<-function(master_sheet){
   if(length(grep("\\.\\.\\.",colnames(master_sheet),value = T))>0) {
     message("Removing duplicated columns")
     a<-grep("\\.\\.\\.",colnames(master_sheet),value = T)
-    b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
+    b<-as.data.frame(do.call(rbind,stringr::str_split(a,"\\.\\.\\.")))
     d<-b[duplicated(b[,1]),]
     e<-paste0(d[,1],"...",d[,2])
     master_sheet<-master_sheet[,!colnames(master_sheet) %in% e]
@@ -3372,7 +3380,7 @@ fix.google.colnames<-function(master_sheet){
 }
 
 #remove detection in less than 2 reps
-rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name"){
+rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name",negatives=NULL){
   
   message("If a detection was identified in more than one PCR replicate, all detections are kept.
   If a detection was identified in only one PCR replicate, that detection is put to zero.
@@ -3380,6 +3388,13 @@ rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name"){
   
   reads<-sum(taxatab[,-1])
   dxns<-length( which( taxatab[,-1] > 0 ) )
+  
+  if(!is.null(negatives)){
+  message("Reminder: Negatives is the list output by negs.stats function
+          Assumes that 'PCR_negative' were not done in replicate, so are exempt")
+  taxatab.exempt<-taxatab[,colnames(negatives$PCR_negative)]
+  taxatab<-taxatab[,!colnames(taxatab) %in% colnames(taxatab.exempt)[-1]]
+  }
   
   #get group ids
   mapping<-ms_ss[match(colnames(taxatab[,-1]),ms_ss$ss_sample_id),grouping]
@@ -3389,19 +3404,20 @@ rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name"){
     df2<-taxatab[, c(FALSE,mapping %in% unique(mapping)[i]),drop=F]
 
     if(length(colnames(df2))==1) df2[,1] = 0 #if only one rep, put all to 0
-    if(length(colnames(df2))==2) df2[df2[,1] == 0 | df2[,2] == 0,]<-0 #if either rep is zero, put both to zero
-    if(length(colnames(df2))==3) {
+    if(length(colnames(df2))>1) {
+      if(length(colnames(df2))>3) message(paste("
+                                                Warning: This group has more than three replicates, not usual:",unique(mapping)[i]))
       for(j in 1:nrow(df2)){
-        if(sum(df2[j,1:3] %in% 0)>1) df2[j,1:3]<-0  #if more than one rep is zero, put all to zero 
+        if(sum(df2[j,1:length(colnames(df2))] %in% 0)>1) df2[j,1:length(colnames(df2))]<-0  #if more than one rep is zero, put all to zero 
       }
     }
     
-    if(length(colnames(df2))>3) stop("havent written for more than three replicates yet")
-      
     clean[[i]]<-df2
   }
   
-  out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))
+  if(!is.null(negatives)){
+    out<-cbind(taxatab.exempt,do.call(cbind,clean))
+  } else {out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))}
   
   out<-rm.0readtaxSam(taxatab = out)
   

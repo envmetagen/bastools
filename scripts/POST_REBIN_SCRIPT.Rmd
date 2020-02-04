@@ -11,7 +11,7 @@ output: html_document
 
 ## read settings
 ```{r, eval=TRUE,echo=F}
-source("/home/tutorial/TOOLS/bastools/project_configs/MOCK_POST_REBIN_SCRIPT.config.R")
+source("/home/tutorial/TOOLS/bastools/project_configs/CRAY_COI_SWABS_POST_REBIN_SCRIPT.config.R")
 
 message("settings:
         ")
@@ -108,39 +108,42 @@ stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
 ```
 
-## check negatives and save results
+## remove contaminants from relevant groups
 ```{r, eval=TRUE,echo=F}
 message("Checking negs")
 negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
-```
 
-## remove contaminants from relevant groups
-```{r, eval=TRUE,echo=F}
+#use.contamination.filter function?
+if(use.contamination.filter==T){
 
-if(is.null(negatives)) {
-  message("No negatives with reads, skipping contaminant filter")
-  } else {
-
-    message("Applying contaminant filter")
-    group.codes2<-list()
-    for(i in 1:length(negatives)){
-    group.codes2[[i]]<-neg.groups[match(names(negatives)[i],neg.types)]
-    }
-    group.codes2<-do.call(c,group.codes2)
-    
-    all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.codes = group.codes2)
-    
-    #check negatives again, just to be sure
-    message("Checking that all negatives are now clean")
-    
-    negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
-    
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.contaminants")
-  }
+  if(is.null(negatives)) {
+    message("No negatives with reads, skipping contaminant filter")
+    } else {
+  
+      message("Applying contaminant filter")
+      group.codes2<-list()
+      for(i in 1:length(negatives)){
+      group.codes2[[i]]<-neg.groups[match(names(negatives)[i],neg.types)]
+      }
+      group.codes2<-do.call(c,group.codes2)
+      
+      all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.codes = group.codes2)
+      
+      #check negatives again, just to be sure
+      message("Checking that all negatives are now clean")
+      
+      negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+      
+      stepcounter<-stepcounter+1
+      all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.contaminants")
+  } 
+} else {
+  message("use.contamination.filter set to FALSE, skipping contaminant filter")
+}
 ```
 
 ## remove detection in less than 2 reps 
+### PCR negatives are exempt, if the negative option is set (only makes sense pre-rm.contaminants function, or without rm.contaminants function)
 ```{r, eval=TRUE,echo=F}
 all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm)
 
@@ -226,20 +229,20 @@ message("Making barplots")
 plotlist<-list()
 for(i in 1:length(plotting.vars)){
 plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = T,hidelegend = T,grouping = sumrepsby)
-print(plotlist[[1]][[1]])
-print(plotlist[[1]][[2]])
+print(plotlist[[i]][[1]])
+print(plotlist[[i]][[2]])
 }
 
 for(i in 1:length(plotting.vars)){
 plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,as.dxns = F,hidelegend = T,grouping = sumrepsby)
-print(plotlist[[1]][[1]])
-print(plotlist[[1]][[2]])
+print(plotlist[[i]][[1]])
+print(plotlist[[i]][[2]])
 }
 
 for(i in 1:length(plotting.vars)){
 plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = F,hidelegend = T,grouping = sumrepsby)
-print(plotlist[[1]][[1]])
-print(plotlist[[1]][[2]])
+print(plotlist[[i]][[1]])
+print(plotlist[[i]][[2]])
 }
 
 ```
@@ -250,14 +253,14 @@ print(plotlist[[1]][[2]])
 #just an example, not interesting in this case
 message("Plotting pca plot with lines")
 for(i in 1:length(plotting.vars)){
-p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
-print(p)
+  p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
+  print(p)
 }
 
 message("Plotting pca plot without lines")
 for(i in 1:length(plotting.vars)){
-p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
-print(p)
+  p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
+  print(p)
 }
 ```
 
@@ -293,8 +296,13 @@ for(i in 2:(grep("aggregate_by_xLevel_taxa",namesSteps)-1)){
   colnames(taxaSteps2)[length(colnames(taxaSteps2))]<-namesSteps[i]
 }
 
-DT::datatable(taxaSteps2, rownames = TRUE, options = list(pageLength = 10, scrollX=T,scrollY=T,fixedColumns = list(leftColumns = 2, rightColumns = 0)),extensions = c('FixedColumns'))
+DT::datatable(taxaSteps2, rownames = FALSE, options = list(pageLength = 10, scrollX=T,scrollY=T,fixedColumns = list(leftColumns = 2, rightColumns = 0)),extensions = c('FixedColumns'))
 
+```
+
+## final taxa list
+```{r, eval=TRUE,echo=F}
+print(all.taxatabs.ss$taxon)
 ```
 
 ## plot counts
