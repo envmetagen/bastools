@@ -84,6 +84,8 @@ neg.types=c("PCR_negative", "Extraction_Negative")
 neg.groups=c("Sample_Plate","Sample_Well")
 #use.contamination.filter function?
 use.contamination.filter=T
+#remove contaminants, not just from batches/groups, but from the entire data set?
+remove.entire.dataset=T
 #grouping for removing detections in <1 rep
 rep.rm<-"biomaterial"
 #sum reps by

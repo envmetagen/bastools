@@ -108,10 +108,20 @@ stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
 ```
 
-## remove contaminants from relevant groups
+## inspect negatives, print plots for only those taxa detected in both negatives and real samples
 ```{r, eval=TRUE,echo=F}
 message("Checking negs")
 negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+
+plotlist<-plot.negs.vs.real(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+
+for(i in 1:length(plotlist)){
+  print(plotlist[[i]])
+}
+```
+
+## remove contaminants from relevant groups
+```{r, eval=TRUE,echo=F}
 
 #use.contamination.filter function?
 if(use.contamination.filter==T){
@@ -127,7 +137,7 @@ if(use.contamination.filter==T){
       }
       group.codes2<-do.call(c,group.codes2)
       
-      all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.codes = group.codes2)
+      all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,group.codes = group.codes2,remove.entire.dataset = remove.entire.dataset)
       
       #check negatives again, just to be sure
       message("Checking that all negatives are now clean")

@@ -72,12 +72,12 @@ problemTaxa<-c("Eukaryota;Arthropoda;Malacostraca;Decapoda;")
 #Detection below taxonpc % of taxon read count will be removed (0.1=0.1%)
 taxonpc = 1
 #Detection below samplepc % of sample read count will be removed (0.1=0.1%)
-samplepc=1
+samplepc=0
 #the absolute value for removing detections in pcr reps (maybe not necessary here, wait til after sumreps...?, as we consider anything in 2 reps to be true)
-filter_dxn = 100
+filter_dxn = 200
 #the absolute value for removing detections after summing replicate level (not sure of level, could leave very low, as we consider anything in 2 reps to be true)
-filter_dxn2 = 200
-#sample_type used to descirbe your real samples (not negatives)
+filter_dxn2 = 0
+#sample_type used to describe your real samples (not negatives)
 real = c("swab")
 #negative types (as detailed in master sheet) and groups to which each one belongs (must be same order). Put neg.types=NULL and neg.groups=NULL 
 #if no negtaives, or skipping this
@@ -85,6 +85,8 @@ neg.types=c("PCR_negative", "Extraction_Negative")
 neg.groups=c("Sample_Plate","extraction_batch")
 #use.contamination.filter function?
 use.contamination.filter=T
+#remove contaminants, not just from batches/groups, but from the entire data set?
+remove.entire.dataset=T
 #grouping for removing detections in <1 rep
 rep.rm<-"biomaterial"
 #sum reps by

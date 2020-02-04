@@ -20,14 +20,16 @@ taxon.filter.solo.df<-function(taxatab,taxonpc=0.1){
   message("Applying taxon_pc filter.")
   taxatab2<-taxatab[,-1]
   a<-sum(taxatab2)
+  dxns1<-sum(taxatab2>0)
   taxatab.PCS<-sweep(taxatab2, MARGIN = 1, STATS = rowSums(taxatab2), FUN = "/")*100
   taxatab.PCS[taxatab.PCS<taxonpc]<-0 
   taxatab2[taxatab.PCS==0]<-0
   b<-sum(taxatab2)
+  dxns2<-sum(taxatab2>0)
   taxatab3<-cbind(taxon=taxatab$taxon,taxatab2)
-  message(paste(a-b,"reads removed"))
+  message(paste("Using filter of", taxonpc, "%. reads removed:",a-b,"from",a,"; detections removed:",dxns1-dxns2,"from",dxns1))
   taxatab4<-rm.0readtaxSam(taxatab3)
-}
+  }
 
 sample.filter.solo<-function(taxatab,samplepc=0.1){
   message("Applying sample_pc filter. Note: this removes samples with no reads")
@@ -38,9 +40,11 @@ sample.filter.solo<-function(taxatab,samplepc=0.1){
   taxatab.PCS[taxatab.PCS<samplepc]<-0
   
   a<-sum(taxatab)
+  dxns1<-sum(taxatab>0)
   taxatab[taxatab.PCS==0]<-0
   b<-sum(taxatab)
-  message(paste(a-b,"reads removed"))
+  dxns2<-sum(taxatab>0)
+  message(paste("Using filter of", samplepc, "%. reads removed:",a-b,"from",a,"; detections removed:",dxns1-dxns2,"from",dxns1))
   
   taxatab.out<-cbind(taxon,taxatab)
   taxatab.out<-rm.0readtaxSam(taxatab.out)
@@ -195,9 +199,11 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T,printnegs=T){
 }
 
 #remove contaminant taxa from samples, based on occurrences in negatives
-remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,printcontaminations=T){
+remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,printcontaminations=T,remove.entire.dataset=F){
   
   totalstart<-sum(taxatab[,-1,drop=F])
+  
+  negtaxaList<-list() #for use if removing neg taxa from entire dataset
   
   for(j in 1:length(negatives)){
     
@@ -213,6 +219,8 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
         sumnegtaxa<-sum(negtaxa[,-1,drop=F])
         negtaxa<-as.character(negtaxa[rowSums(negtaxa[,-1,drop=F])>0,"taxon"])
         
+        negtaxaList[[i]]<-negtaxa
+        
         #get group of a sample
         group.id<-master_sheet[grep(neg,master_sheet[,"ss_sample_id"]),group.codes[j]]
         #get other samples in group
@@ -222,9 +230,7 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
         
         message(paste("Based on",negative_type,neg, ", Removing detections of"))
         print(negtaxa)
-        message("if it occurred in any of the following samples")
-        print(group.samples)
-        message(paste("which all belong to",group.codes[j],":",group.id))
+        message("if it occurred in any samples belonging to ",group.codes[j],":",group.id)
         
         sumb4<-sum(taxatab[,-1])
         
@@ -238,7 +244,10 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
         message(paste(sumb4-sumafter,"reads removed from",sum(contaminations[,-1,drop=F]>0),"detection(s) in",
                       length(colnames(contaminations[,-1,drop=F])),"sample(s), of which",sumnegtaxa,"were in the negative. See table below for details:"))
         if(printcontaminations==T) {
-          print(contaminations,right = F,row.names=F)
+          contaminations2<-as.data.frame(t(contaminations))
+          colnames(contaminations2)<-contaminations$taxon
+          contaminations2<-contaminations2[-1,]
+          print(contaminations2,right = F,row.names=T,quote = F)
           }else(message("Not printing contamination table"))
         }
     }
@@ -246,6 +255,16 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
   taxatab<-rm.0readtaxSam(taxatab)
   totalend<-sum(taxatab[,-1,drop=F])
   message(paste("***********A total of", totalstart-totalend, "reads removed"))
+  
+  if(remove.entire.dataset==T) {
+    message("****Furthermore, removing the following contaminant taxa from entire dataset")
+    all.neg.taxa<-do.call(c,negtaxaList)
+    print(all.neg.taxa)
+    taxatab<-taxatab[!taxatab$taxon %in% all.neg.taxa,]
+    taxatab<-rm.0readtaxSam(taxatab)
+    message(paste("***********A further ", totalend-sum(taxatab[,-1,drop=F]), "reads removed")) 
+  }
+  
   return(taxatab)
 }
 
@@ -3462,4 +3481,63 @@ taxatab.sumStats<-function(taxatab,stepname="this_step"){
   sumStats.list
 }
   
+#plot negs vs real for each taxon
+plot.negs.vs.real<-function(taxatab,ms_ss,real){
+  require(tidyverse)
   
+  long<-reshape2::melt(taxatab)
+  long<-long[long$value>0,]
+  
+  long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
+  long$taxon<-as.character(long$taxon)
+  
+  splitdf<-split(long, f = long$taxon)
+  
+  #only include dfs with at least one negs and real
+  
+  ##neg sample types
+  negtypes<-unique(ms_ss$sample_type)[!unique(ms_ss$sample_type) %in% real]
+  
+  splitdf2<-list()
+  
+  ##dfs with negs
+  for(i in 1:length(splitdf)){
+    if(!TRUE %in% (negtypes %in% splitdf[[i]]$sample_type)) {
+      splitdf2[[i]]<-NULL
+    } else {
+      splitdf2[[i]]<-splitdf[[i]]
+    }
+  }
+  splitdf2<-splitdf2 %>% discard(is.null)
+  
+  splitdf3<-list()
+  ##dfs with real
+  for(i in 1:length(splitdf2)){
+    if(!TRUE %in% (real %in% splitdf2[[i]]$sample_type)) {
+      splitdf3[[i]]<-NULL
+    } else {
+      splitdf3[[i]]<-splitdf2[[i]]
+    }
+  }
+  splitdf3<-splitdf3 %>% discard(is.null)
+  
+  splitdf<-splitdf3
+  
+  plotlist<-list()
+  
+  for(i in 1:length(splitdf3)){
+    df<-splitdf3[[i]]  
+    
+    plotlist[[i]]<-ggplot(data = df,aes(x=variable, y=value,color=sample_type)) + 
+      geom_bar(fill="white", alpha=0.5, stat="identity") +
+      theme(axis.text.x=element_text(size=8,angle=45, hjust=1),axis.title.x = element_blank(),legend.title = element_blank()) +
+      ggtitle(unique(df$taxon)) +
+      ylab("reads")
+    
+  }
+  
+  plotlist
+  
+}
+
+
