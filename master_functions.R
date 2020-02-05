@@ -51,8 +51,8 @@ sample.filter.solo<-function(taxatab,samplepc=0.1){
 }
 
 rm.0readtaxSam<-function(taxatab){
-  taxatab2<-taxatab[rowSums(taxatab[,-1])!=0,]
-  taxatab3<-cbind(taxon=taxatab2[,1],taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
+  taxatab2<-taxatab[rowSums(taxatab[,-1,drop=F])!=0,]
+  taxatab3<-cbind(taxon=taxatab2[,1],taxatab2[,-1,drop=F][,colSums(taxatab2[,-1,drop=F])!=0,drop=F])
 }
 
 rm.0readOTUSam<-function(taxatab){
@@ -3211,7 +3211,7 @@ rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name",negatives=NULL)
       if(length(colnames(df2))>3) message(paste("
                                                 Warning: This group has more than three replicates, not usual:",unique(mapping)[i]))
       for(j in 1:nrow(df2)){
-        if(sum(df2[j,1:length(colnames(df2))] %in% 0)>1) df2[j,1:length(colnames(df2))]<-0  #if more than one rep is zero, put all to zero 
+        if(sum(df2[j,1:length(colnames(df2))] > 0)<2) df2[j,1:length(colnames(df2))]<-0  #if less than two reps have reads, put all to zero 
       }
     }
     
@@ -3408,7 +3408,7 @@ plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
   #make data frame of problem samples
   
   finaltable<-taxatab[,c("taxon",as.character(final.negs[,"variable"]))]
-  finaltable<-rm.0readtaxSam(finaltable)
+  finaltable<-rm.0readtaxSam(taxatab = finaltable)
   
   long<-reshape2::melt(finaltable)
   long<-long[long$value>0,,drop=F]
@@ -3436,9 +3436,9 @@ plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
   plotlist
 }
 
-google.overlord<-function(url,for.MBC=F,for.illscript2=T,for.post.illscript2=F){
+google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir,email){
   
-  if(sum(for.MBC,for.illscript2,for.post.illscript2)>1) stop("Only one output type is allowed to be TRUE")
+  if(sum(for.MBC,for.post.illscript2)!=1) stop("Only one output type must be TRUE")
   
   # Download master sheet
   a<-getwd()
@@ -3482,19 +3482,16 @@ google.overlord<-function(url,for.MBC=F,for.illscript2=T,for.post.illscript2=F){
     #use only the required headers (exclude ss_sample_id)
     master<-master[,headers[-length(headers)]]
     
-    #order correctly
-    master<-master[c(headers[-length(headers)])]
-    
     master$extra_information<-""
   }
   
-  if(for.illscript2==T){
+  if(for.post.illscript2==T){
     
-    headers<-c("primer_set","Primer_F","Primer_R","min_length","max_length","ss_sample_id","experiment_id")
+    headers<-c("primer_set","Primer_F","Primer_R","min_length","max_length","ss_sample_id","experiment_id","biomaterial","Sample_Name")
     
     if(FALSE %in% (headers %in% colnames(master))) stop ("Missing: ", headers[!headers %in% colnames(master)])
     
-    message("Checks only include the essential headers, please check to see all desired headers exist")
+    message("Checks only include the mostly used headers, please check to see all desired headers exist")
   }
   
   return(master)

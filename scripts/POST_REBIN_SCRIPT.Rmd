@@ -27,12 +27,7 @@ stepcounter<-0
 
 ## organise mastersheet
 ```{r, eval=TRUE,echo=F}
-master_sheet<-google.read.master.url(ss_url)
-#remove duplicate columns 
-master_sheet<-remove.google.dups(master_sheet)
-
-#changing sample_type and Primer_set to match functions
-master_sheet<-fix.google.colnames(master_sheet)
+master_sheet<-google.overlord(url = ss_url,tokenDir=bastoolsDir,email=email)
 
 ##subset master sheet for this study 
 message("Subsetting datasheet")
@@ -104,18 +99,6 @@ all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
 
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
-```
-
-## remove detection in less than 2 reps (only done here if rep.rm.first is TRUE)
-### PCR negatives are exempt, if the negative option is set (only makes sense pre-rm.contaminants function, or without rm.contaminants function)
-# *****testing phase
-```{r, eval=TRUE,echo=F}
-if (rep.rm.first==T){
-all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter")
-}
 ```
 
 ## inspect negatives, print plots for only those taxa detected in both negatives and real samples

@@ -4,9 +4,8 @@ print(ls.str())
 
 library(processx)
 library(dplyr)
-setwd(bastoolsDir)
-source("master_functions.R")
-source("bin.blast.R")
+source(paste0(bastoolsDir,"master_functions.R"))
+source(paste0(bastoolsDir,"bin.blast.R"))
 setwd(outDir)
 
 ####################################################

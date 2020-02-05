@@ -79,6 +79,10 @@ use.contamination.filter=T
 remove.entire.dataset=T
 #grouping for removing detections in <1 rep
 rep.rm<-"biomaterial"
+
+#conduct grouping prior to rm.contaminants? ***not yet implemented
+rep.rm.first<-F
+
 #sum reps by
 sumrepsby<-"biomaterial"
 #collapse all taxa at this level. Also used for subsequently keeping only taxa that attain this level. Put xLevel=NULL to skip this

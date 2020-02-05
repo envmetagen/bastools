@@ -49,6 +49,8 @@ taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/reb
 #datasheet url
 ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
 
+email="basegeter@gmail.com"
+
 #options for subsetting master sheet. This functions to sleect the samples you want to analyse.
 #Each item in list is a column heading in master sheet and each character within the item should be what you want to include 
 #(sample_type should always be lower case, even if it is not so on google)

@@ -1,0 +1,67 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## remove detection in less than 2 reps (only done here if rep.rm.first is TRUE)
+### PCR negatives are exempt, if the negative option is set (only makes sense pre-rm.contaminants function, or without rm.contaminants function)
+# *****testing phase
+```{r, eval=TRUE,echo=F}
+if (rep.rm.first==T){
+  message("Checking negatives")
+  negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+  all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm,negatives = negatives)
+  
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter")
+  
+  message("Checking negatives again")
+  negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+  
+  message("Making quantile plots to help deciding dxn_filter threshold")
+for(i in 1:length(negatives) ) {
+  df<-negatives[[i]]
+  if(length(colnames(df))>0){
+    title<-names(negatives)[i]
+    plot1<-qplot.taxatab(taxatab = df)
+    plot1<-plot1 + ggtitle(label = title)
+    print(plot1)
+  }
+}
+
+message("Making barplots for only those taxa detected in both negatives and real samples - to help decide taxon filter and rm.contaminants filter")
+plotlist1<-plot.negs.vs.real(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+
+for(i in 1:length(plotlist1)){
+  print(plotlist1[[i]])
+}
+
+message("Making barplots for only those taxa detected in both negatives and real samples - to help decide sample filter")
+plotlist2<-plot.negs.vs.taxa(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+
+for(i in 1:length(plotlist2)){
+  print(plotlist2[[i]])
+}
+  
+}
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
