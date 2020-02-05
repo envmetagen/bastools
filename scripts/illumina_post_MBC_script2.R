@@ -12,16 +12,21 @@ setwd(outDir)
 
 ####################################################
 #step 0 master sheet creation
-
-if("step0" %in% stepstotake){
-  
-  message("STEP0")
-  
-  experimentsheet<-google.make.exp.sheet.illumina(outDir,sheeturls,experiment_id) #in process, writes a sheet to file 
-  
-  message("STEP0 complete")
-  
-}
+# 
+# if("step0" %in% stepstotake){
+#   
+#   message("STEP0")
+#   
+#   experiemntsSheets<-list()
+#   for(i in 1:length(sheeturls)){
+#   experimentSheets[[i]]<-google.overlord(url = sheeturl[i],for.MBC = F,for.illscript2 = T,)
+#   }
+#   experimentsheet<-experiemntsSheets
+#   
+#   
+#   message("STEP0 complete")
+#   
+# }
 
 
 ####################################################
@@ -130,7 +135,7 @@ if("step12" %in% stepstotake){
   message("STEP12")
   
   files<-list.files(pattern = ".taxatable.tf.txt$")
-  splice.taxatables(files,mastersheet = paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt"))
+  splice.taxatables(files)
   
   message("STEP12 complete")
   

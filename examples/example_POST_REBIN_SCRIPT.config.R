@@ -2,7 +2,8 @@
 
 #usually will be for one primer/run, but if all settings can be applied globally then multiple tables can be provided
 
-#It is intended that this is an iterative process. Run, inspect, change settings, run again, repeat.
+#It is intended that this is an iterative process. Run the inital script (examplez/example_initial_trial_POST_REBIN_SCRIPT_congif.R)
+#with no filters, inspect, change settings, run again, repeat.
 
 #STEPS
 # Download and subset master sheet
@@ -26,10 +27,7 @@
 
 
 #Potential improvements
-#make steps optional
 #make re-ordering of steps an option
-#update single rep detection removal, see above
-#make table of taxa at each step (already a table made up to aggregating taxa. Any way of plotting this?)
 
 #############################################################################
 
@@ -40,16 +38,7 @@ bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools directory
 # setwd(bastoolsDir) 
 # googlesheets4::sheets_auth(email = email)
 
-###For HISEQ data
-#colnames do not match current for hiseq so do
-# test<-data.table::fread(taxatabs,data.table = F)
-# colnames(test)<-c("taxon",paste(colnames(test[,-1]),"-HSBAS",sep = ""))
-# write.table(test,file="/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt",append = F,row.names = F,quote = F,sep = "\t")
-
-
-#Once settings are changed, open bastools/CRAY_POST_REBIN_SCRIPT.Rmd
-#change line 14 to match the path to this config file. Run CRAY_POST_REBIN_SCRIPT.Rmd (via Run All or knit). Run all is better for seeing some objects being created 
-#along the way. Knit is better for viewing overall r.eport
+#Once settings are changed, open the Rmd script and change line 14 to match the path to this config file. Then Run All or knit
 
 #can be multiple
 taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt")
@@ -58,15 +47,14 @@ taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/reb
 ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
 
 #options for subsetting master sheet. This functions to sleect the samples you want to analyse.
-#Each item in list is a column heading in master sheet and 
-#each character within the item should be what you want to include (sample_type should always be lower case,
-#even if it is not so on google)
+#Each item in list is a column heading in master sheet and each character within the item should be what you want to include 
+#(sample_type should always be lower case, even if it is not so on google)
 subsetlist<-list(experiment_id="HSJUN19BAS",primer_set="LERAY-XT",MPLX="N",sample_type=c("Extraction_Negative","GIT_contents","PCR_negative"),
                  Replicate_Name=c("ZYMO"))
 
-#problem taxa - specific taxa in high reads that are not targets, usually human or predator. This is applied early on. This is a grep, so 
+#problem taxa - specific taxa in high reads that are not targets, usually human or predator. This is a grep, so 
 #form the taxa path accordingly and make sure you are only removing what you want (by checking output). 
-#use problemTaxa<-c("NothingToAdd") to not use this 
+#use problemTaxa<-c("NothingToAdd") to turn this off 
 problemTaxa<-c("Eukaryota;Arthropoda;Malacostraca;Decapoda;") 
 #Detection below taxonpc % of taxon read count will be removed (0.1=0.1%)
 taxonpc = 1

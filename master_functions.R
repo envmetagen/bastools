@@ -671,37 +671,7 @@ count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
   return(out)
 }
 
-google.read.master.url<-function(sheeturl,out=NULL,ws="Master_Samplesheet"){
-  url2<-stringr::str_split(sheeturl,"/d/")[[1]][2]
-  url2<-stringr::str_split(url2,"/")[[1]][1]
-  ss_info<-googlesheets4::sheets_get(ss = url2)
-  if(ws == "ENA_sample_data") {
-    ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
-    colnames(ss_data)<-ss_data[2,]
-    ss_data<-ss_data[3:length(ss_data$sample_alias),]
-    ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
-  } else{
-    if(ws == "ENA_library_data") { 
-      ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
-      ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
-    } else{
-      if(ws == "Library_data") { 
-        ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
-        ss_data<-as.data.frame(ss_data[!is.na(ss_data$run_alias),])
-      } else{
-        ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
-        ss_data<-as.data.frame(ss_data[!is.na(ss_data$Sample_Name),])
-      }
-    }
-  }
-  
-  
-  if(!is.null(out)){
-    write.table(ss_data,file = paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt"),quote = F,row.names = F,sep = "\t")
-    message(paste("file saved as",paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt")))
-  }
-  return(ss_data)
-}
+
 
 #' Interpret glm(er) with a binary response
 #' @title Interpret glm(er) with a binary response
@@ -1039,7 +1009,7 @@ otutab_bin_blast_merge_minion<-function(otutabfile,binfile,experimentsheetfile=N
 
 ######################################################################
 #SPLIT TAXATABLES
-splice.taxatables<-function(files,mastersheet){
+splice.taxatables<-function(files){
   
   message("Note:sample names must contain project name with dash")
   
@@ -1050,8 +1020,13 @@ splice.taxatables<-function(files,mastersheet){
   }
   
   #split by project
-  ssdf<-data.table::fread(file = mastersheet,sep = "\t")
-  projectnames<-suppressWarnings(unique(do.call(rbind,stringr::str_split(string = ssdf$ss_sample_id,pattern = "-"))[,1]))
+  projectnames<-list()
+  for(i in 1:length(taxatables)){
+    projectnames[[i]]<-(unique(do.call(rbind,stringr::str_split(string = taxatables[[i]][,-1],pattern = "-"))[,1]))
+  }
+  
+  projectnames<-unique(do.call(c,projectnames))
+  
   projectnames<-paste0(projectnames,"-")
   
   taxatablesplit<-list()
@@ -1125,14 +1100,12 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   long<-long[long$value>0,]
   
   if(!is.null(master_sheet)) {
-    long<-merge(x = long,y = master_sheet[,c(grep(grouping,colnames(master_sheet)),
-                                             grep(column,colnames(master_sheet)))],
-                by.x="variable",by.y=grouping)
+    long[,4]<-ms_ss[match(long$variable,ms_ss[,grouping]),column]
+    colnames(long)[4]<-column
     
     if(!is.null(facetcol)){
-      long<-merge(x = long,y = master_sheet[,c(grep(grouping,colnames(master_sheet)),
-                                               grep(facetcol,colnames(master_sheet)))],
-                  by.x="variable",by.y=grouping)
+      long[,4]<-ms_ss[match(long$variable,ms_ss[,grouping]),column]
+      colnames(long)[4]<-column
     }
     
     long$variable<-long[,grep(column,colnames(long))]
@@ -1667,41 +1640,6 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
 }
 
 
-#read mastersheets and make a processing sheet 
-google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
-  master<-list()
-  headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
-  for(i in 1:length(sheeturls)){
-    master[[i]]<-google.read.master.url(sheeturls[i])
-    
-    #remove duplicated columns
-    if(length(grep("\\.\\.\\.",colnames(master[[i]]),value = T))>0) {
-      message("Removing duplicated columns")
-      a<-grep("\\.\\.\\.",colnames(master[[i]]),value = T)
-      b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
-      d<-b[duplicated(b[,1]),]
-      e<-paste0(d[,1],"...",d[,2])
-      master[[i]]<-master[[i]][,!colnames(master[[i]]) %in% e]
-      colnames(master[[i]])<-gsub("\\.\\.\\..*","",colnames(master[[i]]))
-    }
-    
-    if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
-      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))
-      }
-    master[[i]]<-master[[i]][,headers]
-  }
-  
-  #make a processing sheet
-  experimentsheet<-as.data.frame(data.table::rbindlist(master))
-  experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
-  
-  #write file
-  write.table(experimentsheet,paste0(outDir,experiment_id,"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
-  message(paste("file saved as",paste0(outDir,experiment_id,"_experiment_sheet.txt")))
-  
-  return(experimentsheet)
-}
-
 
 #loop glm by taxon
 loop.glm<-function(taxatab, master_sheet,factor,grouping,summaries=F){
@@ -2157,74 +2095,6 @@ count.fams.in.fasta<-function(fasta,ncbiTaxDir){
   a<-aggregate(tempfasta$count,by=list(tempfasta$path),FUN=sum)
   colnames(a)<-c("Family","nseqs")
   return(a)
-}
-
-#read (and write) a processing sheet 
-google.make.exp.sheet.illumina<-function(outDir,sheeturls,experiment_id){
-  master<-list()
-  headers<-c("Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
-  for(i in 1:length(sheeturls)){
-    master[[i]]<-google.read.master.url(sheeturls[i])
-    
-    #remove duplicated columns
-    if(length(grep("\\.\\.\\.",colnames(master[[i]]),value = T))>0) {
-      message("Removing duplicated columns")
-      a<-grep("\\.\\.\\.",colnames(master[[i]]),value = T)
-      b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
-      d<-b[duplicated(b[,1]),]
-      e<-paste0(d[,1],"...",d[,2])
-      master[[i]]<-master[[i]][,!colnames(master[[i]]) %in% e]
-      colnames(master[[i]])<-gsub("\\.\\.\\..*","",colnames(master[[i]]))
-    }
-    
-    if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
-      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
-    
-    master[[i]]<-master[[i]][,headers]
-  }
-  
-  #make a processing sheet
-  experimentsheet<-as.data.frame(data.table::rbindlist(master))
-  experimentsheet<-experimentsheet[experimentsheet$experiment_id %in% experiment_id,]
-  
-  #write file
-  write.table(experimentsheet,paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
-  message(paste("file saved as",paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt")))
-  
-  return(experimentsheet)
-}
-
-#workaround for getting filenames of fastas to blast
-google.get.startingfastas<-function(outDir,sheeturls,experiment_id,usingobiuniq){
-  experimentsheet<-google.make.experiment.sheet(outDir,sheeturls,experiment_id) #in process, writes a sheet to file 
-  
-  #get barcodes used  
-  barcodes.used<-unique(experimentsheet$barcode_id)
-  barcodes.used <- barcodes.used[!is.na(barcodes.used)]
-  barcodes.used<-gsub("BC","barcode",barcodes.used)
-  
-  #size select, for each fragment, I checked and seqs appear to have primers plus one base (at each end)
-  experimentsheet$primer_combo<-paste0(experimentsheet$Primer_F,experimentsheet$Primer_R)
-  primer_combo<-unique(experimentsheet$primer_combo)
-  
-  #barcodes in each primer combo
-  primer_combo.bcs<-list()
-  for(i in 1:length(primer_combo)){
-    primer_combo.bcs[[i]]<-unique(experimentsheet[experimentsheet$primer_combo==primer_combo[i],"barcode_id"])
-    primer_combo.bcs[[i]]<-gsub("BC","barcode",primer_combo.bcs[[i]])
-    names(primer_combo.bcs[[i]])<-gsub(" ","",
-                                       experimentsheet[experimentsheet$primer_combo==primer_combo[i],"Primer_set"][1])
-  }
-  if(usingobiuniq){
-    for(i in 1:length(primer_combo.bcs)){
-      print(paste0(experiment_id,"_",names(primer_combo.bcs[[i]][1]),".uniq.filtlen.wlen.obi.fasta"))
-    }}
-  
-  if(usingobiuniq==F){
-    for(i in 1:length(primer_combo.bcs)){
-      print(paste0(experiment_id,"_",names(primer_combo.bcs[[i]][1]),".filtlen.wlen.obi.fasta"))
-    }}
-  
 }
 
 ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr,min_length=NULL,max_length=NULL){
@@ -3251,72 +3121,6 @@ run.ecotaxspecificity<-function(infasta,ecopcrdb){
   test<-system2("ecotaxspecificity",c("-d",ecopcrdb, "-e", 1, infasta),wait = T,stdout = T)
 }
 
-google.make.MBC.sheet<-function(tokenDir,email,url,out,subsetlist){
-  
-  a<-getwd()
-  setwd(tokenDir)
-  googlesheets4::sheets_auth(email)
-  setwd(a)
-  
-  master<-google.read.master.url(url)
-  
-  #change the common capitals issues
-  colnames(master)<-gsub("Index_combination","index_combination",colnames(master))
-  colnames(master)<-gsub("Min_length","min_length",colnames(master))
-  colnames(master)<-gsub("Max_length","max_length",colnames(master))
-  
-  #remove duplicated columns
-  if(length(grep("\\.\\.\\.",colnames(master),value = T))>0) {
-    message("Removing duplicated columns")
-    a<-grep("\\.\\.\\.",colnames(master),value = T)
-    b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
-    d<-b[duplicated(b[,1]),]
-    e<-paste0(d[,1],"...",d[,2])
-    master<-master[,!colnames(master) %in% e]
-    colnames(master)<-gsub("\\.\\.\\..*","",colnames(master))
-  }
-  
-  headers<-c("Sample_ID",	"Sample_Name",	"Sample_Plate",	"Sample_Well",	"I7_Index_ID",	"index",
-             "I5_Index_ID",	"index2",	"Sample_Project",	"Description",	"index_combination",	"MID_F",	
-             "MID_R",	"Primer_F",	"Primer_R",	"Filenames","min_length","max_length","ss_sample_id")
-  
-  for(i in 1:length(headers)){
-    if(!headers[i] %in% colnames(master)) stop (c(headers[i]," missing: "))
-  }
-  
-  message("Defaulting to putting all index_combinations to 'used'")
-  master$index_combination<-"used"
-  
-  #subset sheet
-  for(i in 1:length(subsetlist)){
-    if(!names(subsetlist)[i] %in% colnames(master)) stop (c(names(subsetlist)[i]," missing: "))
-  }
-  
-  ms_ss<-subset_mastersheet(master,subsetlist)
-  
-  #check subset
-  message("Check the numbers below make sense")
-  print(master_xtabs(ms_ss,columns=names(subsetlist)))
-  
-  #make ss_sample_id Sample_Name
-  ms_ss$Sample_Name<-ms_ss$ss_sample_id
-  
-  #use only the required headers (exclude ss_sample_id)
-  ms_ss<-ms_ss[,headers[-length(headers)]]
-  
-  #order correctly
-  ms_ss<-ms_ss[c(headers[-length(headers)])]
-  
-  ms_ss$extra_information<-""
-  
-  #write file
-  write.table(ms_ss,out,sep = "\t",quote = F,row.names = F)
-  message(paste0("file saved as ",paste0(getwd(),"/",out)))
-  
-  return(ms_ss)
-  
-}
-
 
 add.stats.ecopcroutput<-function(ecopcroutput,ncbiTaxDir,Ta=NULL,add.3pmm=F,Pf,Pr){
   
@@ -3376,26 +3180,6 @@ add.stats.ecopcroutput<-function(ecopcroutput,ncbiTaxDir,Ta=NULL,add.3pmm=F,Pf,P
   
   ecopcroutput<-ecopcroutput %>% select(AC,taxids,K,P,C,O,F,G,S,amplicon_length,everything())
   ecopcroutput<-ecopcroutput %>% select(-sequence,sequence)
-}
-
-remove.google.dups<-function(master_sheet){
-  if(length(grep("\\.\\.\\.",colnames(master_sheet),value = T))>0) {
-    message("Removing duplicated columns")
-    a<-grep("\\.\\.\\.",colnames(master_sheet),value = T)
-    b<-as.data.frame(do.call(rbind,stringr::str_split(a,"\\.\\.\\.")))
-    d<-b[duplicated(b[,1]),]
-    e<-paste0(d[,1],"...",d[,2])
-    master_sheet<-master_sheet[,!colnames(master_sheet) %in% e]
-    colnames(master_sheet)<-gsub("\\.\\.\\..*","",colnames(master_sheet))
-  }
-  master_sheet
-}
-
-#changing sample_type too to match functions
-fix.google.colnames<-function(master_sheet){
-  colnames(master_sheet)<-gsub("Sample_Type","sample_type",colnames(master_sheet))
-  colnames(master_sheet)<-gsub("Primer_set","primer_set",colnames(master_sheet))
-  master_sheet
 }
 
 #remove detection in less than 2 reps
@@ -3486,7 +3270,7 @@ plot.negs.vs.real<-function(taxatab,ms_ss,real){
   require(tidyverse)
   
   long<-reshape2::melt(taxatab)
-  long<-long[long$value>0,]
+  long<-long[long$value>0,,drop=F]
   
   long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
   long$taxon<-as.character(long$taxon)
@@ -3508,9 +3292,11 @@ plot.negs.vs.real<-function(taxatab,ms_ss,real){
       splitdf2[[i]]<-splitdf[[i]]
     }
   }
+  
   splitdf2<-splitdf2 %>% discard(is.null)
   
   splitdf3<-list()
+  
   ##dfs with real
   for(i in 1:length(splitdf2)){
     if(!TRUE %in% (real %in% splitdf2[[i]]$sample_type)) {
@@ -3519,25 +3305,255 @@ plot.negs.vs.real<-function(taxatab,ms_ss,real){
       splitdf3[[i]]<-splitdf2[[i]]
     }
   }
-  splitdf3<-splitdf3 %>% discard(is.null)
   
-  splitdf<-splitdf3
+  splitdf3<-splitdf3 %>% discard(is.null)
   
   plotlist<-list()
   
   for(i in 1:length(splitdf3)){
     df<-splitdf3[[i]]  
     
+    df$sum<-sum(df$value)
+    
+    df$pc<-round(df$value/df$sum*100,digits = 1)
+    
     plotlist[[i]]<-ggplot(data = df,aes(x=variable, y=value,color=sample_type)) + 
       geom_bar(fill="white", alpha=0.5, stat="identity") +
-      theme(axis.text.x=element_text(size=8,angle=45, hjust=1),axis.title.x = element_blank(),legend.title = element_blank()) +
+      theme(axis.text.x=element_text(size=8,angle=45, hjust=1),legend.title = element_blank()) +
+      geom_text(aes(label=pc), position=position_dodge(width=0.9), vjust=-0.25) +
       ggtitle(unique(df$taxon)) +
-      ylab("reads")
-    
+      ylab("reads") +
+      xlab("labels indicate % of reads in each sample of total reads for taxon")
   }
   
   plotlist
   
+}
+
+qplot.taxatab<-function(taxatab){
+  long<-reshape2::melt(taxatab)
+  long<-long[long$value>0,,drop=F]
+  long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
+  long$taxon<-as.character(long$taxon)
+  
+  a<-as.data.frame(as.factor(quantile(long$value, c(.1, .2, .3, .4, .5, .6, .7, .8,.9, .95, 1)))) 
+  colnames(a)<-"reads"
+  a$quantile<-rownames(a)
+  a$quantile <- factor(a$quantile, levels = a$quantile)
+  a$reads<-round(as.numeric(as.character(a$reads)),digits = 0)
+  
+  ggplot(data = a,aes(y=quantile,x=reads,label=reads)) + geom_point() +geom_text(hjust=1.1, vjust=0) 
+}
+
+
+#plot taxa occurring in both negatives and positives for each negative
+plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
+  
+  require(tidyverse)
+  
+  long<-reshape2::melt(taxatab)
+  long<-long[long$value>0,,drop=F]
+  
+  long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
+  long$taxon<-as.character(long$taxon)
+  
+  splitdf<-split(long, f = long$taxon)
+  
+  #only include dfs with at least one negs and real
+  
+  ##neg sample types
+  negtypes<-unique(ms_ss$sample_type)[!unique(ms_ss$sample_type) %in% real]
+  
+  splitdf2<-list()
+  
+  ##dfs with negs
+  for(i in 1:length(splitdf)){
+    if(!TRUE %in% (negtypes %in% splitdf[[i]]$sample_type)) {
+      splitdf2[[i]]<-NULL
+    } else {
+      splitdf2[[i]]<-splitdf[[i]]
+    }
+  }
+  
+  splitdf2<-splitdf2 %>% discard(is.null)
+  
+  splitdf3<-list()
+  
+  ##dfs with real
+  for(i in 1:length(splitdf2)){
+    if(!TRUE %in% (real %in% splitdf2[[i]]$sample_type)) {
+      splitdf3[[i]]<-NULL
+    } else {
+      splitdf3[[i]]<-splitdf2[[i]]
+    }
+  }
+  
+  splitdf3<-splitdf3 %>% discard(is.null)
+  
+  #get negatives that had a taxon in themselves and real samples
+  splitdf4<-list()
+  for(i in 1:length(splitdf3)){
+    splitdf4[[i]]<-splitdf3[[i]][splitdf3[[i]]$sample_type %in% neg.types,c("variable","sample_type")]
+  }
+  final.negs<-unique(do.call(rbind,splitdf4))
+  
+  #get problem taxa (for %s later)
+  splitdf3taxa<-list()
+  for(i in 1:length(splitdf3)){
+    splitdf3taxa[[i]]<-splitdf3[[i]][1,1]
+  }
+  
+  final.taxa<-do.call(rbind,splitdf3taxa)
+  
+  #make data frame of problem samples
+  
+  finaltable<-taxatab[,c("taxon",as.character(final.negs[,"variable"]))]
+  finaltable<-rm.0readtaxSam(finaltable)
+  
+  long<-reshape2::melt(finaltable)
+  long<-long[long$value>0,,drop=F]
+  
+  long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
+  long$taxon<-as.character(long$taxon)
+  
+  splitdf<-split(long, f = long$variable)
+  
+  plotlist<-list()
+  for(i in 1:length(splitdf)){
+    df<-splitdf[[i]]
+    df$sum<-sum(df$value)
+    df$pc<-round(df$value/df$sum*100,digits = 1)
+    
+    plotlist[[i]]<-ggplot(data = df,aes(x=taxon, y=value,color=sample_type)) + 
+      geom_bar(fill="white", alpha=0.5, stat="identity") +
+      theme(axis.text.x=element_text(size=8,angle=45, hjust=1),legend.title = element_blank()) +
+      geom_text(aes(label=pc), position=position_dodge(width=0.9), vjust=-0.25) +
+      ggtitle(unique(df$variable)) +
+      ylab("reads") +
+      xlab("labels indicate % of reads in each taxon of total reads for sample")
+  }
+  
+  plotlist
+}
+
+google.overlord<-function(url,for.MBC=F,for.illscript2=T,for.post.illscript2=F){
+  
+  if(sum(for.MBC,for.illscript2,for.post.illscript2)>1) stop("Only one output type is allowed to be TRUE")
+  
+  # Download master sheet
+  a<-getwd()
+  setwd(tokenDir)
+  googlesheets4::sheets_auth(email)
+  setwd(a)
+  
+  master<-google.read.master.url(url)
+  
+  #fix names (lowercase mainly)
+  master<-fix.google.colnames(master)
+  
+  #remove downloaded dups
+  if(length(grep("\\.\\.\\.",colnames(master),value = T))>0) {
+    master<-remove.google.dups(master)
+  }
+  
+  
+  headers<-c("Sample_ID",	"Sample_Name",	"Sample_Plate",	"Sample_Well",	"I7_Index_ID",	"index",
+             "I5_Index_ID",	"index2",	"Sample_Project",	"Description",	"index_combination","Primer_F",	"Primer_R",	"Filenames",
+             "min_length","max_length","ss_sample_id",
+             
+             "Primer_set","experiment_id") #only required by illumina script
+  
+  #format for MBC option
+  if(for.MBC==T){
+    headers<-headers[1:(length(headers)-2)]
+    
+    if(FALSE %in% (headers %in% colnames(master))) stop ("Missing: ", headers[!headers %in% colnames(master)])
+    
+    message("Defaulting to putting all index_combinations to 'used'")
+    master$index_combination<-"used"
+    
+    message("Defaulting to no MIDs used")
+    master$MID_F<-""
+    master$MID_R<-""
+    
+    #make ss_sample_id Sample_Name
+    master$Sample_Name<-master$ss_sample_id
+    
+    #use only the required headers (exclude ss_sample_id)
+    master<-master[,headers[-length(headers)]]
+    
+    #order correctly
+    master<-master[c(headers[-length(headers)])]
+    
+    master$extra_information<-""
+  }
+  
+  if(for.illscript2==T){
+    
+    headers<-c("primer_set","Primer_F","Primer_R","min_length","max_length","ss_sample_id","experiment_id")
+    
+    if(FALSE %in% (headers %in% colnames(master))) stop ("Missing: ", headers[!headers %in% colnames(master)])
+    
+    message("Checks only include the essential headers, please check to see all desired headers exist")
+  }
+  
+  return(master)
+  
+}
+
+#changing sample_type too to match functions
+fix.google.colnames<-function(master_sheet){
+  colnames(master_sheet)<-gsub("Sample_Type","sample_type",colnames(master_sheet))
+  colnames(master_sheet)<-gsub("Primer_set","primer_set",colnames(master_sheet))
+  colnames(master_sheet)<-gsub("Index_combination","index_combination",colnames(master_sheet))
+  colnames(master_sheet)<-gsub("Min_length","min_length",colnames(master_sheet))
+  colnames(master_sheet)<-gsub("Max_length","max_length",colnames(master_sheet))
+  master_sheet
+}
+
+google.read.master.url<-function(sheeturl,out=NULL,ws="Master_Samplesheet"){
+  url2<-stringr::str_split(sheeturl,"/d/")[[1]][2]
+  url2<-stringr::str_split(url2,"/")[[1]][1]
+  ss_info<-googlesheets4::sheets_get(ss = url2)
+  if(ws == "ENA_sample_data") {
+    ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+    colnames(ss_data)<-ss_data[2,]
+    ss_data<-ss_data[3:length(ss_data$sample_alias),]
+    ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
+  } else{
+    if(ws == "ENA_library_data") { 
+      ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+      ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
+    } else{
+      if(ws == "Library_data") { 
+        ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+        ss_data<-as.data.frame(ss_data[!is.na(ss_data$run_alias),])
+      } else{
+        ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
+        ss_data<-as.data.frame(ss_data[!is.na(ss_data$Sample_Name),])
+      }
+    }
+  }
+  
+  
+  if(!is.null(out)){
+    write.table(ss_data,file = paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt"),quote = F,row.names = F,sep = "\t")
+    message(paste("file saved as",paste0(gsub(" ","_",ss_info$name),"_",gsub(" ","_",ws),".txt")))
+  }
+  return(ss_data)
+}
+
+remove.google.dups<-function(master_sheet){
+  if(length(grep("\\.\\.\\.",colnames(master_sheet),value = T))>0) {
+    message("Removing duplicated columns")
+    a<-grep("\\.\\.\\.",colnames(master_sheet),value = T)
+    b<-as.data.frame(do.call(rbind,stringr::str_split(a,"\\.\\.\\.")))
+    d<-b[duplicated(b[,1]),,drop=F]
+    e<-paste0(d[,1],"...",d[,2])
+    master_sheet<-master_sheet[,!colnames(master_sheet) %in% e]
+    colnames(master_sheet)<-gsub("\\.\\.\\..*","",colnames(master_sheet))
+  }
+  master_sheet
 }
 
 

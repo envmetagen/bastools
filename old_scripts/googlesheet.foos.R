@@ -153,7 +153,72 @@ master_xtabs<-function(master_sheet,columns){
 }  
 
 
+#read mastersheets and make a processing sheet 
+google.make.experiment.sheet<-function(outDir,sheeturls,experiment_id){
+  master<-list()
+  headers<-c("barcode_id","Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
+  
+  for(i in 1:length(sheeturls)){
+    master[[i]]<-google.read.master.url(sheeturls[i])
+    
+    #remove duplicated columns
+    if(length(grep("\\.\\.\\.",colnames(master[[i]]),value = T))>0) {
+      remove.google.dups(master_sheet = master[[i]])
+    }
+    
+    if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
+      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))
+    }
+    master[[i]]<-master[[i]][,headers]
+  }
+  
+  #make a processing sheet
+  experimentsheet<-as.data.frame(data.table::rbindlist(master))
+  experimentsheet<-experimentsheet[experimentsheet$experiment_id==experiment_id,]
+  
+  #write file
+  write.table(experimentsheet,paste0(outDir,experiment_id,"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
+  message(paste("file saved as",paste0(outDir,experiment_id,"_experiment_sheet.txt")))
+  
+  return(experimentsheet)
+}
 
+
+
+#read (and write) a processing sheet 
+google.make.exp.sheet.illumina<-function(outDir,sheeturls,experiment_id){
+  master<-list()
+  headers<-c("Primer_set","Primer_F","Primer_R","Min_length","Max_length","ss_sample_id","experiment_id")
+  for(i in 1:length(sheeturls)){
+    master[[i]]<-google.read.master.url(sheeturls[i])
+    
+    #remove duplicated columns
+    if(length(grep("\\.\\.\\.",colnames(master[[i]]),value = T))>0) {
+      message("Removing duplicated columns")
+      a<-grep("\\.\\.\\.",colnames(master[[i]]),value = T)
+      b<-do.call(rbind,stringr::str_split(a,"\\.\\.\\."))
+      d<-b[duplicated(b[,1]),,drop=F]
+      e<-paste0(d[,1],"...",d[,2])
+      master[[i]]<-master[[i]][,!colnames(master[[i]]) %in% e]
+      colnames(master[[i]])<-gsub("\\.\\.\\..*","",colnames(master[[i]]))
+    }
+    
+    if(length(headers)!=sum(headers %in% colnames(master[[i]]))){
+      stop (c("one of the following headers missing: ", paste(headers,collapse = " ")))}
+    
+    master[[i]]<-master[[i]][,headers]
+  }
+  
+  #make a processing sheet
+  experimentsheet<-as.data.frame(data.table::rbindlist(master))
+  experimentsheet<-experimentsheet[experimentsheet$experiment_id %in% experiment_id,]
+  
+  #write file
+  write.table(experimentsheet,paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt"),sep = "\t",quote = F,row.names = F)
+  message(paste("file saved as",paste0(outDir,paste(experiment_id,collapse = "_"),"_experiment_sheet.txt")))
+  
+  return(experimentsheet)
+}
 
   
 

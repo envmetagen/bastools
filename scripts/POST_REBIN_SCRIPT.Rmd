@@ -4,14 +4,11 @@ html_notebook: default
 subtitle: ''
 classoption: portrait
 output: html_document
-
 ---
 
-# CRAY COI
-
-## read settings
+## read and print settings
 ```{r, eval=TRUE,echo=F}
-source("/home/tutorial/TOOLS/bastools/project_configs/CRAY_COI_SWABS_POST_REBIN_SCRIPT.config.R")
+source("/home/tutorial/TOOLS/bastools/project_configs/CRAY_trnL_FINAL_SWABS_POST_REBIN_SCRIPT.config.R")
 
 message("settings:
         ")
@@ -52,14 +49,15 @@ all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
 #make new taxa table based on subsetted master sheet
 all.taxatabs.ss<-cbind(taxon=all.taxatabs$taxon,all.taxatabs[colnames(all.taxatabs) %in% ms_ss$ss_sample_id])
-```
 
-## remove samples/taxa with 0 reads
-```{r, eval=TRUE,echo=F}
+#remove 0 reads
 all.taxatabs.ss<-rm.0readtaxSam(all.taxatabs.ss)
 
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = "start")
+
+#rank stats
+dxns.by.rank(all.taxatabs.ss)
 ```
 
 ## remove problem taxa - usually human, predator, NAs and no_hits
@@ -108,15 +106,46 @@ stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
 ```
 
+## remove detection in less than 2 reps (only done here if rep.rm.first is TRUE)
+### PCR negatives are exempt, if the negative option is set (only makes sense pre-rm.contaminants function, or without rm.contaminants function)
+# *****testing phase
+```{r, eval=TRUE,echo=F}
+if (rep.rm.first==T){
+all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm)
+
+stepcounter<-stepcounter+1
+all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter")
+}
+```
+
 ## inspect negatives, print plots for only those taxa detected in both negatives and real samples
 ```{r, eval=TRUE,echo=F}
 message("Checking negs")
 negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
 
-plotlist<-plot.negs.vs.real(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+message("Making quantile plots to help deciding dxn_filter threshold")
+for(i in 1:length(negatives) ) {
+  df<-negatives[[i]]
+  if(length(colnames(df))>0){
+    title<-names(negatives)[i]
+    plot1<-qplot.taxatab(taxatab = df)
+    plot1<-plot1 + ggtitle(label = title)
+    print(plot1)
+  }
+}
 
-for(i in 1:length(plotlist)){
-  print(plotlist[[i]])
+message("Making barplots for only those taxa detected in both negatives and real samples - to help decide taxon filter and rm.contaminants filter")
+plotlist1<-plot.negs.vs.real(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+
+for(i in 1:length(plotlist1)){
+  print(plotlist1[[i]])
+}
+
+message("Making barplots for only those taxa detected in both negatives and real samples - to help decide sample filter")
+plotlist2<-plot.negs.vs.taxa(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+
+for(i in 1:length(plotlist2)){
+  print(plotlist2[[i]])
 }
 ```
 
@@ -210,7 +239,11 @@ all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "unwanted"
 
 ## summary ---this is pre-grouping - please inspect, add groupings to config file as necessary and look at post-grouping table. Can more grouping be done, is anything wrong?
 ```{r, eval=TRUE,echo=F}
+if(is.null(taxa.to.group)){
+  message("Skipping grouping of taxa")
+} else {
 DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T))
+}
 ```
 
 ## group taxa, where possible
@@ -230,7 +263,11 @@ if(is.null(taxa.to.group)){
 
 ## summary--post-grouping
 ```{r, eval=TRUE,echo=F}
+if(is.null(taxa.to.group)){
+  message("Skipping grouping of taxa")
+} else {
 DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T))
+}
 ```
 
 ## some barplots
