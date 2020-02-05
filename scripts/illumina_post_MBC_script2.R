@@ -5,29 +5,9 @@ print(ls.str())
 library(processx)
 library(dplyr)
 setwd(bastoolsDir)
-#googlesheets4::sheets_auth(email = email)
 source("master_functions.R")
 source("bin.blast.R")
 setwd(outDir)
-
-####################################################
-#step 0 master sheet creation
-# 
-# if("step0" %in% stepstotake){
-#   
-#   message("STEP0")
-#   
-#   experiemntsSheets<-list()
-#   for(i in 1:length(sheeturls)){
-#   experimentSheets[[i]]<-google.overlord(url = sheeturl[i],for.MBC = F,for.illscript2 = T,)
-#   }
-#   experimentsheet<-experiemntsSheets
-#   
-#   
-#   message("STEP0 complete")
-#   
-# }
-
 
 ####################################################
 #step 7 blast

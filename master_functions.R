@@ -1022,7 +1022,7 @@ splice.taxatables<-function(files){
   #split by project
   projectnames<-list()
   for(i in 1:length(taxatables)){
-    projectnames[[i]]<-(unique(do.call(rbind,stringr::str_split(string = taxatables[[i]][,-1],pattern = "-"))[,1]))
+    projectnames[[i]]<-(unique(do.call(rbind,stringr::str_split(string = colnames(taxatables[[i]][,-1]),pattern = "-"))[,1]))
   }
   
   projectnames<-unique(do.call(c,projectnames))
