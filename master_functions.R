@@ -199,70 +199,105 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T,printnegs=T){
 }
 
 #remove contaminant taxa from samples, based on occurrences in negatives
-remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,printcontaminations=T,remove.entire.dataset=F){
+remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,printcontaminations=T,remove.entire.dataset=T,rm.only.less.than=T){
   
-  totalstart<-sum(taxatab[,-1,drop=F])
+  if(rm.only.less.than==T)  message("Only removing detections which had a read count less than the negtive")
   
-  negtaxaList<-list() #for use if removing neg taxa from entire dataset
-  
-  for(j in 1:length(negatives)){
+    totalstart<-sum(taxatab[,-1,drop=F])
     
-    negdf<-negatives[[j]]
+    negtaxaList<-list() #for use if removing neg taxa from entire dataset
     
-    negative_type<-names(negatives)[j]
-    
-    if(length(negdf)!=0){
+    for(j in 1:length(negatives)){
       
-      for(i in 2:length(colnames(negdf))){
-        neg<-colnames(negdf)[i]
-        negtaxa<-negdf[,c("taxon",neg)]
-        sumnegtaxa<-sum(negtaxa[,-1,drop=F])
-        negtaxa<-as.character(negtaxa[rowSums(negtaxa[,-1,drop=F])>0,"taxon"])
+      negdf<-negatives[[j]]
+      
+      negative_type<-names(negatives)[j]
+    
+      if(length(negdf)!=0){
+    
+        for(i in 2:length(colnames(negdf))){
+          neg<-colnames(negdf)[i]
+          negtaxa<-negdf[,c("taxon",neg)]
+          sumnegtaxa<-sum(negtaxa[,-1,drop=F])
+          negtaxa<-as.character(negtaxa[rowSums(negtaxa[,-1,drop=F])>0,"taxon"])
+          
+          negtaxaList[[i]]<-negtaxa
+          
+          #get group of a sample
+          group.id<-master_sheet[grep(neg,master_sheet[,"ss_sample_id"]),group.codes[j]]
+          #get other samples in group
+          group.samples<-master_sheet[master_sheet[,group.codes[j]]==group.id,"ss_sample_id"]
+          group.samples<-group.samples[!is.na(group.samples)]
+          
+          message(paste("Based on",negative_type,neg, ", Removing detections of"))
+          print(negtaxa)
+          message("if it occurred in any samples belonging to ",group.codes[j],":",group.id)
+          
+          sumb4<-sum(taxatab[,-1])
+          dxnsbefore<-sum(taxatab[,-1,drop=F]>0)
+          
+          #put taxon counts to 0
+          contaminations<-cbind(taxon=taxatab$taxon[taxatab$taxon %in% negtaxa],taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples])
+          contaminations<-cbind(taxon=contaminations[,1],contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
+          
+            if(rm.only.less.than==T){
         
-        negtaxaList[[i]]<-negtaxa
+              negX<-taxatab[taxatab$taxon %in% negtaxa,c("taxon",neg)][,-1]
         
-        #get group of a sample
-        group.id<-master_sheet[grep(neg,master_sheet[,"ss_sample_id"]),group.codes[j]]
-        #get other samples in group
-        group.samples<-master_sheet[master_sheet[,group.codes[j]]==group.id,"ss_sample_id"]
-        group.samples<-group.samples[!is.na(group.samples)]
+                for(h in 1:length(negtaxa)){
+                  taxatab2<-taxatab[taxatab$taxon==negtaxa[h],colnames(taxatab) %in% group.samples]
+                  taxatab2[taxatab2<(negX[h]+1)]<-0
+                  taxatab3<-cbind(taxatab[taxatab$taxon==negtaxa[h],]$taxon,taxatab2)
+                  taxatab[taxatab$taxon==negtaxa[h],]<-taxatab3[1,]
+                }
+            } else { taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples]<-0 }
         
+         sumafter<-sum(taxatab[,-1])
+         dxnsafter<-sum(taxatab[,-1,drop=F]>0)
         
-        message(paste("Based on",negative_type,neg, ", Removing detections of"))
-        print(negtaxa)
-        message("if it occurred in any samples belonging to ",group.codes[j],":",group.id)
-        
-        sumb4<-sum(taxatab[,-1])
-        
-        #put taxon counts to 0
-        contaminations<-cbind(taxon=taxatab$taxon[taxatab$taxon %in% negtaxa],taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples])
-        contaminations<-cbind(taxon=contaminations[,1],contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
-        taxatab[taxatab$taxon %in% negtaxa,colnames(taxatab) %in% group.samples]<-0
-        
-        sumafter<-sum(taxatab[,-1])
-        
-        message(paste(sumb4-sumafter,"reads removed from",sum(contaminations[,-1,drop=F]>0),"detection(s) in",
+         message(paste(sumb4-sumafter,"reads removed from",dxnsbefore-dxnsafter,"detection(s) in",
                       length(colnames(contaminations[,-1,drop=F])),"sample(s), of which",sumnegtaxa,"were in the negative. See table below for details:"))
-        if(printcontaminations==T) {
+        
+         if(printcontaminations==T) {
           contaminations2<-as.data.frame(t(contaminations))
           colnames(contaminations2)<-contaminations$taxon
           contaminations2<-contaminations2[-1,]
           print(contaminations2,right = F,row.names=T,quote = F)
-          }else(message("Not printing contamination table"))
-        }
+         }else(message("Not printing contamination table"))
+         }
     }
-  }
+    }
+    
   taxatab<-rm.0readtaxSam(taxatab)
   totalend<-sum(taxatab[,-1,drop=F])
   message(paste("***********A total of", totalstart-totalend, "reads removed"))
   
   if(remove.entire.dataset==T) {
-    message("****Furthermore, removing the following contaminant taxa from entire dataset")
-    all.neg.taxa<-do.call(c,negtaxaList)
-    print(all.neg.taxa)
-    taxatab<-taxatab[!taxatab$taxon %in% all.neg.taxa,]
-    taxatab<-rm.0readtaxSam(taxatab)
-    message(paste("***********A further ", totalend-sum(taxatab[,-1,drop=F]), "reads removed")) 
+    
+    if(rm.only.less.than==T){
+      
+      message("****Furthermore, removing the following contaminant taxa from entire dataset")
+      all.neg.taxa<-do.call(c,negtaxaList)
+      print(all.neg.taxa)
+      
+      for(h in 1:length(negtaxa)){
+        taxatab2<-taxatab[taxatab$taxon==negtaxa[h],-1]
+        taxatab2[taxatab2<(negX[h]+1)]<-0
+        taxatab3<-cbind(taxatab[taxatab$taxon==negtaxa[h],]$taxon,taxatab2)
+        taxatab[taxatab$taxon==negtaxa[h],]<-taxatab3[1,]
+      }
+      
+      taxatab<-rm.0readtaxSam(taxatab)
+      message(paste("***********A further ", totalend-sum(taxatab[,-1,drop=F]), "reads removed")) 
+      
+    } else {
+      message("****Furthermore, removing the following contaminant taxa from entire dataset")
+      all.neg.taxa<-do.call(c,negtaxaList)
+      print(all.neg.taxa)
+      taxatab<-taxatab[!taxatab$taxon %in% all.neg.taxa,]
+      taxatab<-rm.0readtaxSam(taxatab)
+      message(paste("***********A further ", totalend-sum(taxatab[,-1,drop=F]), "reads removed")) 
+    }
   }
   
   return(taxatab)
@@ -1792,6 +1827,8 @@ sumreps<-function(taxatab,ms_ss,grouping="Sample_Name",discard=T){
     if(!is.null(df3)) colnames(df3)<-unique(mapping)[i]
     clean[[i]]<-df3
   }
+  
+  clean<-clean %>% discard(is.null)
   
   out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))
   
@@ -3552,5 +3589,40 @@ remove.google.dups<-function(master_sheet){
   }
   master_sheet
 }
+
+## inspect negatives, print plots for only those taxa detected in both negatives and real samples
+full.negative.inspection<-function(taxatab,ms_ss,real){
+  
+  message("Checking negs")
+  negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+  
+  message("Making quantile plots to help deciding dxn_filter threshold")
+  for(i in 1:length(negatives) ) {
+    df<-negatives[[i]]
+    if(length(colnames(df))>0){
+      title<-names(negatives)[i]
+      plot1<-qplot.taxatab(taxatab = df)
+      plot1<-plot1 + ggtitle(label = title)
+      print(plot1)
+    }
+  }
+  
+  message("Making barplots for only those taxa detected in both negatives and real samples - to help decide taxon filter and rm.contaminants filter")
+  plotlist1<-plot.negs.vs.real(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+  
+  for(i in 1:length(plotlist1)){
+    print(plotlist1[[i]])
+  }
+  
+  message("Making barplots for only those taxa detected in both negatives and real samples - to help decide sample filter")
+  plotlist2<-plot.negs.vs.taxa(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+  
+  for(i in 1:length(plotlist2)){
+    print(plotlist2[[i]])
+  }
+}
+
+
+
 
 

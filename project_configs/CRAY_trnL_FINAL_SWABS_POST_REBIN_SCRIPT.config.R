@@ -47,8 +47,7 @@ bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools directory
 taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_trnl.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt")
 
 #datasheet url
-ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
-
+url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
 email="basegeter@gmail.com"
 
 #options for subsetting master sheet. This functions to sleect the samples you want to analyse.
@@ -63,9 +62,9 @@ problemTaxa<-c("NothingToAdd")
 #Detection below taxonpc % of taxon read count will be removed (0.1=0.1%)
 taxonpc = 0
 #Detection below samplepc % of sample read count will be removed (0.1=0.1%)
-samplepc=0
+samplepc=0.5
 #the absolute value for removing detections in pcr reps (maybe not necessary here, wait til after sumreps...?, as we consider anything in 2 reps to be true)
-filter_dxn = 200
+filter_dxn = 20
 #the absolute value for removing detections after summing replicate level (not sure of level, could leave very low, as we consider anything in 2 reps to be true)
 filter_dxn2 = 0
 #sample_type used to descirbe your real samples (not negatives)
@@ -78,8 +77,14 @@ neg.groups=c("Sample_Plate","extraction_batch")
 use.contamination.filter=T
 #remove contaminants, not just from batches/groups, but from the entire data set? Be careful setting this to FALSE, could bias results.
 remove.entire.dataset=T
+#only remove detections of a taxon if they are less than the numbe of reads for that taxon in the negative
+rm.only.less.than=T
 #grouping for removing detections in <1 rep
 rep.rm<-"biomaterial"
+#conduct repfilter prior to rm.contaminants? 
+rep.rm.first<-F
+#conduct repfilter after rm.contaminants? 
+rep.rm.second<-F
 #sum reps by
 sumrepsby<-"biomaterial"
 #collapse all taxa at this level. Also used for subsequently keeping only taxa that attain this level. Put xLevel=NULL to skip this
@@ -93,3 +98,6 @@ unwantedTaxa<-c("NothingToAdd")
 taxa.to.group<-NULL
 #variables to use as groups for plots
 plotting.vars<-c("biomaterial","bleach_step")
+
+#hide legend (to avoid cowplot errors set to false)
+hidelegend=F

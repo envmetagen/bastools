@@ -47,7 +47,8 @@ bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools directory
 taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_trnl.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt")
 
 #datasheet url
-ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
+url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
+email="basegeter@gmail.com"
 
 #options for subsetting master sheet. This functions to sleect the samples you want to analyse.
 #Each item in list is a column heading in master sheet and each character within the item should be what you want to include 
@@ -78,6 +79,8 @@ use.contamination.filter=T
 remove.entire.dataset=T
 #grouping for removing detections in <1 rep
 rep.rm<-"biomaterial"
+#conduct grouping prior to rm.contaminants? ***not yet implemented
+rep.rm.first<-T
 #sum reps by
 sumrepsby<-"biomaterial"
 #collapse all taxa at this level. Also used for subsequently keeping only taxa that attain this level. Put xLevel=NULL to skip this
@@ -90,4 +93,4 @@ unwantedTaxa<-c("NothingToAdd")
 #Ensure the order is correct. put taxa.to.group=NULL to skip this
 taxa.to.group<-NULL
 #variables to use as groups for plots
-plotting.vars<-c("biomaterial")
+plotting.vars<-c("biomaterial","bleach_step")
