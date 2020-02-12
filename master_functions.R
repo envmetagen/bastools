@@ -1381,21 +1381,6 @@ ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length=NULL,out,buf
   #remove quotes too
   f<-process$new(command = "sed", args = c("-i","s/'//g", out), echo_cmd = T)
   f$wait()
-  
-  b<-data.table::fread(file = out,data.table = F,
-                       sep = "|",
-                       col.names = c("AC","seq_length","taxid","rank","species","species_name","genus",
-                                     "genus_name","family","family_name","superkingdom","superkingdom_name",
-                                     "strand","forward_match","forward_mismatch","forward_tm","reverse_match",
-                                     "reverse_mismatch","reverse_tm","amplicon_length","sequence","definition"))
-  #remove any apparently erroneous entries
-  #those that have no amplicon length or forward_mismatch or reverse_mismatch
-  b<-b[!is.na(b$amplicon_length),]
-  b<-b[!is.na(b$forward_mismatch),]
-  b<-b[!is.na(b$reverse_mismatch),]
-  
-  if(length(b$AC)<1) stop("No hits",call. = F)
-  write.table(b,file = out,quote = F,row.names = F,sep = "\t")
 }
 
 #modelling taxtabs
@@ -2017,11 +2002,19 @@ build.refs<-function(input.ecopcr.results,output){
 map2targets<-function(queries.to.map,refs,out){
   #use blast to align seqs to ref
   message("mapping sequences to reference")
+  
+  
+  ### should use qcov setting - No, I asm interested in 'scov'
+  ### should use blastn - optionally I think, recommended for shorter fragments (<100?)
+  ### should use bowtie?
+  ### max targets 3 because files get huge otherwise
+  
   system2(command = "makeblastdb", args=c("-in", refs, "-dbtype", "nucl", "-parse_seqids","-out","refdb"),wait=T)
   
   system2(command = "blastn", args=c("-query", queries.to.map, "-task", "megablast","-db","refdb",
                                      "-outfmt",'"7 qseqid qlen qstart qend slen sstart send length pident qcovs sstrand"',
                                      "-num_threads", "16","-max_target_seqs", "3"),stdout=out,wait = T)
+  
 }
 
 
@@ -2134,67 +2127,80 @@ count.fams.in.fasta<-function(fasta,ncbiTaxDir){
   return(a)
 }
 
-ecopcr2refs2<-function(ecopcrfile,outfile,bufferecopcr,min_length=NULL,max_length=NULL){
+ecopcr2refs<-function(ecopcrfile,outfile,bufferecopcr,Pf,Pr){
   message("Reminder: assumes -D option was used for ecopcr")
+  message("Assumes clean.ecopcrouput was used first")
   #read results
-  ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t",data.table = F)
-  #remove hits outside desired lengths
-  if(!is.null(min_length)) {ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]}
-  if(!is.null(max_length)) {ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]}
-  #remove duplicates (i.e. pick one entry per AC, based on lowest mismatches)
-  ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
-  ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
-  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
+  a<-data.table::fread(ecopcrfile,sep = "\t",data.table = F)
   
-  #the edges removal in next step takes a long time, choosing one seq per genus 
-  ecopcroutput <- ecopcroutput[order(ecopcroutput$family_name,ecopcroutput$amplicon_length,decreasing = T),]
-  ecopcroutput <-ecopcroutput[!duplicated(ecopcroutput[,c("family")]),] 
+  message(nrow(a)," total hits")
   
-  #remove seqs with edges less than buffer
-  a<-strsplit(ecopcroutput$sequence,split = "")
-  ecopcroutput$leftbuffer<-"0"
-  ecopcroutput$rightbuffer<-"0"
-  
-  d<-list()
-  #pb = txtProgressBar(min = 0, max = length(ecopcroutput$leftbuffer), initial = 0,style = 3) 
-  for(i in 1:length(ecopcroutput$leftbuffer)){
-    ecopcroutput$leftbuffer[i]<-match(FALSE,a[[i]] %in% letters)
-    d[[i]]<-a[[i]][ecopcroutput$leftbuffer[i]:length(a[[i]])]
-    ecopcroutput$rightbuffer[i]<-length(d[[i]])-as.numeric(match(TRUE,d[[i]] %in% letters))
-    #setTxtProgressBar(pb,i)
-  }
-  #remove seqs with left buffer less than buffer
-  ecopcroutput<-ecopcroutput[!ecopcroutput$leftbuffer<bufferecopcr,]
+  #remove seqs with edges less than buffer - why necessary?, because ecopcr with buffer includes hits where buffer extended past length of seq
+  message("Removing sequences with edges less than buffer")
+  #location of first base of insert
+  a$start<-stringr::str_locate(a$sequence,"[A-Z]")[1] #all left edges are 25, which makes sense, this step not needed
+  a$sequence2<-substr(x = a$sequence, start = a$start, stop = nchar(a$sequence))
+  #location of last base of insert
+  a$end<-stringr::str_locate(a$sequence2,"[a-z]")[,1]-1
+  ##a$sequence3<-substr(x = a$sequence2, start = 1, stop = a$end)
+  #length of left edge
+  a$leftedge<-a$start-1
+  #length of right edge
+  a$rightedge<-nchar(a$sequence2)-a$end
+  #remove seqs with left buffer less than buffer + primer  #####maybe should be done before selecting genus
+  before<-nrow(a)
+  a<-a[!a$leftedge<(bufferecopcr+nchar(Pf)),]
+  after<-nrow(a)
+  message(before-after," sequences removed for failing left buffer")
   #remove seqs with right buffer less than buffer
-  ecopcroutput<-ecopcroutput[!ecopcroutput$rightbuffer<bufferecopcr,]
+  a<-a[!a$rightedge<(bufferecopcr+nchar(Pr)),]
+  after2<-nrow(a)
+  message(after-after2," sequences removed for failing right buffer")
+  
+  #run a check on if there were any buffer that were too long...shouldnt be
+  if(length(table(a$rightedge))!=1) message("Error:  Some left buffers are too long...check reason")
+  if(length(table(a$leftedge))!=1)  message("Error: Some left buffers are too long...check reason")
+  
+  #choosing one seq per genus
+  message("Choosing one sequence per genus")
+  colnames(a)<-gsub("taxid","taxids",colnames(a))
+  a$path<-paste(a$superkingdom_name,a$family_name,a$genus_name,sep = ";")
+  a <- a[order(a$path,a$amplicon_length,decreasing = T),]
+  a <-a[!duplicated(a[,c("genus_name")]),] 
+  
+  message(nrow(a)," selected")
   
   #output as fasta
-  colnames(ecopcroutput)<-gsub("sequence", "seq.text",colnames(ecopcroutput))
-  ecopcroutput$seq.text<-toupper(ecopcroutput$seq.text)
-  ecopcroutput$seq.name<-paste0(ecopcroutput$AC," taxid=",ecopcroutput$taxid,"; ",ecopcroutput$definition)
-  phylotools::dat2fasta(ecopcroutput[,c("seq.name","seq.text")],outfile)
+  colnames(a)<-gsub("sequence", "seq.text",colnames(a))
+  #refs should comprise buffer,binding site, insert, binding site, buffer        
+          
+  a$seq.text<-toupper(a$seq.text)
+  a$seq.name<-paste0(a$AC," taxid=",a$taxid,"; ",a$definition)
+  phylotools::dat2fasta(a[,c("seq.name","seq.text")],outfile)
 }
 
 add.3pmms<-function(ecopcroutput,Pf,Pr){
   
   message("Adding f_mismatches_3prime: the no. of mismatches in the 3 prime half of the forward primer")
-  message("Adding r_mismatches_3prime: the no. of mismatches in the 3 prime half of the reverse primer")
+  
   
   #add 3' mismatches to ecopcroutput
-  f_mismatch_table<-mismatch.table(ecopcroutput,Pf,"f")
+  f_mismatch_table<-mismatch.table(ecopcroutput_clean = ecopcroutput,primer.seq = Pf,primer.direction = "f")
   f_mismatches_3prime<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)/2):nchar(Pf)]))
   colnames(f_mismatches_3prime)<-"f_mismatches_3prime"
-  r_mismatch_table<-mismatch.table(ecopcroutput, Pr,"r")
+  message("Adding r_mismatches_3prime: the no. of mismatches in the 3 prime half of the reverse primer")
+  r_mismatch_table<-mismatch.table(ecopcroutput_clean = ecopcroutput,primer.seq = Pf,primer.direction = "r")
   r_mismatches_3prime<-as.data.frame(rowSums(r_mismatch_table[,as.integer(nchar(Pr)/2):nchar(Pr)]))
   colnames(r_mismatches_3prime)<-"r_mismatches_3prime"
   ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime,r_mismatches_3prime)
   
   message("Adding f_mismatches_3prime6: the no. of mismatches in the 3 prime 6bp of the forward primer")
-  message("Adding r_mismatches_3prime6: the no. of mismatches in the 3 primer 6bp of the reverse primer")
+  
   
   #add 3' mismatches to ecopcroutput - 6bp
   f_mismatches_3prime6<-as.data.frame(rowSums(f_mismatch_table[,as.integer(nchar(Pf)-5):nchar(Pf)]))
   colnames(f_mismatches_3prime6)<-"f_mismatches_3prime6"
+  message("Adding r_mismatches_3prime6: the no. of mismatches in the 3 primer 6bp of the reverse primer")
   r_mismatches_3prime6<-as.data.frame(rowSums(r_mismatch_table[,as.integer(nchar(Pr)-5):nchar(Pr)]))
   colnames(r_mismatches_3prime6)<-"r_mismatches_3prime6"
   ecopcroutput<-cbind(ecopcroutput,f_mismatches_3prime6,r_mismatches_3prime6)
@@ -2354,24 +2360,76 @@ calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
 }
 
 
-modify.ecopcroutput<-function(ecopcrfile,out,min_length=NULL,max_length=NULL){
+clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer=F){
   #GENERAL CLEANING 
   
-  #read results
-  ecopcroutput<-data.table::fread(ecopcrfile,sep = "\t")
+  b<-data.table::fread(file = ecopcrfile,data.table = F,
+                       sep = "|",
+                       col.names = c("AC","seq_length","taxid","rank","species","species_name","genus",
+                                     "genus_name","family","family_name","superkingdom","superkingdom_name",
+                                     "strand","forward_match","forward_mismatch","forward_tm","reverse_match",
+                                     "reverse_mismatch","reverse_tm","amplicon_length","sequence","definition"))
+  #remove any apparently erroneous entries
+  #those that have no amplicon length or forward_mismatch or reverse_mismatch
+  
+  step1<-nrow(b)
+  message("A total of ",step1," hits")
+  
+  message("removing hits that have no amplicon length or forward_mismatch or reverse_mismatch, apparent errors")
+  b<-b[!is.na(b$amplicon_length),]
+  b<-b[!is.na(b$forward_mismatch),]
+  b<-b[!is.na(b$reverse_mismatch),]
+  step2<-nrow(b)
+  message(step1-step2, " hits removed")
+  
+  if(nrow(b)<1) stop("No hits",call. = F)
+
   message("Removing hits outside desired lengths, if provided")
-  if(!is.null(min_length)) ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length<min_length,]
-  if(!is.null(max_length)) ecopcroutput<-ecopcroutput[!ecopcroutput$amplicon_length>max_length,]
+  if(!is.null(min_length)) b<-b[!b$amplicon_length<min_length,]
+  if(!is.null(max_length)) b<-b[!b$amplicon_length>max_length,]
+  step3<-nrow(b)
+  message(step2-step3, " hits removed")
+  
   message("Removing duplicates (i.e. pick one entry per AC, based on lowest mismatches)")
-  ecopcroutput$total_mismatches<-as.numeric(ecopcroutput$forward_mismatch)+as.numeric(ecopcroutput$reverse_mismatch)
-  ecopcroutput <- ecopcroutput[order(ecopcroutput$AC,ecopcroutput$total_mismatches),]
-  ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput$AC),]
-  message("Removing weird primer mismatches (only a few usually)")
-  ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$forward_match,allowNA = T)<nchar(Pf),]
-  ecopcroutput<-ecopcroutput[!nchar(ecopcroutput$reverse_match,allowNA = T)<nchar(Pr),]
+  b$total_mismatches<-as.numeric(b$forward_mismatch)+as.numeric(b$reverse_mismatch)
+  b <- b[order(b$AC,b$total_mismatches),]
+  b<-b[!duplicated(b$AC),]
+  step4<-nrow(b)
+  message(step3-step4, " hits removed")
+  
+  message("Removing weird primer mismatches, apparent errors, only a few usually")
+  b<-b[!nchar(b$forward_match,allowNA = T)<nchar(Pf),]
+  b<-b[!nchar(b$reverse_match,allowNA = T)<nchar(Pr),]
+  step5<-nrow(b)
+  message(step4-step5, " hits removed")
+  
+  message("Adding full seqs")
+  b$sequence2<-gsub("[a-z]","",b$sequence)
+  b$fullseq<-paste0(b$forward_match,b$sequence2,b$reverse_match)
+  b$sequence2<-NULL
+  
+  message("Removing entries with Ns in full seqs")
+  if(length(grep("N",ignore.case = T,x = b$fullseq))>0)  b<-b[-grep("N",ignore.case = T,x = b$fullseq),]
+  step5a<-nrow(b)
+  message(step5-step5a, " hits removed")
+  
+  message("Removing entries with ambiguities in full seqs")
+  ambigs<-c("R","Y","S","W","K","M","B","D","H","V")
+  for(i in 1:length(ambigs)){
+    if(length(grep(ambigs[i],ignore.case = T,x = b$fullseq))>0)  b<-b[-grep(ambigs[i],ignore.case = T,x = b$fullseq),]
+  }
+  step5b<-nrow(b)
+  message(step5a-step5b, " hits removed")
+  
+  if(rm.buffer==T) {
+    message("Removing the buffer portions of the inserts")
+    b$sequence<-gsub("[a-z]","",b$sequence)
+  }
   
   #write  file
-  write.table(x=ecopcroutput,file = out,quote = F,sep = "\t",row.names = F)
+  write.table(x=b,file = paste0(ecopcrfile,".clean"),quote = F,sep = "\t",row.names = F,append=F)
+  
+  message("Cleaned ecopcr results saved in ", paste0(ecopcrfile,".clean"))
   
 }
 
@@ -2567,15 +2625,15 @@ mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out,pident=20){
   colnames(j)<-c("qseqid", "qlen", "qstart", "qend","slen", "sstart", "send", "length", "pident", "qcovs","sstrand")
                  
   #calculate scov
-  j$scov<-j$length/j$slen
+  j$scovs<-j$length/j$slen
   
   #remove duplicate hsp hits, based on highest scov
-  j2 <- j[order(j$qseqid,j$scov,decreasing = T),]
+  j2 <- j[order(j$qseqid,j$scovs,decreasing = T),]
   j2<-j2[!duplicated(j2$qseqid),]
   count_hits<-length(j2$qseqid)
   
   #remove hits less than specified scov
-  j2<-j2[j2$scov>qc,]
+  j3<-j2[j2$scovs>scov,]
   count_qc<-length(j2$qseqid)
   
   #remove hits less than specified pident
@@ -2586,14 +2644,14 @@ mapTrim2.simple<-function(query,blast.results.file,qc=0.7,out,pident=20){
   k<-merge(x = j2,y = n,by = "qseqid",all.y = F) 
   
   message("outputting as fasta")
-  message("testing keeping all sequence that passed buffers, rather than extracting sequence")
+  message("keeping full sequence for queries that passed buffers, rather than extracting sequence")
   k_export<-k[,c("seq.name","seq.text")]
   count_final_db<-length(k_export$seq.name)
   phylotools::dat2fasta(k_export,outfile = out)
   
   ###########################
   message(paste("Done.", "From", count_queries,"sequences,", count_hits, "mapped to a reference,",count_qc,
-            "of which had >",qc*100,"% coverage,",count_pident,"of which had greater than",pident,"% percentage identity"))
+            "of which had >",scov*100,"% coverage,",count_pident,"of which had greater than",pident,"% percentage identity"))
 }
 
 
@@ -2897,13 +2955,17 @@ family.mean.mismatch<-function(ecopcroutput_clean,primer.seq=NULL,primer.directi
 
 
 
-mismatch.table<-function(ecopcroutput_clean,primer.seq=NULL,primer.direction){
+mismatch.table<-function(ecopcroutput_clean,primer.seq,primer.direction){
   
   #split query forward primer
   if(primer.direction=="f"){
-    sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$forward_match), ""))))}
+    sst = split.primer.into.cols(primer.seq = primer.seq,ecopcroutput = ecopcroutput_clean,primer.direction = "f")
+  }
+  
   if(primer.direction=="r"){
-    sst <- as.data.frame(t(as.data.frame(strsplit(as.character(ecopcroutput_clean$reverse_match), ""))))}
+    sst = split.primer.into.cols(primer.seq = primer.seq,ecopcroutput = ecopcroutput_clean,primer.direction = "r")
+  }
+   
   sst$family_name<-ecopcroutput_clean$family_name
   rownames(sst)<-NULL
   
@@ -2927,6 +2989,8 @@ mismatch.table<-function(ecopcroutput_clean,primer.seq=NULL,primer.direction){
              N=c("C","G","T","A"))
   
   #replace subject primer baseswith IUPAC ambiguities
+  message("Note: If primer binding site sequences contains an ambiguity, this will count as a non-match to the subject primer")
+  
   suppressWarnings(for(i in 1:length(pflist)){
     if(pflist[[i]]=="R") pflist[[i]]<-IUPAC[["R"]]
     if(pflist[[i]]=="Y") pflist[[i]]<-IUPAC[["Y"]]
@@ -2941,18 +3005,15 @@ mismatch.table<-function(ecopcroutput_clean,primer.seq=NULL,primer.direction){
     if(pflist[[i]]=="N") pflist[[i]]<-IUPAC[["N"]]
   })
   
+  
   #check if query primer is in subject primer
-  #function to apply %in% to one data.frame
-  matchdf<-function(df,pflist){
-    out<-data.frame(matrix(ncol=length(pflist),nrow = length(df[,1])))
-    for(i in 1:length(pflist)){
-      out[,i]<-df[,i] %in% pflist[[i]]
-    }
-    return(out)
+  #check if query in subject primer
+  out<-list()
+  for(i in 1:length(pflist)){
+    out[[i]]<-sst[,i] %in% pflist[[i]]
   }
   
-  #apply
-  out2<-matchdf(sst,pflist)
+  out2<-as.data.frame(do.call(cbind,out))  
   
   #convert true/false to 1/0
   out3<-out2*1
@@ -3130,6 +3191,7 @@ add.res.bas2<-function(mod_ecopcrout_file,makeblastdb_exec="makeblastdb",ncbiTax
   bins<-data.table::fread(paste0(out,".bins.txt"),data.table = F)
   bins$path<-paste(bins$K,bins$P,bins$C,bins$O,bins$F,bins$G,bins$S,sep = ";")
   temprank<-stringr::str_count(bins$path,";NA")
+  message("Think this is wrong!")
   temprank<-gsub(0,"species",temprank)
   temprank<-gsub(1,"genus",temprank)
   temprank<-gsub(2,"family",temprank)
@@ -3159,7 +3221,7 @@ run.ecotaxspecificity<-function(infasta,ecopcrdb){
 }
 
 
-add.stats.ecopcroutput<-function(ecopcroutput,ncbiTaxDir,Ta=NULL,add.3pmm=F,Pf,Pr){
+add.stats.ecopcroutput<-function(ecopcroutput,ncbiTaxDir,Ta=NULL,Pf,Pr){
   
   #change taxid to taxids, for next function
   colnames(ecopcroutput)<-gsub("taxid","taxids",colnames(ecopcroutput))
@@ -3172,10 +3234,10 @@ add.stats.ecopcroutput<-function(ecopcroutput,ncbiTaxDir,Ta=NULL,add.3pmm=F,Pf,P
   message("Adding full taxonomy")
   ecopcroutput<-add.lineage.df(df = ecopcroutput,ncbiTaxDir = ncbiTaxDir,as.taxids = F)
   
-  #add 3 prime mismtaches to ecopcroutput 
+  #add 3 prime mismatches to ecopcroutput 
   #adds 4 columns: 3prime mismatches for half the primer, 3prime mismatches for last 6bp only,
   #for both forward and reverse primers
-  if(add.3pmm) ecopcroutput<-add.3pmms(ecopcroutput,Pf,Pr) 
+  ecopcroutput<-add.3pmms(ecopcroutput,Pf,Pr) 
   
   #add tm
   #adds 6 columns: tm for full primer, 3prime half, 3primer6; for both primers. Uses basic equation
@@ -3207,7 +3269,7 @@ add.stats.ecopcroutput<-function(ecopcroutput,ncbiTaxDir,Ta=NULL,add.3pmm=F,Pf,P
   }
   
   #add Tm of last 6 bp of fw primer divided by overall Tm (%)
-  message("Calculating Tm of last 6 bp of fw primer divided by overall Tm (%)")
+  message("Calculating Tm of last 6 bp of primer divided by overall Tm (%)")
   ecopcroutput$tm_fw_3p6_perc<-ecopcroutput$fTms3prime6/ecopcroutput$fTms*100
   ecopcroutput$tm_rv_3p6_perc<-ecopcroutput$rTms3prime6/ecopcroutput$rTms*100
   
@@ -3517,9 +3579,19 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir,email){
     master$Sample_Name<-master$ss_sample_id
     
     #use only the required headers (exclude ss_sample_id)
-    master<-master[,headers[-length(headers)]]
+    
+    headers.MBC<-c("Sample_ID",	"Sample_Name",	"Sample_Plate",	"Sample_Well",	"I7_Index_ID",	"index",
+               "I5_Index_ID",	"index2",	"Sample_Project",	"Description",	"index_combination","MID_F","MID_R","Primer_F",	"Primer_R",	"Filenames",
+               "min_length","max_length","ss_sample_id")
+    
+    master<-master[,headers.MBC[-length(headers.MBC)]]
     
     master$extra_information<-""
+    
+    message("Putting NAs to empty")
+    
+    master[is.na(master)]=""
+    
   }
   
   if(for.post.illscript2==T){
@@ -3623,6 +3695,25 @@ full.negative.inspection<-function(taxatab,ms_ss,real){
 }
 
 
-
+split.primer.into.cols<-function(primer.seq,ecopcroutput,primer.direction){
+  pflist<-list()
+  for(i in 1:nchar(primer.seq)){
+    pflist[[i]]<-substr(primer.seq,start = i,stop = i)
+  }
+  
+  splitprimerList<-list()
+  
+  if(primer.direction=="f") a <- ecopcroutput$forward_match
+  if(primer.direction=="r") a <- ecopcroutput$reverse_match
+  
+  for(i in 1:nchar(Pf)){
+    splitprimerList[[i]]<-substr(a, start=i, stop=i)
+    names(splitprimerList)[i]<-substr(Pf,start = i,stop = i)
+  }
+  
+  splitprimer<-as.data.frame(do.call(cbind,splitprimerList))
+  colnames(splitprimer)<-names(splitprimerList)
+  splitprimer
+}
 
 

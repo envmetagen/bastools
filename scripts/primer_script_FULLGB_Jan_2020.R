@@ -34,8 +34,8 @@ message("script being used:
         ")
 print(readLines(script))
 
-source("/home/bastian.egeter/git_bastools/bastools/master_functions.R")
-source("/home/bastian.egeter/git_bastools/bastools/bin.blast.R")
+source(paste0(bastoolsDir,"master_functions.R"))
+source(paste0(bastoolsDir,"bin.blast.R"))
 library(processx)
 library(dplyr)
 obitaxoR<-ROBITaxonomy::read.taxonomy(dbname = obitaxo)

@@ -10,7 +10,7 @@ if(update.taxonomies==T) {
 }
 
 packages.needed<-c("dplyr","googlesheets4","processx","httpuv","treemap","igraph","XML","data.tree","DT","ggplot2","vegan"
-                   ,"stringr","phylotools","htmlwidgets","tidyverse","cowplot","ggpubr","insect","plotly","seqRFLP","rlang","fs")
+                   ,"stringr","phylotools","htmlwidgets","tidyverse","cowplot","ggpubr","insect","plotly","seqRFLP","rlang","fs","purrr")
 
 for(i in 1:length(packages.needed)){
   if(!packages.needed[i] %in% rownames(installed.packages())) {
