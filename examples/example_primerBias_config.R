@@ -15,7 +15,7 @@ outDir<-"/media/sf_Documents/WORK/CIBIO/temp/primer_testing/"
 
 Pf="GGNTGAACHGTHTAYCCHCC"
 Pr="TCDGGRTGNCCRAARAAYCA"
-max_error_buildrefs=2
+max_error_buildrefs=3
 max_error_ecopcr=4
 min_length=50 #insert
 max_length=500-nchar(Pf)-nchar(Pr) #testing with upper limit of the miseq run used in the final ecopcr 

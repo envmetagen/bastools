@@ -746,7 +746,7 @@ interp.lm <- function(model){
   }}
 
 
-make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=F, ncbiTaxDir, dbversion=5){
+make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=F, ncbiTaxDir, dbversion=4){
   library(processx)
   
   message("Reminder: Assumes header includes taxid=taxid;")
@@ -787,6 +787,7 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
   mappingfile<-paste0("mapping",as.numeric(Sys.time()),".txt")
   write.table(tempfasta[,c("ids","taxids")],mappingfile,quote = F,sep = " ",row.names = F,col.names = F)
   
+  message("Creating blastdb")
   system2(command = makeblastdb_exec, 
           args=c("-in", gsub(".fasta",".blastdbformatted.fasta",infasta), 
                  "-dbtype", "nucl", 
@@ -2008,6 +2009,7 @@ map2targets<-function(queries.to.map,refs,out){
   ### should use blastn - optionally I think, recommended for shorter fragments (<100?)
   ### should use bowtie?
   ### max targets 3 because files get huge otherwise
+  ### max 
   
   system2(command = "makeblastdb", args=c("-in", refs, "-dbtype", "nucl", "-parse_seqids","-out","refdb"),wait=T)
   
@@ -2127,7 +2129,7 @@ count.fams.in.fasta<-function(fasta,ncbiTaxDir){
   return(a)
 }
 
-ecopcr2refs<-function(ecopcrfile,outfile,bufferecopcr,Pf,Pr){
+ecopcr2refs<-function(ecopcrfile,outfile,bufferecopcr,Pf,Pr,selection="genus"){
   message("Reminder: assumes -D option was used for ecopcr")
   message("Assumes clean.ecopcrouput was used first")
   #read results
@@ -2162,11 +2164,11 @@ ecopcr2refs<-function(ecopcrfile,outfile,bufferecopcr,Pf,Pr){
   if(length(table(a$leftedge))!=1)  message("Error: Some left buffers are too long...check reason")
   
   #choosing one seq per genus
-  message("Choosing one sequence per genus")
+  message("Choosing one sequence per ",selection)
   colnames(a)<-gsub("taxid","taxids",colnames(a))
   a$path<-paste(a$superkingdom_name,a$family_name,a$genus_name,sep = ";")
   a <- a[order(a$path,a$amplicon_length,decreasing = T),]
-  a <-a[!duplicated(a[,c("genus_name")]),] 
+  a <-a[!duplicated(a[,c(paste0(selection,"_name"))]),] 
   
   message(nrow(a)," selected")
   
@@ -2360,7 +2362,7 @@ calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
 }
 
 
-clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer=F){
+clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer.insert=F,buffer.used=T){
   #GENERAL CLEANING 
   
   b<-data.table::fread(file = ecopcrfile,data.table = F,
@@ -2404,9 +2406,15 @@ clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffe
   message(step4-step5, " hits removed")
   
   message("Adding full seqs")
-  b$sequence2<-gsub("[a-z]","",b$sequence)
-  b$fullseq<-paste0(b$forward_match,b$sequence2,b$reverse_match)
-  b$sequence2<-NULL
+  if(buffer.used==F){
+    message("As buffer.used=F, fullseq will be primer-insert-primer")
+    b$sequence2<-gsub("[a-z]","",b$sequence)
+    b$fullseq<-paste0(b$forward_match,b$sequence2,b$reverse_match)
+    b$sequence2<-NULL
+  } else {
+    message("As buffer.used=T, fullseq will be buffer-primer-insert-primer-buffer")
+    b$fullseq<-b$sequence
+  }
   
   message("Removing entries with Ns in full seqs")
   if(length(grep("N",ignore.case = T,x = b$fullseq))>0)  b<-b[-grep("N",ignore.case = T,x = b$fullseq),]
@@ -2421,8 +2429,8 @@ clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffe
   step5b<-nrow(b)
   message(step5a-step5b, " hits removed")
   
-  if(rm.buffer==T) {
-    message("Removing the buffer portions of the inserts")
+  if(rm.buffer.insert==T) {
+    message("Removing the buffer portions of the inserts, including primers")
     b$sequence<-gsub("[a-z]","",b$sequence)
   }
   

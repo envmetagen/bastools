@@ -1,18 +1,14 @@
-pathTobowtieScript ="/home/tutorial/SCRIPTS/emg_setup/scripts/emg_fasta_galign"
-fasta="example_modecopcroutput.fasta"
-out="bowtie2.test.txt"
-
 #bowtie2-build --large-index -f --threads 2 COI.fullgb.ecopcrResults.txt.clean.fasta COI.fullgb.ecopcrResults.txt.clean.fasta.db2
 #bowtie2 -a -f --large-index --end-to-end  --sam-no-qname-trunc -p 2 --no-unal -x COI.fullgb.ecopcrResults.txt.clean.fasta.db2 
 #-U COI.fullgb.ecopcrResults.txt.clean.fasta --min-score L,0,0.00001 -S COI.fullgb.ecopcrResults.txt.clean.sam
-
 #cat COI.fullgb.ecopcrResults.txt.clean.sam | grep "XM:" | cut -f 1,3-|sed -E "s/([^\t]+)\t([^\t]+)\t.*XM:i:([0-9]+)\t.*XO:i:([0-9]+).*/\1\t\2\t\3\t\4/" | awk 'BEGIN{FS="\t";OFS="\t";} $3<4 { print;} '> COI.fullgb.ecopcrResults.txt.clean.sam2
 
-bowtie.res<-data.table::fread("COI.fullgb.ecopcrResults.txt.clean.sam2",sep = "\t",data.table = F)
 
 ecopcroutput<-"COI.fullgb.ecopcrResults.txt.clean"
 
-add.res.bowtie<-function(ecopcroutput){
+#########FINISH THIS
+
+add.res.bowtie<-function(ecopcroutput,ncbiTaxDir){
   
   ecopcr<-data.table::fread(ecopcroutput,sep = "\t",data.table = F)
   
@@ -21,10 +17,10 @@ add.res.bowtie<-function(ecopcroutput){
   
   phylotools::dat2fasta(ecopcr[,c("seq.name","seq.text")],outfile = paste0(ecopcroutput,".fasta"))
   
-  system2(paste0(bastoolsDir,"scripts/emg_fasta_galign_ALL_PERFECT"),args=c("-B","-c","-q",paste0(ecopcroutput,".fasta")
+  system2(paste0(bastoolsDir,"scripts/emg_fasta_galign_ALL_PERFECT"),args=c("-B","-q",paste0(ecopcroutput,".fasta")
                                                                 ,"-r",paste0(ecopcroutput,".fasta"),"-o",paste0(ecopcroutput,".bowtie.res")),wait = T)
   
-  bowtie.res<-data.table::fread(paste0(ecopcroutput,".bowtie.res"),data.table = F)
+  bowtie.res<-data.table::fread(paste0(ecopcroutput,".bowtie.res"),sep="\t",data.table = F)
   
   colnames(bowtie.res)<-c("query","subject","mismatches","gaps")
   
@@ -37,7 +33,7 @@ add.res.bowtie<-function(ecopcroutput){
   bowtie.res<-add.lineage.df(df = bowtie.res,ncbiTaxDir = ncbiTaxDir)
   
   #lca
-  lcasp = aggregate(bowtie.res$taxids, by=list(bowtie.res$query),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxoR,x))
+  lcasp = aggregate(bowtie.res$taxids, by=list(bowtie.res$AC),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxoR,x))
   
   #get lca names
   colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
@@ -62,9 +58,16 @@ add.res.bowtie<-function(ecopcroutput){
   lcasp$sp.res<- !lcasp$path %in% lcasp$path[grep(";unknown$",lcasp$path)]
   
   lcasp$res<-"htf" #higher than family
-  lcasp$res[lcasp$fam.res==T]<-"fam"
-  lcasp$res[lcasp$gen.res==T]<-"gen"
-  lcasp$res[lcasp$sp.res==T]<-"sp"
+  lcasp$res[lcasp$fam.res==T]<-"family"
+  lcasp$res[lcasp$gen.res==T]<-"genus"
+  lcasp$res[lcasp$sp.res==T]<-"species"
+  
+  merged<-merge(ecopcr,lcasp[,c("Group.1","res")],by.x = "AC",by.y = "Group.1",all.x = T)
+  
+  #write  file
+  write.table(x=merged,file = paste0(ecopcroutput,".wbowtie.res"),quote = F,sep = "\t",row.names = F,append=F)
+  
+  message("Cleaned ecopcr results saved in ", paste0(ecopcroutput,".wbowtie.res"))
 }
 
  

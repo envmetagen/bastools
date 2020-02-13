@@ -50,17 +50,17 @@ if("step4" %in% stepstotake){
                  out_type = "--ecopcrdb-output",add2existing = F)
   
   #run ecopcr with buffer option
-  message("Creating refdb. maxL not used, min_length=10, buffer = T, max_error=",max_error_buildrefs)
+  message("Creating references. maxL not used, min_length=10, buffer = T, max_error=",max_error_buildrefs)
   ecoPCR.Bas(Pf,Pr,ecopcrdb = gsub(".fasta",".checked.ecopcrdb",catted_DLS),max_error = max_error_buildrefs,
              min_length = 10,out = gsub(".fasta",".ecopcrResults.txt",catted_DLS),  buffer = buffer)
   
   #clean
-  clean.ecopcroutput(ecopcrfile = gsub(".fasta",".ecopcrResults.txt",catted_DLS),rm.buffer = F)
+  clean.ecopcroutput(ecopcrfile = gsub(".fasta",".ecopcrResults.txt",catted_DLS),rm.buffer = F,buffer.used = T)
   
-  #build refs fasta from results
+  #build refs fasta from results, assumes buffer was used in ecopcr, assumes clean was done (with rm.buffer=F). Uses 'śequence' (buff-p-insert-p-buff)
   ecopcr2refs(ecopcrfile=gsub(".fasta",".ecopcrResults.txt.clean",catted_DLS),
                outfile = gsub(".fasta",".refs.fasta",catted_DLS),bufferecopcr = buffer,Pf = Pf,Pr = Pr)
-  
+    
   message("STEP4 COMPLETE")
   
 }

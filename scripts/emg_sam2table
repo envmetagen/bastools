@@ -1,0 +1,7 @@
+#!/bin/bash
+
+function sam2table() {
+echo "input file must end in .sam"
+cat $1 | grep "XM:" | cut -f 1,3-|sed -E "s/([^\t]+)\t([^\t]+)\t.*XM:i:([0-9]+)\t.*XO:i:([0-9]+).*/\1\t\2\t\3\t\4/" | awk 'BEGIN{FS="\t";OFS="\t";} $3<4 { print;} ' > ${1/.sam/.txt}
+
+}
