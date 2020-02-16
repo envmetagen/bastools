@@ -33,7 +33,7 @@ stepstotake<-c("step7","step8","step9","step10","step11","step12","step13","step
 ####To blast entire database just use
 #startingfastas<-c("file1.fasta","file2.fasta")
 
-startingfastas<-c(
+startingfastas<-data.frame(infasta=
   "none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.fasta",
   taxidlimit=c(7711),
   taxidname=c("chordata"))
@@ -60,9 +60,6 @@ KronaPath<-"/home/bastian.egeter/Tools/Krona.install/bin/ktImportText"
 
 #full path to blast db - this is the stem filename of the db files
 refdb = "/mnt/Disk1/Tools/BLAST+/DBs/nt_v5/nt_v5"
-
-#any of the experiment_ids to be included in the master sheet
-experiment_id<-c("2020_01")
 
 #minimum query coverage for filtering blast results
 min_qcovs=70

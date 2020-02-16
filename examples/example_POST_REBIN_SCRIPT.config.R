@@ -44,7 +44,7 @@ bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools directory
 taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt")
 
 #datasheet url
-ss_url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
+url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
 
 #options for subsetting master sheet. This functions to sleect the samples you want to analyse.
 #Each item in list is a column heading in master sheet and each character within the item should be what you want to include 
@@ -78,8 +78,12 @@ remove.entire.dataset=T
 rm.only.less.than=T
 #grouping for removing detections in <1 rep
 rep.rm<-"biomaterial"
+#conduct grouping prior to rm.contaminants? 
+rep.rm.first<-T
 #sum reps by
 sumrepsby<-"biomaterial"
+#conduct grouping post rm.contaminants? 
+rep.rm.second<-F
 #collapse all taxa at this level. Also used for subsequently keeping only taxa that attain this level. Put xLevel=NULL to skip this
 xLevel<-"family"
 #unwanted taxa - non-targets that are not required for final analysis. This is applied last. This is a grep, so 
@@ -94,3 +98,9 @@ taxa.to.group<-data.frame(taxa.to.group=c("Eukaryota;Chordata;Amphibia;Anura;Aly
                                       ,"Eukaryota;Chordata;Amphibia;Anura;Bufonidae;Epidalea;Epidalea calamita"))
 #variables to use as groups for plots
 plotting.vars<-c("biomaterial")
+
+#hide legend (to avoid cowplot errors set to false)
+hidelegend=T
+
+#split barplots by facet, set to null if not required
+facetcol=NULL

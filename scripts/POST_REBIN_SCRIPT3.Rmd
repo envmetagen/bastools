@@ -8,7 +8,7 @@ output: html_document
 
 ## read and print settings
 ```{r, eval=TRUE,echo=F}
-source("/home/tutorial/TOOLS/bastools/project_configs/CRAY_trnL_FINAL_SWABS_POST_REBIN_SCRIPT.config.R")
+source("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/POST_TAXONOMY_CHECK/SCORPION/SCORPION_POST_REBIN_SCRIPT.config.R")
 
 message("settings:
         ")
@@ -27,13 +27,13 @@ stepcounter<-0
 
 ## organise mastersheet
 ```{r, eval=TRUE,echo=F}
-master_sheet<-google.overlord(url = url,tokenDir=bastoolsDir,email=email)
+master_sheet<-google.overlord(url = url,tokenDir = bastoolsDir)
 
 ##subset master sheet for this study 
 message("Subsetting datasheet")
 ms_ss<-subset_mastersheet(master_sheet, subsetlist)
 #check again to see the subset made sense
-master_xtabs(ms_ss,columns=c(names(subsetlist)))
+master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 
 ```
 
@@ -221,7 +221,7 @@ stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "unwanted")
 ```
 
-## summary ---this is pre-grouping - please inspect, add groupings to config file as necessary and look at post-grouping table. Can more grouping be done, is anything wrong?
+## summary ---this is pre-grouping
 ```{r, eval=TRUE,echo=F}
 if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
@@ -257,48 +257,106 @@ DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options 
 ## some barplots
 ```{r, eval=TRUE,echo=F}
 message("Making barplots")
+
 plotlist<-list()
 for(i in 1:length(plotting.vars)){
 plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = T,hidelegend = hidelegend,grouping = sumrepsby)
 }
-if(hidelegend==F) {
+
 for(i in 1:length(plotting.vars)){
-  print(plotlist[[i]])
-} 
+  if(hidelegend==F) {
+    print(plotlist[[i]])
   }else {
   print(plotlist[[i]][[1]])
   print(plotlist[[i]][[2]])
+  }
 }
   
 
 for(i in 1:length(plotting.vars)){
 plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby)
 }
-if(hidelegend==F) {
 for(i in 1:length(plotting.vars)){
-  print(plotlist[[i]])
-} 
+  if(hidelegend==F) {
+    print(plotlist[[i]])
   }else {
   print(plotlist[[i]][[1]])
   print(plotlist[[i]][[2]])
+  }
 }
 
 for(i in 1:length(plotting.vars)){
 plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby)
 }
-if(hidelegend==F) {
 for(i in 1:length(plotting.vars)){
-  print(plotlist[[i]])
-} 
+  if(hidelegend==F) {
+    print(plotlist[[i]])
   }else {
   print(plotlist[[i]][[1]])
   print(plotlist[[i]][[2]])
+  }
 }
+
+if(!is.null(facetcol)){
+  plotlist<-list()
+  for(i in 1:length(plotting.vars)){
+    if(plotting.vars[i]!=facetcol){
+      plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
+                                   as.dxns = T,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
+    }
+  }
+  
+  for(i in 1:length(plotting.vars)){
+    if(hidelegend==F) {
+      if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+    }else {
+    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
+    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+    }
+  }
+  
+  plotlist<-list()
+  for(i in 1:length(plotting.vars)){
+    if(plotting.vars[i]!=facetcol){
+      plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,
+                                   as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
+    }
+  }
+  
+  for(i in 1:length(plotting.vars)){
+    if(hidelegend==F) {
+      if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+    }else {
+    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
+    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+    }
+  }
+  
+  plotlist<-list()
+  for(i in 1:length(plotting.vars)){
+    if(plotting.vars[i]!=facetcol){
+      plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
+                                   as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
+    }
+  }
+  
+  for(i in 1:length(plotting.vars)){
+    if(hidelegend==F) {
+      if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+    }else {
+    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
+    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+    }
+  }
+
+}
+  
+
 
 ```
 
 
-## pca plot (just an example, not interesting in this case)
+## pca plot 
 ```{r, eval=TRUE,echo=F}
 #just an example, not interesting in this case
 message("Plotting pca plot with lines")
