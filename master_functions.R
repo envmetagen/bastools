@@ -1136,12 +1136,14 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   long<-long[long$value>0,]
   
   if(!is.null(master_sheet)) {
+    message("Note: think about which plots make sense. If sumrepsby is biomaterial, then plots using e.g. extraction method
+            do not make sense, because there is more than one possibility for each biomaterial")
     long[,4]<-ms_ss[match(long$variable,ms_ss[,grouping]),column]
     colnames(long)[4]<-column
     
     if(!is.null(facetcol)){
-      long[,4]<-ms_ss[match(long$variable,ms_ss[,grouping]),column]
-      colnames(long)[4]<-column
+      long[,5]<-ms_ss[match(long$variable,ms_ss[,grouping]),facetcol]
+      colnames(long)[5]<-facetcol
     }
     
     long$variable<-long[,grep(column,colnames(long))]
@@ -1158,7 +1160,9 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   
   if(length(unique(long$taxon))<29)  a<-a+scale_fill_manual(values = MyCols) 
   
-  if(as.percent) {a<-a+geom_bar(position="fill", stat="identity")} else {a<-a+geom_bar(stat = "identity")}
+  if(as.percent) {a<-a+geom_bar(position="fill", stat="identity")
+  } else {a<-a+geom_bar(stat = "identity")
+  }
   
   if(!is.null(facetcol))  a<-a+facet_wrap(as.formula(paste0("~",facetcol)))
   
@@ -3543,16 +3547,16 @@ plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
   plotlist
 }
 
-google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir,email){
+google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir=NULL,email=NULL,use.lengths=F,subsetList=NULL){
   
   if(sum(for.MBC,for.post.illscript2)!=1) stop("Only one output type must be TRUE")
   
   # Download master sheet
-  a<-getwd()
-  setwd(tokenDir)
-  googlesheets4::sheets_auth(email)
-  setwd(a)
-  
+  # a<-getwd()
+  # setwd(tokenDir)
+  # googlesheets4::sheets_auth(email)
+  # setwd(a)
+  # 
   master<-google.read.master.url(url)
   
   #fix names (lowercase mainly)
@@ -3561,6 +3565,15 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir,email){
   #remove downloaded dups
   if(length(grep("\\.\\.\\.",colnames(master),value = T))>0) {
     master<-remove.google.dups(master)
+  }
+  
+  #subset
+  if(!is.null(subsetList)){
+    message("subsetting mastersheet")
+    master<-subset_mastersheet(master_sheet = master,subsetList)
+    message("checking subset, including sample type by default")
+    #check
+    print(master_xtabs(master,c("sample_type",names(subsetList))))
   }
   
   
@@ -3587,10 +3600,15 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir,email){
     master$Sample_Name<-master$ss_sample_id
     
     #use only the required headers (exclude ss_sample_id)
-    
-    headers.MBC<-c("Sample_ID",	"Sample_Name",	"Sample_Plate",	"Sample_Well",	"I7_Index_ID",	"index",
+    if(use.lengths==T){
+     headers.MBC<-c("Sample_ID",	"Sample_Name",	"Sample_Plate",	"Sample_Well",	"I7_Index_ID",	"index",
                "I5_Index_ID",	"index2",	"Sample_Project",	"Description",	"index_combination","MID_F","MID_R","Primer_F",	"Primer_R",	"Filenames",
                "min_length","max_length","ss_sample_id")
+    }else{
+      headers.MBC<-c("Sample_ID",	"Sample_Name",	"Sample_Plate",	"Sample_Well",	"I7_Index_ID",	"index",
+                     "I5_Index_ID",	"index2",	"Sample_Project",	"Description",	"index_combination","MID_F","MID_R","Primer_F",	"Primer_R",	"Filenames",
+                     "ss_sample_id")
+    }
     
     master<-master[,headers.MBC[-length(headers.MBC)]]
     
@@ -3676,30 +3694,34 @@ full.negative.inspection<-function(taxatab,ms_ss,real){
   message("Checking negs")
   negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
   
-  message("Making quantile plots to help deciding dxn_filter threshold")
-  for(i in 1:length(negatives) ) {
-    df<-negatives[[i]]
-    if(length(colnames(df))>0){
-      title<-names(negatives)[i]
-      plot1<-qplot.taxatab(taxatab = df)
-      plot1<-plot1 + ggtitle(label = title)
-      print(plot1)
+  if(is.null(negatives)) {message("No negatives with reads, skipping negatives report")
+    } else {
+  
+      message("Making quantile plots to help deciding dxn_filter threshold")
+      for(i in 1:length(negatives) ) {
+        df<-negatives[[i]]
+        if(length(colnames(df))>0){
+          title<-names(negatives)[i]
+          plot1<-qplot.taxatab(taxatab = df)
+          plot1<-plot1 + ggtitle(label = title)
+          print(plot1)
+        }
+      }
+      
+      message("Making barplots for only those taxa detected in both negatives and real samples - to help decide taxon filter and rm.contaminants filter")
+      plotlist1<-plot.negs.vs.real(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+      
+      for(i in 1:length(plotlist1)){
+        print(plotlist1[[i]])
+      }
+      
+      message("Making barplots for only those taxa detected in both negatives and real samples - to help decide sample filter")
+      plotlist2<-plot.negs.vs.taxa(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
+      
+      for(i in 1:length(plotlist2)){
+        print(plotlist2[[i]])
+      }
     }
-  }
-  
-  message("Making barplots for only those taxa detected in both negatives and real samples - to help decide taxon filter and rm.contaminants filter")
-  plotlist1<-plot.negs.vs.real(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
-  
-  for(i in 1:length(plotlist1)){
-    print(plotlist1[[i]])
-  }
-  
-  message("Making barplots for only those taxa detected in both negatives and real samples - to help decide sample filter")
-  plotlist2<-plot.negs.vs.taxa(taxatab = all.taxatabs.ss,ms_ss = ms_ss,real = real)
-  
-  for(i in 1:length(plotlist2)){
-    print(plotlist2[[i]])
-  }
 }
 
 
@@ -3723,5 +3745,30 @@ split.primer.into.cols<-function(primer.seq,ecopcroutput,primer.direction){
   colnames(splitprimer)<-names(splitprimerList)
   splitprimer
 }
+
+#make an experiment sheet for MBC. 
+#subsetList is usually the experiment_id e.g. list(experiment_id=c("2020_02"))
+# urls<-c("https://docs.google.com/spreadsheets/d/1SBBTKa6ZlbYQIWp5Xz2PrhA2v9fYXXlzpWDdn72g3lg/edit#gid=0",
+#         "https://docs.google.com/spreadsheets/d/1VaMRnezBhMCul8Xk-yGAxYZ9tV7inn1QoT5doOLns4s/edit#gid=0")
+#out="/mnt/Disk1/BASTIAN_RAW/2020_02/TOAD_SCORPION_mastersheet.txt"
+google.make.MBC.expSheet<-function(urls,subsetList=NULL,out=NULL){
+  
+  masterList<-list()
+  for(i in 1:length(urls)){
+    masterList[[i]]<-google.overlord(url = urls[i]
+                                     ,for.MBC = T,for.post.illscript2 = F,subsetList = subsetList,use.lengths = T)
+  }
+  
+  #combining sheets:
+  masterC<-do.call(rbind,masterList)
+  
+  if(!is.null(out)) {
+    write.table(masterC,out,append = F,quote = F,sep = "\t",row.names = F)
+    message("experiment sheet saved to ",out)
+  }
+  
+  return(masterC)
+}
+
 
 
