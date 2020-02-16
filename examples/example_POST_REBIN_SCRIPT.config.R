@@ -74,6 +74,8 @@ neg.groups=c("Sample_Plate","Sample_Well")
 use.contamination.filter=T
 #remove contaminants, not just from batches/groups, but from the entire data set?
 remove.entire.dataset=T
+#only remove detections of a taxon if they are less than the number of reads for that taxon in the negative
+rm.only.less.than=T
 #grouping for removing detections in <1 rep
 rep.rm<-"biomaterial"
 #sum reps by
