@@ -7,8 +7,7 @@ output: html_document
 ---
 
 ## read and print settings
-```{r, eval=TRUE,echo=F}
-source("/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/POST_TAXONOMY_CHECK/SCORPION/SCORPION_POST_REBIN_SCRIPT.config.R")
+```{r read and print settings, eval=TRUE,echo=F}
 
 message("settings:
         ")
@@ -16,7 +15,7 @@ print(ls.str())
 ```
 
 
-```{r, eval=TRUE, results='hide',echo=F}
+```{r load functions, eval=TRUE, results='hide',echo=F}
 source(paste0(bastoolsDir,"master_functions.R"))
 library(ggplot2)
 library(dplyr)
@@ -26,8 +25,12 @@ stepcounter<-0
 ```
 
 ## organise mastersheet
-```{r, eval=TRUE,echo=F}
-master_sheet<-google.overlord(url = url,tokenDir = bastoolsDir)
+```{r organise mastersheet, eval=TRUE,echo=F}
+if(is.null(master_sheet_file)){
+  master_sheet<-google.overlord(url = url,tokenDir = bastoolsDir)
+} else {
+  master_sheet<-data.table::fread(master_sheet_file,data.table = F,sep = "\t")
+}
 
 ##subset master sheet for this study 
 message("Subsetting datasheet")
@@ -38,7 +41,7 @@ master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 ```
 
 ## import taxatabs
-```{r, eval=TRUE,echo=F, results='hide'}
+```{r import taxatabs, eval=TRUE,echo=F, results='hide'}
 #import taxtabs
 all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
@@ -56,7 +59,7 @@ dxns.by.rank(all.taxatabs.ss)
 ```
 
 ## remove problem taxa - usually human, predator, NAs and no_hits
-```{r, eval=TRUE,echo=F}
+```{r remove problem taxa, eval=TRUE,echo=F}
 message("Removing no_hits")
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 
@@ -76,59 +79,60 @@ all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxaGrep = problemTaxa)
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.problem")
 
-full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+if(do.first.negative.inspection==T) full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
 
 ```
 
 ## apply taxon and sample filters
-```{r, eval=TRUE,echo=F}
-#Filter samples before removing the NAs and no_hits (0.1%)
-all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "taxonpc")
-
-all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=samplepc)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "samplepc")
-
-full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+```{r apply taxon and sample filters, eval=TRUE,echo=F}
+if(taxonpc>0 && samplepc>0) {
+    all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
+    
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "taxonpc")
+    
+    all.taxatabs.ss<-sample.filter.solo(taxatab = all.taxatabs.ss,samplepc=samplepc)
+    
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "samplepc")
+    
+    full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+}else message("taxonpc and samplepc set to 0...skipping taxon and sample filters")
 ```
 
 
 ## remove detection in less than 2 reps (only done here if rep.rm.first is TRUE)
 ### PCR negatives are exempt, if the negative option is set (only makes sense pre-rm.contaminants function, or without rm.contaminants function)
-```{r, eval=TRUE,echo=F}
+```{r remove detection in less than 2 reps rep.rm.first TRUE, eval=TRUE,echo=F}
 if (rep.rm.first==T){
-  message("Checking negatives")
-  negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+  negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F,printnegs = F)
   all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm,negatives = negatives)
   
   stepcounter<-stepcounter+1
   all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter1")
 
-full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
-
-}
+  full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+} else message("rep.rm.first=F...skipping removal of detections in less than 2 reps")
 ```
 
   
 ## apply detection filter
-```{r, eval=TRUE,echo=F}
+```{r apply detection filter, eval=TRUE,echo=F}
 #check with removing detections
-message("Applying detection filter")
-all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
-
-full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+if(filter_dxn>0){
+  message("Applying detection filter")
+  all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
+  
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
+  
+  full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+} else message("filter_dxn=0...skipping detection filter")
 
 ```
 
-## remove contaminants from relevant groups
-```{r, eval=TRUE,echo=F}
+## remove contaminants 
+```{r remove contaminants , eval=TRUE,echo=F}
 
 #use.contamination.filter function?
 if(use.contamination.filter==T){
@@ -147,12 +151,13 @@ if(use.contamination.filter==T){
       group.codes2<-do.call(c,group.codes2)
       
       all.taxatabs.ss<-remove.contaminant.taxa(taxatab = all.taxatabs.ss,master_sheet = ms_ss,negatives = negatives,
-                                               group.codes = group.codes2,remove.entire.dataset = remove.entire.dataset,rm.only.less.than=rm.only.less.than)
+                                               group.codes = group.codes2,remove.entire.dataset = remove.entire.dataset,
+                                               rm.only.less.than=rm.only.less.than,printcontaminations = T)
       
       #check negatives again, just to be sure
       message("Checking that all negatives are now clean")
       
-      negatives<-negs.stats(taxatab=all.taxatabs.ss,ms_ss = ms_ss,real=real,ex_hominidae=F)
+      full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
       
       stepcounter<-stepcounter+1
       all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.contaminants")
@@ -164,17 +169,18 @@ if(use.contamination.filter==T){
 
 ## remove detection in less than 2 reps 
 ### PCR negatives are exempt, if the negative option is set (only makes sense pre-rm.contaminants function, or without rm.contaminants function)
-```{r, eval=TRUE,echo=F}
+```{r remove detection in less than 2 reps, eval=TRUE,echo=F}
 if (rep.rm.second==T){
-all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm)
+  all.taxatabs.ss<-rm.single.rep.dxn(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = rep.rm)
+  
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter2")
+} else message("rep.rm.second=F...skipping removal of detections in less than 2 reps")
 
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter")
-}
 ```
 
 ## sum reps
-```{r, eval=TRUE,echo=F}
+```{r sum reps, eval=TRUE,echo=F}
 all.taxatabs.ss<-sumreps(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,discard = F)
 
 stepcounter<-stepcounter+1
@@ -182,17 +188,18 @@ all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "sumreps")
 ```
 
 ## apply 2nd detection filter (possibly makes more sense here?)
-```{r, eval=TRUE,echo=F}
-#check with removing detections
-message("Applying detection filter")
-all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn2)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter2")
+```{r apply 2nd detection filter, eval=TRUE,echo=F}
+if(filter_dxn2>0){
+  message("Applying 2nd detection filter")
+  all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn2)
+  
+  stepcounter<-stepcounter+1
+  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter2")
+} else message("filter_dxn2=0...skipping 2nd detection filter")
 ```
 
 ## aggregate at chosen level and keep only that-level taxa 
-```{r, eval=TRUE,echo=F}
+```{r aggregate at chosen level and keep only that-level taxa, eval=TRUE,echo=F}
 if(is.null(xLevel)) {
   message("Skipping aggregate of taxa at xLevel")
   
@@ -213,7 +220,7 @@ if(is.null(xLevel)) {
                                                         
 
 ## remove unwanted taxa for analysis
-```{r, eval=TRUE,echo=F}
+```{r remove unwanted taxa for analysis, eval=TRUE,echo=F}
 message("Removing unwanted taxa")
 all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxa = unwantedTaxa)
 
@@ -222,7 +229,7 @@ all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "unwanted"
 ```
 
 ## summary ---this is pre-grouping
-```{r, eval=TRUE,echo=F}
+```{r summary pre-grouping, eval=TRUE,echo=F}
 if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
 } else {
@@ -231,7 +238,7 @@ DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options 
 ```
 
 ## group taxa, where possible
-```{r, eval=TRUE}
+```{r group taxa, eval=TRUE}
 if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
 } else {
@@ -246,7 +253,7 @@ if(is.null(taxa.to.group)){
 ```
 
 ## summary--post-grouping
-```{r, eval=TRUE,echo=F}
+```{r summary post-grouping, eval=TRUE,echo=F}
 if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
 } else {
@@ -255,125 +262,130 @@ DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options 
 ```
 
 ## some barplots
-```{r, eval=TRUE,echo=F}
-message("Making barplots")
+```{r barplots, eval=TRUE,echo=F}
 
-plotlist<-list()
-for(i in 1:length(plotting.vars)){
-plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = T,hidelegend = hidelegend,grouping = sumrepsby)
-}
-
-for(i in 1:length(plotting.vars)){
-  if(hidelegend==F) {
-    print(plotlist[[i]])
-  }else {
-  print(plotlist[[i]][[1]])
-  print(plotlist[[i]][[2]])
-  }
-}
+if(!is.null(plotting.vars)){
   
-
-for(i in 1:length(plotting.vars)){
-plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby)
-}
-for(i in 1:length(plotting.vars)){
-  if(hidelegend==F) {
-    print(plotlist[[i]])
-  }else {
-  print(plotlist[[i]][[1]])
-  print(plotlist[[i]][[2]])
-  }
-}
-
-for(i in 1:length(plotting.vars)){
-plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby)
-}
-for(i in 1:length(plotting.vars)){
-  if(hidelegend==F) {
-    print(plotlist[[i]])
-  }else {
-  print(plotlist[[i]][[1]])
-  print(plotlist[[i]][[2]])
-  }
-}
-
-if(!is.null(facetcol)){
+  message("Making barplots")
+  
   plotlist<-list()
   for(i in 1:length(plotting.vars)){
-    if(plotting.vars[i]!=facetcol){
-      plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
-                                   as.dxns = T,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
-    }
+    plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = T,
+                                     hidelegend = hidelegend,grouping = sumrepsby)
   }
   
   for(i in 1:length(plotting.vars)){
     if(hidelegend==F) {
-      if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+      print(plotlist[[i]])
     }else {
-    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
-    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+      print(plotlist[[i]][[1]])
+      print(plotlist[[i]][[2]])
     }
   }
+    
   
-  plotlist<-list()
   for(i in 1:length(plotting.vars)){
-    if(plotting.vars[i]!=facetcol){
-      plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,
-                                   as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
-    }
+    plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,as.dxns = F,hidelegend = hidelegend,
+                                     grouping = sumrepsby)
   }
-  
   for(i in 1:length(plotting.vars)){
     if(hidelegend==F) {
-      if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+      print(plotlist[[i]])
     }else {
-    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
-    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+      print(plotlist[[i]][[1]])
+      print(plotlist[[i]][[2]])
     }
   }
   
-  plotlist<-list()
   for(i in 1:length(plotting.vars)){
-    if(plotting.vars[i]!=facetcol){
-      plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
-                                   as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
-    }
+    plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = F,hidelegend = hidelegend,
+                                     grouping = sumrepsby)
   }
-  
   for(i in 1:length(plotting.vars)){
     if(hidelegend==F) {
-      if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+      print(plotlist[[i]])
     }else {
-    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
-    if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+      print(plotlist[[i]][[1]])
+      print(plotlist[[i]][[2]])
     }
   }
-
-}
   
-
-
+  if(!is.null(facetcol)){
+    plotlist<-list()
+    for(i in 1:length(plotting.vars)){
+      if(plotting.vars[i]!=facetcol){
+        plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
+                                     as.dxns = T,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
+      }
+    }
+    
+    for(i in 1:length(plotting.vars)){
+      if(hidelegend==F) {
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+      }else {
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+      }
+    }
+    
+    plotlist<-list()
+    for(i in 1:length(plotting.vars)){
+      if(plotting.vars[i]!=facetcol){
+        plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,
+                                     as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
+      }
+    }
+    
+    for(i in 1:length(plotting.vars)){
+      if(hidelegend==F) {
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+      }else {
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+      }
+    }
+    
+    plotlist<-list()
+    for(i in 1:length(plotting.vars)){
+      if(plotting.vars[i]!=facetcol){
+        plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
+                                     as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
+      }
+    }
+    
+    for(i in 1:length(plotting.vars)){
+      if(hidelegend==F) {
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
+      }else {
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
+        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+      }
+    }
+  }
+} else message("plotting.vars=F...skipping barplots")
 ```
 
 
 ## pca plot 
-```{r, eval=TRUE,echo=F}
+```{r pca plots, eval=TRUE,echo=F}
 #just an example, not interesting in this case
-message("Plotting pca plot with lines")
-for(i in 1:length(plotting.vars)){
-  p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
-  print(p)
-}
-
-message("Plotting pca plot without lines")
-for(i in 1:length(plotting.vars)){
-  p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
-  print(p)
-}
+if(!is.null(plotting.vars)){
+  message("Plotting pca plot with lines")
+  for(i in 1:length(plotting.vars)){
+    p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
+    print(p)
+  }
+  
+  message("Plotting pca plot without lines")
+  for(i in 1:length(plotting.vars)){
+    p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
+    print(p)
+  }
+} else message("plotting.vars=F...skipping pca plots")
 ```
 
 ## combine counts and taxalists
-```{r, eval=TRUE,echo=F}
+```{r step counts, eval=TRUE,echo=F}
 #counts
 message("Note that detections/samples after sumreps will be fewer because reps are joined")
 
@@ -409,12 +421,12 @@ DT::datatable(taxaSteps2, rownames = FALSE, options = list(pageLength = 10, scro
 ```
 
 ## final taxa list
-```{r, eval=TRUE,echo=F}
+```{r final taxa list, eval=TRUE,echo=F}
 print(all.taxatabs.ss$taxon)
 ```
 
 ## plot counts
-```{r, eval=TRUE,echo=F}
+```{r plot counts, eval=TRUE,echo=F}
 message("Note that detections/samples after sumreps will be fewer because reps are joined")
 
 all.counts$step <- factor(all.counts$step,levels = all.counts$step)
@@ -435,12 +447,7 @@ stepPlot(all.counts,type="taxa")
 stepPlot(all.counts,type="samples")
 ```
 
-## a few final sentences would be good 
-```{r, eval=TRUE,echo=F}
-#e.g. from x ss_sample_id belonging to real, negs etc,...y had detections, reads etc.
-```
-
 ## write final table
-```{r, eval=TRUE,echo=F}
-#write.table(all.taxatabs.ss,"all.taxatabs.ss.txt",quote = F, row.names = F,col.names = T,sep = "\t")
+```{r write table, eval=TRUE,echo=F}
+if(!is.null(taxatab.out)) write.table(all.taxatabs.ss,taxatab.out,quote = F, row.names = F,col.names = T,sep = "\t")
 ```
