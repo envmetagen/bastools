@@ -361,6 +361,217 @@ extract.gene.gb2<-function(gbfile,gene,bastoolsDir){
   unlink(paste0(bastoolsDir,scripts))
 }
 
+#' @export
+#'
+get_BOLD_BAS<-function(groups){
+  #would be good to apply taxise to ncbi download
+  
+  #make folder for all
+  dir.create(path = "./BOLD")
+  setwd("./BOLD")
+  
+  #check the level of each group
+  bb<-c("kingdom","phylum","class","order")
+  a2<-taxize::classification(groups,db = "col")
+  cc<-data.frame(ncol(4))
+  for(i in 1:length(a2)){
+    cc[i,1:4]<-bb %in% a2[[i]]$rank[length(a2[[i]]$rank)]
+  }
+  
+  #get families, if group is greater than family
+  a3<-list()
+  for(i in 1:length(cc$V1)){
+    if("TRUE" %in% cc[i,]==TRUE){
+      a3[[i]]<-taxize::downstream(groups[i], db = "col", downto = "family")
+    }
+  }
+  
+  #Loop to download sequences for each group
+  if(length(a3)>0){
+    for(i in 1:length(a3)){
+      #make folder for each group
+      dir.create(path = names(a3[[i]][1]))
+      setwd(names(a3[[i]][1]))
+      time1<-Sys.time()
+      ctn<-vector()
+      a4<-a3[[i]][[1]]$childtaxa_name
+      ctn<-c(ctn,a4)
+      ctn<-ctn[!ctn=="Not assigned"]
+      ctn<-ctn[order(... = ctn,na.last = F)]
+      #download sequences for each family
+      for(j in 1:length(ctn)){
+        out <- bold::bold_seq(ctn[j])
+        time2<-Sys.time()
+        ##Make fasta file for each family, if anything was found
+        if(!length(out)==0){
+          df1<-data.table::rbindlist(l = out)
+          df1$def<-paste0(df1$id,"_",df1$name)
+          df2<-df1[,c(5,4)]
+          invisible(seqRFLP::dataframe2fas(x = df2,file = paste0(ctn[j],"_BOLD.fasta")))
+          message(c("Downloaded ",length(df2$def), " sequences for ", paste0(ctn[j]), " in ",
+                    round(difftime(time2,time1),digits = 2)," mins from BOLD"))
+        }
+      }
+      setwd("../../BOLD")
+    }
+  }
+  
+  
+  if(length(a3)==0){
+    for(i in 1:length(groups)){
+      #download data
+      time1<-Sys.time()
+      groups<-groups[order(... = groups,na.last = F)]
+      out <- bold::bold_seq(groups[i])
+      time2<-Sys.time()
+      
+      ##Output fasta files
+      if(!length(out)==0){
+        df1<-data.table::rbindlist(l = out)
+        df1$def<-paste0(df1$id,"_",df1$name)
+        df2<-df1[,c(5,4)]
+        invisible(seqRFLP::dataframe2fas(x = df2,file = paste0(groups[i],"_BOLD.fasta")))
+        message(c("Downloaded ",length(df2$def), " sequences for ", groups[i], " in ",round(difftime(time2,time1),digits = 2),
+                  " mins from BOLD"))
+      }
+    }
+  }
+}
+
+#' Download sequences from NCBI and BOLD based on taxonomy and gene search terms
+#'
+#'
+#' @export
+batch_download.BAS<-function (table, config){
+  source(config)
+  if (is.data.frame(table)) {
+  }
+  if(!is.data.frame(table)){
+    table <- read.csv(table, sep = Taxon_sep, stringsAsFactors = F)
+  }
+  table[2][is.na(table[2])] <- ""
+  folder <- which(table[, 1] != "")
+  folder <- c(folder, nrow(table) + 1)
+  table[folder, ]
+  for (i in 1:(length(folder) - 1)) {
+    subFolder <- table[folder[i], 1]
+    subStart <- folder[i] + 1
+    subEnd <- folder[i + 1] - 1
+    dir.create(subFolder, showWarnings = F)
+    subFolderPath <- paste(subFolder, "/", subFolder, sep = "")
+    if (table[subEnd, 2] == "") {
+      taxa <- subFolder
+    }
+    else {
+      taxa <- table[subStart:subEnd, 2]
+    }
+    download_and_cluster <- T
+    if (Skip_if_complete) {
+      done <- file.exists(paste(subFolder, "/", "done.txt",
+                                sep = ""))
+      if (done) {
+        download_and_cluster <- F
+        time <- readLines(paste(subFolder, "/", "done.txt",
+                                sep = ""), warn = F)
+        message(paste("Data for *", subFolder, "* was already downloaded and clustered on ",
+                      time[1], " and will thus be skipped. Turn Skip_if_complete to F, if you like data to be redownloaded and reclustered or delete the file done.txt in the folder ",
+                      subFolder, sep = ""))
+        message(" ")
+        message("-------------------")
+        message(" ")
+      }
+    }
+    if (download_and_cluster) {
+      if (Download) {
+        if (download_bold) {
+          Download_BOLD(taxa, folder = subFolderPath,
+                        setwd = subFolder)
+        }
+        if (download_GB) {
+          Download_GB(taxa, folder = subFolderPath, marker = Marker,
+                      maxlength = maxlength_GB, custom_query = custom_query_GB,
+                      setwd = subFolder)
+        }
+        if (download_mt) {
+          Download_mito(taxa, folder = subFolderPath,
+                        minlength = minlength_mt, maxlength = maxlength_mt,
+                        custom_query = custom_query_mt, setwd = subFolder)
+          #if (length(list.files(subFolderPath, pattern = "mito.gb$")) >
+          #   0) {
+          #message(" ")
+          #Mito_GB2fasta(subFolderPath, marker = Marker,
+          #             add = add_mt, rm_dup = rm_dup, no_marker = no_marker,
+          #            setwd = subFolder)
+          #}
+        }
+      }
+      message(" ")
+      if (Merge_and_Cluster_data) {
+        all_file_TF <- c()
+        if (merge_bold) {
+          BOLD_fasta <- paste(subFolderPath, "_Bold.fasta",
+                              sep = "")
+          if (length(list.files(subFolderPath, pattern = "BOLD\\.fasta$")) >
+              0) {
+            Merge_fasta(files = subFolderPath, save = BOLD_fasta,
+                        clip_left = clipping_left_bold, clip_right = clipping_rigth_bold,
+                        pattern = "BOLD\\.fasta$", setwd = subFolder)
+            all_file_TF <- c(all_file_TF, BOLD_fasta)
+          }
+        }
+        if (merge_GB) {
+          if (length(list.files(subFolderPath, pattern = "GB\\.fasta$")) >
+              0) {
+            GB_fasta <- paste(subFolderPath, "_GB.fasta",
+                              sep = "")
+            Merge_fasta(subFolderPath, save = GB_fasta,
+                        clip_left = clipping_left_GB, clip_right = clipping_rigth_GB,
+                        pattern = "GB\\.fasta$", setwd = subFolder)
+            all_file_TF <- c(all_file_TF, GB_fasta)
+          }
+        }
+        if (merge_mt) {
+          if (length(list.files(subFolderPath, pattern = "[mito]\\.fasta$")) >
+              0) {
+            mito_fasta <- paste(subFolderPath, "_mito.fasta",
+                                sep = "")
+            Merge_fasta(subFolderPath, save = mito_fasta,
+                        clip_left = clipping_left_mt, clip_right = clipping_rigth_mt,
+                        pattern = "[mito]\\.fasta$", setwd = subFolder)
+            all_file_TF <- c(all_file_TF, mito_fasta)
+          }
+        }
+        all_fasta <- paste(subFolder, "/", subFolder,
+                           "_all.fasta", sep = "")
+        if (is.null(all_file_TF)) {
+          glumanda <- paste("\nWARNING: For the group ",
+                            subFolder, " no sequences were obtained from the given reference databases. review the taxon spelling or search for a broader group / aktivate downloading on all databases.\n\n")
+          cat(file = paste(subFolder, "/log.txt", sep = ""),
+              glumanda, append = T)
+          message(glumanda)
+        }
+        else {
+          Merge_fasta(all_file_TF, save = all_fasta,
+                      clip_left = 0, clip_right = 0, setwd = subFolder)
+          message(" ")
+          all_fasta <- paste(subFolder, "_all.fasta",
+                             sep = "")
+          Clustering(all_fasta, vsearchpath = vsearchpath,
+                     id = id, threshold = threshold, setwd = subFolder)
+          message(" ")
+        }
+        message("-------------------")
+        message(" ")
+        cat(file = paste(subFolder, "/", "done.txt",
+                         sep = ""), paste(Sys.time()))
+      }
+    }
+  }
+  if (summstats) {
+    download_stats(table)
+  }
+  message(" ")
+}
 
 
 

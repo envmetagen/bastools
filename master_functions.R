@@ -2172,20 +2172,22 @@ ecopcr2refs<-function(ecopcrfile,outfile,bufferecopcr,Pf,Pr,selection="genus"){
   if(length(table(a$leftedge))!=1)  message("Error: Some left buffers are too long...check reason")
   
   #choosing one seq per genus
-  message("Choosing one sequence per ",selection)
-  colnames(a)<-gsub("taxid","taxids",colnames(a))
-  a$path<-paste(a$superkingdom_name,a$family_name,a$genus_name,sep = ";")
-  a <- a[order(a$path,a$amplicon_length,decreasing = T),]
-  a <-a[!duplicated(a[,c(paste0(selection,"_name"))]),] 
-  
-  message(nrow(a)," selected")
+  if(!is.null(selection)){
+    message("Choosing one sequence per ",selection)
+    colnames(a)<-gsub("taxid","taxids",colnames(a))
+    a$path<-paste(a$superkingdom_name,a$family_name,a$genus_name,sep = ";")
+    a <- a[order(a$path,a$amplicon_length,decreasing = T),]
+    a <-a[!duplicated(a[,c(paste0(selection,"_name"))]),] 
+    
+    message(nrow(a)," selected")
+  }
   
   #output as fasta
   colnames(a)<-gsub("sequence", "seq.text",colnames(a))
   #refs should comprise buffer,binding site, insert, binding site, buffer        
           
   a$seq.text<-toupper(a$seq.text)
-  a$seq.name<-paste0(a$AC," taxid=",a$taxid,"; ",a$definition)
+  a$seq.name<-paste0(a$AC," taxid=",a$taxid,"; definition=",a$definition,"; strand=",a$strand)
   phylotools::dat2fasta(a[,c("seq.name","seq.text")],outfile)
 }
 
@@ -2290,7 +2292,7 @@ add.res.Bas<-function(ecopcroutput,obitaxdb){
 }
 
 #function to calculate % species with family or lower res
-res.fam.or.better.basres<-function(ecopcroutput,column="resolution.bas"){
+res.fam.or.better.basres<-function(ecopcroutput,column="res"){
   (length(ecopcroutput[,column][ecopcroutput[,column]=="family"])+
      length(ecopcroutput[,column][ecopcroutput[,column]=="genus"])+
      length(ecopcroutput[,column][ecopcroutput[,column]=="species"])) /
@@ -2509,7 +2511,7 @@ make.primer.bias.table<-function(originaldbtab,
   ##########################################
   
   #for rest of stats keep only unique barcodes for each family
-  message("Dereplicating by family. Bias tables are based on dereplicated seqeunces only")
+  message("Dereplicating by family. Bias tables are based on dereplicated sequences only")
   ecopcroutput$path<-paste(ecopcroutput$K,ecopcroutput$P,ecopcroutput$C,ecopcroutput$O,ecopcroutput$F,sep = ";")
   ecopcroutput<-ecopcroutput[!duplicated(ecopcroutput[,c("path","fullseq")]),]
   
@@ -2550,8 +2552,8 @@ make.primer.bias.table<-function(originaldbtab,
   mean_fam.res.bas<-calc.fam.res(ecopcroutput,res = "bas2")
   colnames(mean_fam.res.bas)<-gsub("pc_res_fam_or_better", "res.fam.plus.bas",colnames(mean_fam.res.bas))
   #% of unqiue seqs that get to fam or better
-  mean_fam.res.obi<-calc.fam.res(ecopcroutput,res = "obi")
-  colnames(mean_fam.res.obi)<-gsub("pc_res_fam_or_better", "res.fam.plus.obi",colnames(mean_fam.res.obi))
+  #mean_fam.res.obi<-calc.fam.res(ecopcroutput,res = "obi")
+  #colnames(mean_fam.res.obi)<-gsub("pc_res_fam_or_better", "res.fam.plus.obi",colnames(mean_fam.res.obi))
   #mean amplicon length
   mean_amplicon.len<-aggregate(x =  nchar(ecopcroutput$sequence), by = list(ecopcroutput$path),FUN = mean)
   colnames(mean_amplicon.len)<-gsub("x","mean_amplicon.len",colnames(mean_amplicon.len))
@@ -3775,4 +3777,37 @@ google.make.MBC.expSheet<-function(urls,subsetList=NULL,out=NULL){
 }
 
 
+add.target.positions<-function(cattedDLS.checked,refs,out){
 
+  a<-phylotools::read.fasta(refs)
+  ref.ids<-do.call(rbind,stringr::str_split(a$seq.name," "))[,1]
+  
+  write.table(ref.ids,quote = F,row.names = F,append = F,file = "ref.ids.tmp")
+  
+  system2(command = "seqkit", args=c("grep", "-f","ref.ids.tmp",cattedDLS.checked),stdout = out,wait = T)
+  
+  unlink("ref.ids.tmp")
+  
+  #find each seq in original
+  b<-phylotools::read.fasta(out)
+  
+  b2<-b[order(b$seq.name),]
+  a2<-a[order(a$seq.name),]
+  colnames(a2)<-c("target.seq.name","target.seq.text")
+  
+  a3<-cbind(a2,b2)
+  a3$target.seq.text<-as.character(a3$target.seq.text)
+  a3$seq.text<-as.character(a3$seq.text)
+  
+  a3[grepl("strand=R",a3$target.seq.name),"target.seq.text"]<-insect::rc(z=a3[grepl("strand=R",a3$target.seq.name),"target.seq.text"])
+  
+  a3$start<-stringr::str_locate(a3$seq.text,a3$target.seq.text)[,1]
+  a3$end<-stringr::str_locate(a3$seq.text,a3$target.seq.text)[,2]
+  
+  a3$seq.name<-paste0(a3$seq.name," target.start=",a3$start,"; target.end=",a3$end,";")
+  
+  phylotools::dat2fasta(dat = a3[,c("seq.name","seq.text")],outfile = out)
+}
+
+
+  
