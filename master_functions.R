@@ -2148,22 +2148,25 @@ ecopcr2refs<-function(ecopcrfile,outfile,bufferecopcr,Pf,Pr,selection="genus"){
   #remove seqs with edges less than buffer - why necessary?, because ecopcr with buffer includes hits where buffer extended past length of seq
   message("Removing sequences with edges less than buffer")
   #location of first base of insert
-  a$start<-stringr::str_locate(a$sequence,"[A-Z]")[1] #all left edges are 25, which makes sense, this step not needed
+  a$start<-stringr::str_locate(a$sequence,"[A-Z]")[1] #all left edges are 25, which makes sense
   a$sequence2<-substr(x = a$sequence, start = a$start, stop = nchar(a$sequence))
   #location of last base of insert
   a$end<-stringr::str_locate(a$sequence2,"[a-z]")[,1]-1
+  #noticed one or two seqs that did not have bufers for some reason, resulting in NAs
+  if(sum(is.na(a$end))>0) a<-a[!is.na(a$end),]
+  
   ##a$sequence3<-substr(x = a$sequence2, start = 1, stop = a$end)
   #length of left edge
   a$leftedge<-a$start-1
   #length of right edge
   a$rightedge<-nchar(a$sequence2)-a$end
-  #remove seqs with left buffer less than buffer + primer  #####maybe should be done before selecting genus
+  #remove seqs with left buffer less than buffer + primer  
   before<-nrow(a)
   a<-a[!a$leftedge<(bufferecopcr+nchar(Pf)),]
   after<-nrow(a)
   message(before-after," sequences removed for failing left buffer")
   #remove seqs with right buffer less than buffer
-  a<-a[!a$rightedge<(bufferecopcr+nchar(Pr)),]
+  a<-a[!a$rightedge<(bufferecopcr+nchar(Pr)),] ####################introduces NA to AC
   after2<-nrow(a)
   message(after-after2," sequences removed for failing right buffer")
   
@@ -2372,7 +2375,7 @@ calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
 }
 
 
-clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer.insert=F,buffer.used=T){
+clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer.insert=F,buffer.used=T,rm.buffer.insert=F){
   #GENERAL CLEANING 
   
   b<-data.table::fread(file = ecopcrfile,data.table = F,
