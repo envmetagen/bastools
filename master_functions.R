@@ -2375,7 +2375,7 @@ calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
 }
 
 
-clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer.insert=F,buffer.used=T,rm.buffer.insert=F){
+clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer.insert=F,buffer.used=T){
   #GENERAL CLEANING 
   
   b<-data.table::fread(file = ecopcrfile,data.table = F,
