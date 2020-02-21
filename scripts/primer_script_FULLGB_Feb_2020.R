@@ -207,7 +207,9 @@ if("step6" %in% stepstotake){
   lca$gen.res<-TRUE
   lca$sp.res<-TRUE
   
-  if(length(grep(";unknown;unknown;unknown$",lca$path))>0) lca$fam.res<- !lca$path %in% lca$path[grep(";unknown;unknown;unknown$",lca$path)]
+  lca$path<-paste(lca$K,lca$P,lca$C,lca$O,lca$F,lca$G,lca$S,sep = ";")
+  
+  if(length(grep(";unknown;unknown;unknown$",lca$path))>0) lca$fam.res<-!lca$path %in% lca$path[grep(";unknown;unknown;unknown$",lca$path)]
   if(length(grep(";unknown;unknown$",lca$path))>0) lca$gen.res<- !lca$path %in% lca$path[grep(";unknown;unknown$",lca$path)]
   if(length(grep(";unknown$",lca$path))>0) lca$sp.res<- !lca$path %in% lca$path[grep(";unknown$",lca$path)]
   
@@ -277,9 +279,6 @@ if("step8" %in% stepstotake){
   message("counting families after mapping back")
   aftermapping<-count.fams.in.fasta(gsub(".fasta",".checked.wPos.plus.mapcaught.fasta",catted_DLS),ncbiTaxDir)
   
-  #after final ecopcr
-  long.ecopcr<-data.table::fread(out_mod_ecopcrout_file,data.table = F) 
-  
   #merge all
   message("merging with bias table")
   merged<-merge(cattedDLS,afterchecks,by = "Family",all = T)
@@ -288,6 +287,8 @@ if("step8" %in% stepstotake){
   
   merged<-merge(merged,first.ecopcr,by = "Family",all = T)
   colnames(merged)<-gsub("nseqs",paste0("first.ecopcr.maxe=",max_error_buildrefs),colnames(merged))
+
+  merged<-merge(merged,long.ecopcr,by = "Family",all = T)
   
   merged<-merge(merged,aftermapping,by = "Family",all = T)
   colnames(merged)<-gsub("nseqs","after_mapping_back",colnames(merged))
