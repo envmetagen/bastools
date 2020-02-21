@@ -102,7 +102,7 @@ if("step4" %in% stepstotake){
   add.target.positions(cattedDLS.checked=gsub(".fasta",".checked.fasta",catted_DLS),refs=gsub(".fasta",".refs.fasta",catted_DLS)
                        ,out=gsub(".fasta",".checked.wPos.fasta",catted_DLS))
   
-  #map sequences that did not have primers found against sequences that had primer found
+  #map sequences that did not have primers found against sequences that had primers found
   ##first make faste of sequences that did not have primers found
   a<-phylotools::read.fasta(gsub(".fasta",".checked.wPos.fasta",catted_DLS))
   ref.ids<-do.call(rbind,stringr::str_split(a$seq.name," "))[,1]
@@ -129,9 +129,9 @@ if("step4" %in% stepstotake){
 #step 5 check that sequences which mapped overlap target region
 if("step5" %in% stepstotake){
   
-  message("RUNNING STEP5 - check that sequences which mapped overlap target region")
+  message("RUNNING STEP5 - check that sequences which mapped overlap target region, and make final ecopcrdb")
   
-  #check that sequences which mapped overlap target region
+  #check that sequences which mapped overlap target region  
   ##read in blast results
   a<-data.table::fread(gsub(".fasta",".checked.NoPri.blast",catted_DLS),data.table = F)
   colnames(a)<-c("qseqid","sseqid", "stitle", "qlen", "qstart", "qend", "slen", "sstart", "send", "length", "pident", "qcovs", "sstrand")
@@ -198,6 +198,7 @@ if("step6" %in% stepstotake){
   ecopcrout.wstats<-add.stats.ecopcroutput(ecopcroutput = ecopcroutput,ncbiTaxDir = ncbiTaxDir,Ta = Ta,Pf = Pf,Pr = Pr)
   
   #add resolution using simple method
+  message("Adding resolution")
   lca = aggregate(ecopcrout.wstats$taxids, by=list(ecopcrout.wstats$sequence),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxoR,x))
   colnames(lca)<-c("sequence","taxids")
   lca<-add.lineage.df(lca,ncbiTaxDir = ncbiTaxDir)
@@ -206,9 +207,9 @@ if("step6" %in% stepstotake){
   lca$gen.res<-TRUE
   lca$sp.res<-TRUE
   
-  lca$fam.res<- !lca$path %in% lca$path[grep(";unknown;unknown;unknown$",lca$path)]
-  lca$gen.res<- !lca$path %in% lca$path[grep(";unknown;unknown$",lca$path)]
-  lca$sp.res<- !lca$path %in% lca$path[grep(";unknown$",lca$path)]
+  if(length(grep(";unknown;unknown;unknown$",lca$path))>0) lca$fam.res<- !lca$path %in% lca$path[grep(";unknown;unknown;unknown$",lca$path)]
+  if(length(grep(";unknown;unknown$",lca$path))>0) lca$gen.res<- !lca$path %in% lca$path[grep(";unknown;unknown$",lca$path)]
+  if(length(grep(";unknown$",lca$path))>0) lca$sp.res<- !lca$path %in% lca$path[grep(";unknown$",lca$path)]
   
   lca$res<-"htf" #higher than family
   lca$res[lca$fam.res==T]<-"family"

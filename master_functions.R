@@ -2222,7 +2222,7 @@ add.3pmms<-function(ecopcroutput,Pf,Pr){
 }
 
 add.tm.ecopcroutput<-function(ecopcroutput){
-  message("Calculating Tm for forward & reverse primer binding sites: 1) full binding site 2) 3 prime half 3) 3 primer last 6bp")
+  message("Calculating Tm for forward & reverse primer binding sites: 1) full binding site 2) 3 prime half 3) 3 prime last 6bp")
   ecopcroutput$fTms<-Tm.calc(ecopcroutput$forward_match)
   ecopcroutput$rTms<-Tm.calc(ecopcroutput$reverse_match)
   ecopcroutput$fTms3primehalf<-Tm.calc(substr(x = ecopcroutput$forward_match,
@@ -2508,7 +2508,7 @@ make.primer.bias.table<-function(originaldbtab,
   
   ##########################################
   #percentage seqs amped
-  all_primer_bias$pc_seqs_amped<-round(all_primer_bias$nseqs.amped/all_primer_bias$nseqs.odb*100,digits = 2)
+    all_primer_bias$pc_seqs_amped<-round(all_primer_bias$nseqs.amped/all_primer_bias$nseqs.odb*100,digits = 2)
   #percentage taxa amped
   all_primer_bias$pc_taxa_amped<-round(all_primer_bias$ntaxa.amped/all_primer_bias$ntaxa.odb*100,digits = 2)
   ##########################################
