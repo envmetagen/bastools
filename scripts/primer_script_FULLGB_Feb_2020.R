@@ -310,7 +310,7 @@ if("step8" %in% stepstotake){
   
   mergedbias<-mergedbias %>% select(path,K,P,C,O,F,everything())
   
-  write.table(x = biastemp,file = out_bias_file,quote = F,row.names = F,sep = "\t")
+  write.table(x = mergedbias,file = out_bias_file,quote = F,row.names = F,sep = "\t")
   
   message("STEP8 COMPLETE")
   
