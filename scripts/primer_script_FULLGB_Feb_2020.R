@@ -278,7 +278,7 @@ if("step8" %in% stepstotake){
   aftermapping<-count.fams.in.fasta(gsub(".fasta",".checked.wPos.plus.mapcaught.fasta",catted_DLS),ncbiTaxDir)
   
   #after final ecopcr
-  long.ecopcr<-data.table::fread(out_mod_ecopcrout_file,data.table = F) ###finish this
+  long.ecopcr<-data.table::fread(out_mod_ecopcrout_file,data.table = F) 
   
   #merge all
   message("merging with bias table")
