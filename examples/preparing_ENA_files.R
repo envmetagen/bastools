@@ -4,16 +4,16 @@
 #bastoolsDir<-"/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/git-bastools/bastools/"
 bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
 #datasheet
-sheeturl<-"https://docs.google.com/spreadsheets/d/1hf9LNJ11GId8Z6qkyhzZ9hFQo7PbcF7JDY1rhRBDW7A/edit#gid=1531090624"
+sheeturl<-"https://docs.google.com/spreadsheets/d/1LUN1siU0D7ZAkj7aq4p98rAoZaQJ8Cg44MzGuGN91cU/edit#gid=0"
 #options for subsetting sample sheet - if none use sample.subsetlist<-NULL
 #sample.subsetlist<-list(Site=c("Atar"))
-sample.subsetlist<-NULL
+sample.subsetlist<-list(notes="Used for A case study of introduced rats consuming endemic New Zealand frogs")
 #options for subsetting library sheet 
-library.subsetlist<-list(experiment_id=c("2018_02"))
+library.subsetlist<-list(library_construction_protocol=c("Primer_F=GACCCYATGGARCTTWARAC;Primer_R=TARCTTGGTYCGTTGATCA"))
 #email
 email="basegeter@gmail.com"
 #directory with files for upload
-fileDir<-"/mnt/Disk2/MISEQ_RUNS/2018_02_MICROSATS-SOILPHOS-FILTURB-NZFROG-IRANVERTS-ICVERTS-GUELTA/original_miseq_files/"
+fileDir<-"/mnt/Disk2/MISEQ_RUNS/20178_02_MICROSATS-SOILPHOS-FILTURB-NZFROG-IRANVERTS-ICVERTS-GUELTA/original_miseq_files/"
 #outdir ENA upload sheets will be saved here
 outdir<-"/mnt/Disk2/MISEQ_RUNS/2018_02_MICROSATS-SOILPHOS-FILTURB-NZFROG-IRANVERTS-ICVERTS-GUELTA/original_miseq_files/"
 #final sample sheet filename
