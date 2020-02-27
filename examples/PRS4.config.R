@@ -89,8 +89,12 @@ rep.rm.first<-F
 sumrepsby<-"biomaterial"
 #removing detections in <1 rep post rm.contaminants? 
 rep.rm.second<-F
-#collapse all taxa at this level. Also used for subsequently keeping only taxa that attain this level. Put xLevel=NULL to skip this
+#collapse all taxa at this level.  Put xLevel=NULL to skip this
 xLevel<-NULL
+#Keep only taxa at/below this level:
+zLevel<-"species"
+#collapse taxa pre-grouping?
+aggregate.pre.grouping=F
 #unwanted taxa - non-targets that are not required for final analysis. This is applied last. This is a grep, so 
 #form the taxa path accordingly and make sure you are only removing what you want (by checking output).
 #use problemTaxa<-c("NothingToAdd") to not use this 

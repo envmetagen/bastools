@@ -199,22 +199,28 @@ if(filter_dxn2>0){
 ```
 
 ## aggregate at chosen level and keep only that-level taxa 
-```{r aggregate at chosen level and keep only that-level taxa, eval=TRUE,echo=F}
-if(is.null(xLevel)) {
-  message("Skipping aggregate of taxa at xLevel")
-  
-  stepcounter<-stepcounter+1
-  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
-  
-} else {
-  all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
-  stepcounter<-stepcounter+1
-  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
-  
-  all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = xLevel)
-  
-  stepcounter<-stepcounter+1
-  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_xLevel") 
+```{r aggregate at chosen level and keep only that-level taxa Pre-grouping, eval=TRUE,echo=F}
+if(aggregate.pre.grouping==T){
+  if(is.null(xLevel)) {
+    message("Skipping aggregate of taxa at xLevel")
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
+    
+  } else {
+    all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
+  }
+    
+  if(is.null(zLevel)) {
+    message("Skipping removal of taxa at zlevel")
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
+  } else {
+    all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = zLevel)
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
+  }
 }
 ```
                                                         
@@ -238,7 +244,7 @@ DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options 
 ```
 
 ## group taxa, where possible
-```{r group taxa, eval=TRUE}
+```{r group taxa, eval=TRUE,echo=F}
 if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
 } else {
@@ -258,6 +264,32 @@ if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
 } else {
 DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T))
+}
+```
+
+## aggregate at chosen level and keep only that-level taxa 
+```{r aggregate at chosen level and keep only that-level taxa Post-grouping, eval=TRUE,echo=F}
+if(aggregate.pre.grouping==F){
+  if(is.null(xLevel)) {
+    message("Skipping aggregate of taxa at xLevel")
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
+    
+  } else {
+    all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
+  }
+    
+  if(is.null(zLevel)) {
+    message("Skipping removal of taxa at zlevel")
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
+  } else {
+    all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = zLevel)
+    stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
+  }
 }
 ```
 

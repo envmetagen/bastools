@@ -3813,4 +3813,71 @@ add.target.positions<-function(cattedDLS.checked,refs,out){
 }
 
 
+plot.ecopcroutput.bubble<-function(ecopcrdf,level="F",parent="C",parent2=NULL,plotvar="amplicon_length"){
+  #parent is the facet plot. e.g. put to somethng above family if level="F", parent2 is above parent
   
+  require(dplyr)
+  require(ggplot2)
+  
+  if(!plotvar %in% c("amplicon_length","n_mismatches","res")) stop("Please choose a plotting variable: 'amplicon_length', 'res' or 'n_mismatches'")
+  
+  heir<-c("K","P","C","O","F","G","S")
+  if(!level %in% heir)  stop("level must be one of 'K','P','C','O','F','G','S'")
+  
+  if(is.null(parent2)) parent2<-level
+  if(is.null(parent)) parent<-level
+  
+  if(plotvar %in% c("amplicon_length","res")){
+    ecopcr.freq <- ecopcrdf %>%
+      dplyr::group_by(parent2=ecopcrdf[,parent2],parent=ecopcrdf[,parent],level=ecopcrdf[,level], plotvar=ecopcrdf[,plotvar],total_mismatches) %>%
+      dplyr::summarise(freq = length(level))
+    
+    ecopcr.freq<-as.data.frame(ecopcr.freq)
+    
+    parrange <- ggplot(data = ecopcr.freq, aes(x=level, y=plotvar, size=freq,color=ecopcr.freq$total_mismatches+0.001))
+    
+    if(plotvar %in% "amplicon_length") {
+      min <- min(ecopcr.freq$plotvar)
+      max <- max(ecopcr.freq$plotvar)
+      parrange<-parrange+scale_y_continuous(limits = c(min-2, max+2), breaks = seq(min-2, max+2, by = 20))
+
+    }
+    
+    scales="free_x"
+  }
+  
+  if(plotvar=="n_mismatches"){
+    ecopcr.freq <- ecopcrdf %>%
+      dplyr::group_by(parent=ecopcrdf[,parent],level=ecopcrdf[,level], forward_mismatch, reverse_mismatch,total_mismatches) %>%
+      dplyr::summarise(freq = length(level))
+    
+    ecopcr.freq<-as.data.frame(ecopcr.freq)
+    
+    parrange <- ggplot(data = ecopcr.freq, aes(x=forward_mismatch, y=reverse_mismatch, size=freq,color=ecopcr.freq$total_mismatches+0.001))
+    
+    scales="fixed"
+  }
+    
+   parrange2<- parrange  + 
+      geom_point(alpha=0.8) + 
+      #theme_grey() + 
+      theme(legend.position = "none", strip.text = element_text(size=8), axis.title = element_text(size=10), 
+            axis.text.x = element_text(angle = 45,vjust = 1, hjust = 1, size = 7), title = element_text(face = "bold", size=15)) +
+     scale_colour_gradientn(colours = heat.colors(11,rev = T))
+   
+   if(parent==level) parent=NULL
+   if(parent2==level) parent2=NULL
+   
+   if(!is.null(parent)){
+     if(!parent %in% heir)  stop("parent must be one of 'K','P','C','O','F','G','S'")
+     if(!is.null(parent2)){
+       if(!parent2 %in% heir)  stop("parent must be one of 'K','P','C','O','F','G','S'")
+       parrange3<-parrange2+facet_wrap(ecopcr.freq$parent2~ecopcr.freq$parent,scales = scales,nrow = 4) 
+     } else parrange3<-parrange2+facet_wrap(~ecopcr.freq$parent,scales = scales,nrow = 4)
+   } else parrange3<-parrange2
+   
+  return(parrange3)
+}
+
+
+
