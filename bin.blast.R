@@ -549,7 +549,13 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,
   }
   
   disabledTaxaDF<-do.call(rbind,disabledTaxaDFList)
+  
+  #make empty cells FALSE
+  disabledTaxaDF$disable_species<-as.logical(disabledTaxaDF$disable_species)
+  disabledTaxaDF$disable_genus<-as.logical(disabledTaxaDF$disable_genus)
+  disabledTaxaDF$disable_family<-as.logical(disabledTaxaDF$disable_family)
   disabledTaxaDF[,c(-1,-2)][is.na(disabledTaxaDF[,c(-1,-2)])]<-FALSE
+
   
   if(force) {
     message("Using force=T")

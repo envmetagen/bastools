@@ -320,6 +320,7 @@ if(!is.null(plotting.vars)){
     plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,as.dxns = F,hidelegend = hidelegend,
                                      grouping = sumrepsby)
   }
+  
   for(i in 1:length(plotting.vars)){
     if(hidelegend==F) {
       print(plotlist[[i]])
@@ -333,6 +334,7 @@ if(!is.null(plotting.vars)){
     plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = F,hidelegend = hidelegend,
                                      grouping = sumrepsby)
   }
+  
   for(i in 1:length(plotting.vars)){
     if(hidelegend==F) {
       print(plotlist[[i]])

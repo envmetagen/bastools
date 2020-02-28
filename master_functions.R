@@ -239,7 +239,8 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
           dxnsbefore<-sum(taxatabX[,-1,drop=F]>0)
           
           #put taxon counts to 0
-          contaminations<-cbind(taxon=taxatabX$taxon[taxatabX$taxon %in% negtaxa],taxatabX[taxatabX$taxon %in% negtaxa,colnames(taxatabX) %in% group.samples])
+          contaminations<-cbind(taxon=taxatabX$taxon[taxatabX$taxon %in% negtaxa],
+                                              taxatabX[taxatabX$taxon %in% negtaxa,colnames(taxatabX) %in% group.samples])
           contaminations<-cbind(taxon=contaminations[,1],contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
           
             if(rm.only.less.than==T){
@@ -1146,6 +1147,8 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
     colnames(long)[4]<-column
     
     if(!is.null(facetcol)){
+      if(is.null(ms_ss[match(long$variable,ms_ss[,grouping]),facetcol])) stop("facetcol not found, check spelling, not some columns become lower case")
+      
       long[,5]<-ms_ss[match(long$variable,ms_ss[,grouping]),facetcol]
       colnames(long)[5]<-facetcol
     }
