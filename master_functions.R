@@ -1777,27 +1777,26 @@ reads.by.rank<-function(taxatab){
   return(d)
 }
 
-dxns.by.rank<-function(taxatab){
+stats.by.rank<-function(taxatab){
   a<-summary.dxns.by.taxon(taxatab)
   a<-a[a$taxon!="NA;NA;NA;NA;NA;NA;NA",]
   a<-a[a$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
   
-  #add rank
-  temprank<-stringr::str_count(a$taxon,";NA")
-  temprank<-gsub(0,"species",temprank)
-  temprank<-gsub(1,"genus",temprank)
-  temprank<-gsub(2,"family",temprank)
-  temprank<-gsub(3,"above_family",temprank)
-  
-  a$rank<-temprank
+  a$rank<-bas.get.ranks(a)
   
   d<-aggregate(a$n.samples,by=list(a$rank),FUN=sum)
   
+  e<-aggregate(a$total.reads,by=list(a$rank),FUN=sum)
+  
   colnames(d)<-c("rank","dxns")
+  colnames(e)<-c("rank","total.reads")
   
-  d$percent<-round(d$dxns/sum(d$dxns)*100,digits = 1)
+  d$percent.dxns<-round(d$dxns/sum(d$dxns)*100,digits = 1)
+  e$percent.reads<-round(e$total.reads/sum(e$total.reads)*100,digits = 1)
   
-  return(d)
+  f<-cbind(d,reads=e$total.reads,percent.reads=e$percent.reads)
+  
+  return(f)
 }
 
 sumreps<-function(taxatab,ms_ss,grouping="Sample_Name",discard=T){
@@ -3375,10 +3374,12 @@ taxatab.sumStats<-function(taxatab,stepname="this_step"){
   
   taxatab1<-summary.dxns.by.taxon(taxatab)
   
+  taxatab1$rank<-bas.get.ranks(taxatab1)
+  
   dfsum<-data.frame(detections=sum(taxatab1$n.samples),reads=sum(taxatab1$total.reads),
                     taxa=length(taxatab1$taxon),samples=length(colnames(taxatab[,-1])))
   
-  taxa<-taxatab1[,c("taxon","total.reads")]
+  taxa<-taxatab1[,c("taxon","total.reads","rank")]
   
   sumStats.list[[1]]<-dfsum
   sumStats.list[[2]]<-taxa
@@ -3882,5 +3883,28 @@ plot.ecopcroutput.bubble<-function(ecopcrdf,level="F",parent="C",parent2=NULL,pl
   return(parrange3)
 }
 
-
+bas.get.ranks<-function(taxatab){
+  
+  taxa<-taxatab[,1,drop=F]  
+  
+  taxa$fam.res<-TRUE
+  taxa$gen.res<-TRUE
+  taxa$sp.res<-TRUE
+  
+  #change NA and collapsed to unknown
+  taxa$taxon<-gsub("NA","unknown",taxa$taxon)
+  taxa$taxon<-gsub("collapsed","unknown",taxa$taxon)
+  
+  if(length(grep(";unknown;unknown;unknown$",taxa$taxon))>0) taxa$fam.res<-!taxa$taxon %in% taxa$taxon[grep(";unknown;unknown;unknown$",taxa$taxon)]
+  if(length(grep(";unknown;unknown$",taxa$taxon))>0) taxa$gen.res<- !taxa$taxon %in% taxa$taxon[grep(";unknown;unknown$",taxa$taxon)]
+  if(length(grep(";unknown$",taxa$taxon))>0) taxa$sp.res<- !taxa$taxon %in% taxa$taxon[grep(";unknown$",taxa$taxon)]
+  
+  taxa$res<-"htf" #higher than family
+  taxa$res[taxa$fam.res==T]<-"family"
+  taxa$res[taxa$gen.res==T]<-"genus"
+  taxa$res[taxa$sp.res==T]<-"species"
+  
+  return(taxa$res)
+  
+}
 

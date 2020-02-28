@@ -47,6 +47,7 @@ all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
 #make new taxa table based on subsetted master sheet
 all.taxatabs.ss<-cbind(taxon=all.taxatabs$taxon,all.taxatabs[colnames(all.taxatabs) %in% ms_ss$ss_sample_id])
+if(length(colnames(all.taxatabs.ss))==1) stop("No matching ss_sample_ids from master sheet found in taxatable")
 
 #remove 0 reads
 all.taxatabs.ss<-rm.0readtaxSam(all.taxatabs.ss)
@@ -55,7 +56,7 @@ stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = "start")
 
 #rank stats
-dxns.by.rank(all.taxatabs.ss)
+print(stats.by.rank(taxatab = all.taxatabs.ss))
 ```
 
 ## remove problem taxa - usually human, predator, NAs and no_hits
@@ -79,6 +80,9 @@ all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxaGrep = problemTaxa)
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.problem")
 
+#rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+
 if(do.first.negative.inspection==T) full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
 
 ```
@@ -97,6 +101,10 @@ if(taxonpc>0 && samplepc>0) {
     all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "samplepc")
     
     full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+    
+    #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
 }else message("taxonpc and samplepc set to 0...skipping taxon and sample filters")
 ```
 
@@ -112,6 +120,10 @@ if (rep.rm.first==T){
   all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter1")
 
   full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
 } else message("rep.rm.first=F...skipping removal of detections in less than 2 reps")
 ```
 
@@ -127,6 +139,10 @@ if(filter_dxn>0){
   all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter")
   
   full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
 } else message("filter_dxn=0...skipping detection filter")
 
 ```
@@ -161,7 +177,11 @@ if(use.contamination.filter==T){
       
       stepcounter<-stepcounter+1
       all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.contaminants")
-  } 
+  
+      #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
+      } 
 } else {
   message("use.contamination.filter set to FALSE, skipping contaminant filter")
 }
@@ -175,6 +195,10 @@ if (rep.rm.second==T){
   
   stepcounter<-stepcounter+1
   all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter2")
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
 } else message("rep.rm.second=F...skipping removal of detections in less than 2 reps")
 
 ```
@@ -185,6 +209,9 @@ all.taxatabs.ss<-sumreps(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumr
 
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "sumreps")
+
+#rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
 ```
 
 ## apply 2nd detection filter (possibly makes more sense here?)
@@ -195,6 +222,10 @@ if(filter_dxn2>0){
   
   stepcounter<-stepcounter+1
   all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter2")
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
 } else message("filter_dxn2=0...skipping 2nd detection filter")
 ```
 
@@ -221,6 +252,9 @@ if(aggregate.pre.grouping==T){
     stepcounter<-stepcounter+1
     all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
   }
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
 }
 ```
                                                         
@@ -232,6 +266,9 @@ all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxa = unwantedTaxa)
 
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "unwanted")
+
+#rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
 ```
 
 ## summary ---this is pre-grouping
@@ -240,6 +277,9 @@ if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
 } else {
 DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T))
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
 }
 ```
 
@@ -264,6 +304,10 @@ if(is.null(taxa.to.group)){
   message("Skipping grouping of taxa")
 } else {
 DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T))
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
 }
 ```
 
@@ -290,6 +334,9 @@ if(aggregate.pre.grouping==F){
     stepcounter<-stepcounter+1
     all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
   }
+  
+  #rank stats
+  print(stats.by.rank(taxatab = all.taxatabs.ss))
 }
 ```
 
@@ -418,6 +465,18 @@ if(!is.null(plotting.vars)){
 } else message("plotting.vars=F...skipping pca plots")
 ```
 
+## final table stats
+```{r final table counts, eval=TRUE,echo=F}
+#rank stats
+print(stats.by.rank(taxatab = all.taxatabs.ss))
+
+#summary
+summary.dxns.by.taxon(taxatab = all.taxatabs.ss)
+
+# final taxa list
+print(all.taxatabs.ss$taxon)
+```
+
 ## combine counts and taxalists
 ```{r step counts, eval=TRUE,echo=F}
 #counts
@@ -452,11 +511,6 @@ for(i in 2:(grep("aggregate_by_xLevel_taxa",namesSteps)-1)){
 
 DT::datatable(taxaSteps2, rownames = FALSE, options = list(pageLength = 10, scrollX=T,scrollY=T,fixedColumns = list(leftColumns = 1, rightColumns = 0)),extensions = c('FixedColumns'))
 
-```
-
-## final taxa list
-```{r final taxa list, eval=TRUE,echo=F}
-print(all.taxatabs.ss$taxon)
 ```
 
 ## plot counts
