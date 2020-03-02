@@ -1641,7 +1641,7 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
     contributordf<-contributordf[contributordf$may_be_improved=="TRUE",]
     contributordf<-contributordf[!contributordf$high.pident<abspident,]
     
-  } else {(message("Not adding 'May be improved' column as no pidents provided"))}
+  } else {(message("Not adding 'May be improved' column, as no pidents provided"))}
   
   
   #if pathofinterest at genus level, dont output contributors from diferent genera
@@ -1752,30 +1752,6 @@ taxatab.pieplot<-function(taxatab,hidelegend=F){
   b
 }
 
-
-reads.by.rank<-function(taxatab){
-  a<-summary.dxns.by.taxon(taxatab)
-  a<-a[a$taxon!="NA;NA;NA;NA;NA;NA;NA",]
-  a<-a[a$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
-  
-  #add rank
-  temprank<-stringr::str_count(a$taxon,";NA")
-  message("Dont think this is right")
-  temprank<-gsub(0,"species",temprank)
-  temprank<-gsub(1,"genus",temprank)
-  temprank<-gsub(2,"family",temprank)
-  temprank<-gsub(3,"above_family",temprank)
-  
-  a$rank<-temprank
-  
-  d<-aggregate(a$total.reads,by=list(a$rank),FUN=sum)
-  
-  colnames(d)<-c("rank","reads")
-  
-  d$percent<-round(d$reads/sum(d$reads)*100,digits = 1)
-  
-  return(d)
-}
 
 stats.by.rank<-function(taxatab){
   a<-summary.dxns.by.taxon(taxatab)
@@ -2030,104 +2006,7 @@ map2targets<-function(queries.to.map,refs,out){
 }
 
 
-add.counts.to.biasfile<-function(ncbiTaxDir,download.fasta,after.minL.fasta,after.checks.fasta,first.ecopcr.hit.table,
-                                 mapped.fasta,out_bias_file,long.ecopcr.file){
-  
-  #catted DLS
-  message("counting families in cattedDLS")
-  cattedDLS<-count.fams.in.fasta(download.fasta,ncbiTaxDir)
-  
-  #after minL
-  message("counting families after minL")
-  afterminL<-count.fams.in.fasta(after.minL.fasta,ncbiTaxDir)
-  
-  #after rm fams and checks
-  message("counting families after checks")
-  afterchecks<-count.fams.in.fasta(after.checks.fasta,ncbiTaxDir)
-  
-  #after first ecopcr
-  message("counting families after 1st ecopcr")
-  
-  firstecopcr<-data.table::fread(first.ecopcr.hit.table,sep = "\t")
-  firstecopcr<-firstecopcr[!firstecopcr$amplicon_length>max_length,]
-  firstecopcr$taxids<-firstecopcr$taxid
-  firstecopcr<-add.lineage.df(firstecopcr,ncbiTaxDir)
-  firstecopcr$count<-1
-  firstecopcr$path<-paste(firstecopcr$K,firstecopcr$P,firstecopcr$C,firstecopcr$O,firstecopcr$F,sep = ";")
-  a<-aggregate(firstecopcr$count,by=list(firstecopcr$path),FUN=sum)
-  colnames(a)<-c("Family","nseqs")
-  firstecopcr<-a
-  
-  #after long ecopcr
-  message("counting families in long ecopcr")
-  
-  long.ecopcr<-data.table::fread(long.ecopcr.file,data.table = F)
-  long.ecopcr<-long.ecopcr[long.ecopcr$amplicon_length>max_length & long.ecopcr$amplicon_length<long_length,]
-  long.ecopcr$taxids<-long.ecopcr$taxid
-  long.ecopcr<-add.lineage.df(long.ecopcr,ncbiTaxDir)
-  long.ecopcr$count<-1
-  long.ecopcr$path<-paste(long.ecopcr$K,long.ecopcr$P,long.ecopcr$C,long.ecopcr$O,long.ecopcr$F,sep = ";")
-  a<-aggregate(long.ecopcr$count,by=list(long.ecopcr$path),FUN=sum)
-  colnames(a)<-c("Family","nseqs")
-  long.ecopcr1<-a
-  
-  #mean length in long ecopcr
-  a<-aggregate(long.ecopcr$amplicon_length,by=list(long.ecopcr$path),FUN=mean)
-  colnames(a)<-c("Family","nseqs")
-  long.ecopcr2<-a
-  
-  #after mapping back
-  message("counting families after mapping back")
-  aftermapping<-count.fams.in.fasta(mapped.fasta,ncbiTaxDir)
-  
-  #merge all
-  message("merging with bias table")
-  merged<-merge(cattedDLS,afterminL,by = "Family",all = T)
-  colnames(merged)<-gsub("nseqs.x","downloaded",colnames(merged))
-  colnames(merged)<-gsub("nseqs.y","after_min_length",colnames(merged))
-  merged<-merge(merged,afterchecks,by = "Family",all = T)
-  colnames(merged)<-gsub("nseqs","after_checks",colnames(merged))
-  merged<-merge(merged,firstecopcr,by = "Family",all = T)
-  colnames(merged)<-gsub("nseqs","first_ecopcr",colnames(merged))
-  
-  merged<-merge(merged,long.ecopcr1,by = "Family",all = T)
-  colnames(merged)<-gsub("nseqs","first_ecopcr_but_above_max_length",colnames(merged))
-  
-  merged<-merge(merged,long.ecopcr2,by = "Family",all = T)
-  colnames(merged)<-gsub("nseqs","mean_length_for_above_max_length",colnames(merged))
-  merged$mean_length_for_above_max_length<-round(merged$mean_length_for_above_max_length,digits = 0)
-  
-  merged<-merge(merged,aftermapping,by = "Family",all = T)
-  colnames(merged)<-gsub("nseqs","after_mapping_back",colnames(merged))
-  
-  sum(merged$downloaded,na.rm = T)
-  sum(merged$after_min_length,na.rm = T)
-  sum(merged$after_checks,na.rm = T)
-  sum(merged$first_ecopcr,na.rm = T)
-  sum(merged$after_mapping,na.rm = T)
-  
-  biastemp<-data.table::fread(out_bias_file,sep = "\t")
-
-  mergedbias<-merge(merged,biastemp,by.x ="Family",by.y = "in.odb",all = T)
-  mergedbias$nseqs.odb=NULL
-  
-  #fixing taxonomy columns
-  splittaxonomy<-do.call(rbind,stringr::str_split(mergedbias$Family,";"))
-  mergedbias$K<-splittaxonomy[,1]
-  mergedbias$P<-splittaxonomy[,2]
-  mergedbias$C<-splittaxonomy[,3]
-  mergedbias$O<-splittaxonomy[,4]
-  mergedbias$F<-splittaxonomy[,5]
-  
-  mergedbias$path<-mergedbias$Family
-  mergedbias$Family=NULL
-  
-  mergedbias<-mergedbias %>% select(path,K,P,C,O,F,everything())
-  
-  return(mergedbias)
-}
-
-count.fams.in.fasta<-function(fasta,ncbiTaxDir){
+count.nseqs.in.fams.in.fasta<-function(fasta,ncbiTaxDir){
   message("Reminders: headers must contain \"taxid=taxid;\"")
   tempfasta<-phylotools::read.fasta(fasta)
   tempfasta$taxids<-stringr::str_match(tempfasta$seq.name, "taxid=(.*?);")[,2]
@@ -2137,6 +2016,22 @@ count.fams.in.fasta<-function(fasta,ncbiTaxDir){
   a<-aggregate(tempfasta$count,by=list(tempfasta$path),FUN=sum)
   colnames(a)<-c("Family","nseqs")
   return(a)
+}
+
+count.taxa.in.fams.in.fasta<-function(fasta,ncbiTaxDir){
+  message("Reminders: headers must contain \"taxid=taxid;\"")
+  tempfasta<-phylotools::read.fasta(fasta)
+  tempfasta$taxids<-stringr::str_match(tempfasta$seq.name, "taxid=(.*?);")[,2]
+  tempfasta<-add.lineage.df(tempfasta,ncbiTaxDir)
+  tempfasta$count<-1
+  tempfasta$path<-paste(tempfasta$K,tempfasta$P,tempfasta$C,tempfasta$O,tempfasta$F,tempfasta$G,tempfasta$S,sep = ";")
+  a<-aggregate(tempfasta$count,by=list(tempfasta$path),FUN=sum)
+  a$x=1
+  b<-as.data.frame(do.call(rbind,stringr::str_split(a$Group.1,";"))[,1:5])
+  a$fampath<-paste(b[,1],b[,2],b[,3],b[,4],b[,5],sep = ";")
+  b<-aggregate(a$x,by=list(a$fampath),FUN=sum)
+  colnames(b)<-c("Family","ntaxa")
+  return(b)
 }
 
 ecopcr2refs<-function(ecopcrfile,outfile,bufferecopcr,Pf,Pr,selection="genus"){

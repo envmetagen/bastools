@@ -203,27 +203,17 @@ if("step6" %in% stepstotake){
   colnames(lca)<-c("sequence","taxids")
   lca<-add.lineage.df(lca,ncbiTaxDir = ncbiTaxDir)
   
-  lca$fam.res<-TRUE
-  lca$gen.res<-TRUE
-  lca$sp.res<-TRUE
+  lca$taxon<-paste(lca$K,lca$P,lca$C,lca$O,lca$F,lca$G,lca$S,sep = ";")
   
-  lca$path<-paste(lca$K,lca$P,lca$C,lca$O,lca$F,lca$G,lca$S,sep = ";")
+  lca<-lca %>% select(taxon,everything())
   
-  if(length(grep(";unknown;unknown;unknown$",lca$path))>0) lca$fam.res<-!lca$path %in% lca$path[grep(";unknown;unknown;unknown$",lca$path)]
-  if(length(grep(";unknown;unknown$",lca$path))>0) lca$gen.res<- !lca$path %in% lca$path[grep(";unknown;unknown$",lca$path)]
-  if(length(grep(";unknown$",lca$path))>0) lca$sp.res<- !lca$path %in% lca$path[grep(";unknown$",lca$path)]
-  
-  lca$res<-"htf" #higher than family
-  lca$res[lca$fam.res==T]<-"family"
-  lca$res[lca$gen.res==T]<-"genus"
-  lca$res[lca$sp.res==T]<-"species"
+  lca$res<-bas.get.ranks(lca)
   
   merged<-merge(ecopcrout.wstats,lca[,c("sequence","res")],by = "sequence",all.x = T)
   
   write.table(x = merged,file = out_mod_ecopcrout_file,append = F,quote = F,sep = "\t",row.names = F)
 
   message("STEP6 COMPLETE")
-  
   
 }
 #######################################################
@@ -251,15 +241,18 @@ if("step8" %in% stepstotake){
   message("RUNNING STEP8 - add step counts to bias file")
   #catted DLS
   message("counting families in cattedDLS")
-  cattedDLS<-count.fams.in.fasta(catted_DLS,ncbiTaxDir)
+  cattedDLS<-count.nseqs.in.fams.in.fasta(catted_DLS,ncbiTaxDir)
   
   #after rm fams and checks
   message("counting families after checks")
-  afterchecks<-count.fams.in.fasta(gsub(".fasta",".checked.fasta",catted_DLS),ncbiTaxDir)
+  afterchecks<-count.nseqs.in.fams.in.fasta(fasta = gsub(".fasta",".checked.fasta",catted_DLS),ncbiTaxDir)
+  
+  ##ntaxa 
+  taxa.afterchecks<-count.taxa.in.fams.in.fasta(fasta = gsub(".fasta",".checked.fasta",catted_DLS),ncbiTaxDir)
   
   #after first ecopcr
   message("counting families found in during 1st ecopcr to build refs")
-  first.ecopcr<-count.fams.in.fasta(gsub(".fasta",".refs.fasta",catted_DLS),ncbiTaxDir)
+  first.ecopcr<-count.nseqs.in.fams.in.fasta(gsub(".fasta",".refs.fasta",catted_DLS),ncbiTaxDir)
   
   #mean,min,max length in first ecopcr
   long.ecopcr<-data.table::fread(gsub(".fasta",".ecopcrResults.txt.clean",catted_DLS),data.table = F)  
@@ -277,13 +270,16 @@ if("step8" %in% stepstotake){
 
   #after mapping back
   message("counting families after mapping back")
-  aftermapping<-count.fams.in.fasta(gsub(".fasta",".checked.wPos.plus.mapcaught.fasta",catted_DLS),ncbiTaxDir)
+  aftermapping<-count.nseqs.in.fams.in.fasta(gsub(".fasta",".checked.wPos.plus.mapcaught.fasta",catted_DLS),ncbiTaxDir)
   
   #merge all
   message("merging with bias table")
   merged<-merge(cattedDLS,afterchecks,by = "Family",all = T)
   colnames(merged)<-gsub("nseqs.x","starting.fasta",colnames(merged))
   colnames(merged)<-gsub("nseqs.y","after.checks",colnames(merged))
+  
+  merged<-merge(merged,taxa.afterchecks,by = "Family",all = T)
+  colnames(merged)<-gsub("ntaxa","ntaxa.after.checks",colnames(merged))
   
   merged<-merge(merged,first.ecopcr,by = "Family",all = T)
   colnames(merged)<-gsub("nseqs",paste0("first.ecopcr.maxe=",max_error_buildrefs),colnames(merged))

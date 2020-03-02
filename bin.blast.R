@@ -354,7 +354,7 @@ check.low.res.results<-function(pathofinterest,bins,btab){
 }
 
 check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabledTaxaFile=NULL,
-                           spident=NULL,gpident=NULL,fpident=NULL,abspident=NULL){
+                           spident=NULL,gpident=NULL,fpident=NULL,abspident=NULL,rm.excess=T,out=T){
   
   bins<-data.table::fread(binfile,sep = "\t",data.table = F)
   bins$path<-paste0(bins$K,";",bins$P,";",bins$C,";",bins$O,";",bins$F,";",bins$G,";",bins$S)
@@ -439,32 +439,39 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
     
   } else {(message("Not adding 'May be improved' column as no pidents provided"))}
   
+  if(rm.excess==T){
+    #if pathofinterest at genus level, dont output contributors from diferent genera
+    contributordf$contributors<-as.character(contributordf$contributors)
+    
+    #1. make column to see whether genera match
+    contributordf$contrGenus<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,6]
+    contributordf$pathGenus<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,6]
+    contributordf$contr.path.genus.match<-contributordf$contrGenus==contributordf$pathGenus
+    
+    #2. If rank=genus, and columns dont match, then remove
+    contributordf<-contributordf[!(contributordf$rank=="genus" & contributordf$contr.path.genus.match==FALSE),]
+    
+    #if pathofinterest at family level, dont output contributors from different families
+    
+    #1. make column to see whether families match
+    contributordf$contrFam<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,5]
+    contributordf$pathFam<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,5]
+    contributordf$contr.path.fam.match<-contributordf$contrFam==contributordf$pathFam
+    
+    #2. If rank=family, and columns dont match, then remove
+    contributordf<-contributordf[!(contributordf$rank=="family" & contributordf$contr.path.fam.match==FALSE),]
+    
+    contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:14]
+  } else {
+    
+    contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:12]
+    
+  }
   
-  #if pathofinterest at genus level, dont output contributors from diferent genera
-  contributordf$contributors<-as.character(contributordf$contributors)
-  
-  #1. make column to see whether genera match
-  contributordf$contrGenus<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,6]
-  contributordf$pathGenus<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,6]
-  contributordf$contr.path.genus.match<-contributordf$contrGenus==contributordf$pathGenus
-  
-  #2. If rank=genus, and columns dont match, then remove
-  contributordf<-contributordf[!(contributordf$rank=="genus" & contributordf$contr.path.genus.match==FALSE),]
-  
-  #if pathofinterest at family level, dont output contributors from different families
-  
-  #1. make column to see whether families match
-  contributordf$contrFam<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,5]
-  contributordf$pathFam<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,5]
-  contributordf$contr.path.fam.match<-contributordf$contrFam==contributordf$pathFam
-  
-  #2. If rank=family, and columns dont match, then remove
-  contributordf<-contributordf[!(contributordf$rank=="family" & contributordf$contr.path.fam.match==FALSE),]
-  
-  contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:14]
-  
-  write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
+  if(out==T){
+    write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
               sep="\t",quote = F,row.names = F)
+  } else (return(contributordf))
 }
 
 #############################decided to split function
