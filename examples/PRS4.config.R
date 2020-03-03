@@ -104,10 +104,11 @@ unwantedTaxa<-c("NothingToAdd")
 taxa.to.group<-NULL
 #variables to use as groups for plots, set to NULL to skip making barplots (useful if running into memory problems)
 plotting.vars<-NULL
-
+#the taxonomic levels to use for plotting. Set to NULL to use the taxatable as is (which will be printed regardless)
+#Note that multiple values of this and plotting.vars will make a lot of barplots!
+plotting_levels<-c("class")
 #hide legend (to avoid cowplot errors set to FALSE)
 hidelegend=T
-
 #split barplots by facet, set to null if not required
 facetcol=NULL
 
@@ -119,6 +120,8 @@ out_html<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/CRAYFISH/STATS/Stats_2020_
 
 #full path to taxatab out, put to NULL if not desired
 taxatab.out<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/CRAYFISH/STATS/Stats_2020_Feb/PRS3_COI_MAIN.txt"
+#make krona plot, put to F if not desired
+krona.out<-T
 
 #if your computer has trouble allocating memory set this to FALSE, it will exclude the inspection of negative prior to applying filters,
 # the memory issue is caused by trying to store too many plots in memory (which happend when there is lots of contamination)
