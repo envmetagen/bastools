@@ -23,7 +23,8 @@ if("step9" %in% stepstotake){
                                 stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
                obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,
-               abspident = abspident,disabledTaxaFiles = disabledTaxaFiles,disabledTaxaOut = disabledTaxaOut,force = force)
+               abspident = abspident,disabledTaxaFiles = disabledTaxaFiles,disabledTaxaOut = disabledTaxaOut,force = force, 
+               full.force=full.force)
   }
   
   message("STEP9 complete")
@@ -55,9 +56,12 @@ if("step11" %in% stepstotake){
   
   message("STEP11")
   
-  taxatabs<-list.files(pattern = ".taxatable.txt$")
+  for(i in 1:length(files)){
+    taxatabs<-paste0(experiment_id[i],"_",gsub(".blast.filt.txt",".rebins.taxatable.txt",
+                                               stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
   
   taxon.filter.solo(taxatabs,filterpc)
+  }
   
   message("STEP11 complete")
   
@@ -72,13 +76,16 @@ if("step12" %in% stepstotake){
   
   message("Note:sample names must contain project name with dash")
   
-  taxatabs<-list.files(pattern = ".taxatable.tf.txt$")
-  for(i in 1:length(taxatabs)){
-    taxatable<-data.table::fread(taxatabs[i],sep = "\t",header = T,data.table = F)
-    taxatable<-taxatable[,c(1,grep(paste0("^",project_name),colnames(taxatable)))]
+  for(i in 1:length(files)){
+    taxatabs<-paste0(experiment_id[i],"_",gsub(".blast.filt.txt",".rebins.taxatable.tf.txt",
+                                               stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
+    
+    taxatable<-data.table::fread(taxatabs,sep = "\t",header = T,data.table = F)
+    taxatable<-taxatable[,c(1,grep(paste0("^",project_name),colnames(taxatable))),drop=F]
+    if(length(colnames(taxatable)))
     taxatable<-taxatable[rowSums(taxatable[,2:length(colnames(taxatable))])!=0,]
     write.table(taxatable,
-                paste0(project_name,gsub("taxatable.tf.txt","taxatable.tf.spliced.txt",taxatabs[i])),
+                paste0(project_name,gsub("taxatable.tf.txt","taxatable.tf.spliced.txt",taxatabs)),
                 row.names = F,quote = F,sep = "\t")
   }
   
@@ -118,9 +125,12 @@ if("step14" %in% stepstotake){
   
   message("STEP14")
   
-  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   for(i in 1:length(files)){
-    bas.krona.plot(files[i],KronaPath)
+    taxatabs<-paste0(experiment_id[i],"_",gsub(".blast.filt.txt",".rebins.taxatable.tf.spliced.txt",
+                                               stringr::str_split(files[i],"/")[[1]][length(stringr::str_split(files[i],"/")[[1]])]))
+    taxatabs<-paste0(project_name,taxatabs)
+  
+    bas.krona.plot(taxatabs,KronaPath)
   }
   message("STEP14 complete")
   

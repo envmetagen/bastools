@@ -52,6 +52,8 @@ project_name<-"IRAN-" #INCLUDE THE DASH HERE
 #Use force=T to ignore any contributor entries where no levels were disabled when consistency checking. 
 #Use force=F to do more thorough consistency checks
 force=F
+#use full.full=T to disable a taxon even if it was only marked as TRUE once in the whole file 
+full.force=F
 
 #THE FOLLOWING SETTINGS MUST BE IDENTICAL TO THOSE USED FOR ORIGINAL BINNING 
 

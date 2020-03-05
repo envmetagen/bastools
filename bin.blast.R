@@ -45,7 +45,7 @@
 bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
                      obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,
                      disabledTaxaFiles=NULL,disabledTaxaOut=NULL,
-                     force=F,consider_sp.=F){
+                     force=F,full.force=F,consider_sp.=F){
   t1<-Sys.time()
   
   if(is.null(out)) stop("out not specified")
@@ -70,7 +70,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #read and check disabled taxa file(s) 
   if(!is.null(disabledTaxaFiles)){
     
-    disabledTaxaDf<-merge.and.check.disabled.taxa.files(disabledTaxaFiles,disabledTaxaOut,force = force)
+    disabledTaxaDf<-merge.and.check.disabled.taxa.files(disabledTaxaFiles,disabledTaxaOut,force = force,full.force = full.force)
     
     #get taxids at 7 levels
     disabledTaxaDf<-add.lineage.df(disabledTaxaDf,ncbiTaxDir,as.taxids = T)
@@ -534,7 +534,7 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
 }
 
 
-merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,force=F){
+merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,force=F,full.force=F){
   
   message("Note: Use force=T to ignore any contributor entries where no levels were disabled when consistency checking.
                  Use force=F to do more thorough consistency checks")
@@ -563,14 +563,48 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,
   disabledTaxaDF$disable_family<-as.logical(disabledTaxaDF$disable_family)
   disabledTaxaDF[,c(-1,-2)][is.na(disabledTaxaDF[,c(-1,-2)])]<-FALSE
 
+  disabledTaxaDF<-add.lineage.df(disabledTaxaDF,ncbiTaxDir,as.taxids = T)
+  
+  if(full.force) force=T
   
   if(force) {
     message("Using force=T")
     disabledTaxaDF$trues<-rowSums(disabledTaxaDF[,c("disable_species","disable_genus","disable_family")])
-    disabledTaxaDF<-disabledTaxaDF[disabledTaxaDF$trues>0,-7]
+    disabledTaxaDF<-disabledTaxaDF[disabledTaxaDF$trues>0,-match("trues",colnames(disabledTaxaDF))]
+    
+    if(full.force) {
+      message("Using full.force=T")
+      
+      #change families marked as TRUE to TRUE 
+      splitdf<-split(disabledTaxaDF, f = as.factor(disabledTaxaDF$F))
+      
+      for (i in 1:(length(splitdf))) {
+        if(TRUE %in% splitdf[[i]]$disable_family) splitdf[[i]]$disable_family<-TRUE
+      }
+      
+      disabledTaxaDF<-do.call(rbind, splitdf)
+      
+      #change genus marked as TRUE to TRUE 
+      splitdf<-split(disabledTaxaDF, f = as.factor(disabledTaxaDF$G))
+      
+      for (i in 1:(length(splitdf))) {
+        if(TRUE %in% splitdf[[i]]$disable_genus) splitdf[[i]]$disable_genus<-TRUE
+      }
+      
+      disabledTaxaDF<-do.call(rbind, splitdf)
+      
+      #change species marked as TRUE to TRUE 
+      splitdf<-split(disabledTaxaDF, f = as.factor(disabledTaxaDF$S))
+      
+      for (i in 1:(length(splitdf))) {
+        if(TRUE %in% splitdf[[i]]$disable_species) splitdf[[i]]$disable_species<-TRUE
+      }
+      
+      disabledTaxaDF<-do.call(rbind, splitdf)
+    }
+      
   } else { message("Using force=F")}
-
-  disabledTaxaDF<-add.lineage.df(disabledTaxaDF,ncbiTaxDir,as.taxids = T)
+  
   
   #check that identical paths have not been treated differently
   shouldstop1<-list()
@@ -589,7 +623,7 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,
   for(i in 1:length(unique(disabledTaxaDF$F))){
     temp<-disabledTaxaDF[disabledTaxaDF$F==unique(disabledTaxaDF$F)[i],]
     if(length(temp$contributors)>1) if(sum(duplicated(temp[,"disable_family"]))!=length(temp$contributors)-1) {
-      message("inconsistent family disabling detected")
+      message("inconsistent family disabling detected:")
       print(temp)
       shouldstop2[[i]]<-temp
     }
