@@ -342,7 +342,7 @@ keep.below.xLevel.assigns<-function(taxatab,xLevel="species"){
 
 aggregate.at.xLevel<-function(taxatab,xLevel){
   
-  if(!xLevel %in% c("genus","family","order")) stop("Only allowable at genus, family or order level")
+  if(!xLevel %in% c("genus","family","order","class","phylum")) stop("Only allowable at genus, family, order, class or phylum level")
   
   splittaxonomy<-as.data.frame(do.call(rbind,stringr::str_split(taxatab[,1],";")))
   
@@ -360,7 +360,16 @@ aggregate.at.xLevel<-function(taxatab,xLevel){
   if(xLevel=="order"){
     xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3],";",splittaxonomy[,4])
     leftover<-c(";collapsed;collapsed;collapsed")
-    
+  }
+  
+  if(xLevel=="class"){
+    xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2],";",splittaxonomy[,3])
+    leftover<-c(";collapsed;collapsed;collapsed;collapsed")
+  }
+  
+  if(xLevel=="phylum"){
+    xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2])
+    leftover<-c(";collapsed;collapsed;collapsed;collapsed;collapsed")
   }
   
   taxatab<-aggregate(taxatab[,-1],by = list(xPath),FUN=sum)
@@ -1127,13 +1136,15 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
   unlink(list.files(pattern = "*krona.txt"))
 }
 
-taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F,grouping="ss_sample_id"){
-  message("If column names are not ss_sample_ids using 'grouping' to specify what they are")
+taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F,grouping="ss_sample_id",
+                            taxonomic_level=NULL){
+  #If column names are not ss_sample_ids using 'grouping' to specify what they are
   
   taxa<-do.call(rbind,stringr::str_split(taxatab$taxon,";"))
   taxa<-cbind(taxa,do.call(rbind,stringr::str_split(taxa[,7]," ")))
   taxa2<-as.data.frame(substr(taxa,start = 1,stop = 3))
   taxatab$taxon<-apply(taxa2,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],"_",x[9]))
+  
   
   if(as.dxns==T) taxatab<-binarise.taxatab(taxatab,t=T)
   
@@ -3352,10 +3363,9 @@ plot.negs.vs.real<-function(taxatab,ms_ss,real){
 qplot.taxatab<-function(taxatab){
   long<-reshape2::melt(taxatab)
   long<-long[long$value>0,,drop=F]
-  long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
   long$taxon<-as.character(long$taxon)
   
-  a<-as.data.frame(as.factor(quantile(long$value, c(.1, .2, .3, .4, .5, .6, .7, .8,.9, .95, 1)))) 
+  a<-as.data.frame(as.factor(quantile(long$value, c(0.001,.01,.1, .2, .3, .4, .5, .6, .7, .8,.9, .95, 1)))) 
   colnames(a)<-"reads"
   a$quantile<-rownames(a)
   a$quantile <- factor(a$quantile, levels = a$quantile)
@@ -3803,3 +3813,29 @@ bas.get.ranks<-function(taxatab){
   
 }
 
+bas.plot.specaccum<-function(taxatab,xlabel){
+  require(vegan)
+  #transpose
+  ttaxatab<-taxatab
+  rownames(ttaxatab)<-ttaxatab$taxon  
+  ttaxatab$taxon<-NULL  
+  ttaxatab<-as.data.frame(t(as.matrix(ttaxatab)))
+  
+  #build the species accumulation curve 
+  taxatab.specaccum <- vegan::specaccum(ttaxatab,method = "exact")
+  
+  #plot the curve with some predefined settings
+  plot(taxatab.specaccum,ci.type="poly", col="blue", lwd=2, ci.lty=0, ci.col="lightblue",xlab = xlabel,ylab = "number of taxa")
+}
+
+bas.plot.specrich<-function(taxatab){
+  require(vegan)
+  #transpose
+  ttaxatab<-taxatab
+  rownames(ttaxatab)<-ttaxatab$taxon  
+  ttaxatab$taxon<-NULL  
+  ttaxatab<-as.data.frame(t(as.matrix(ttaxatab)))
+  
+  pool.taxatab <- vegan::poolaccum(ttaxatab)
+  plot(pool.taxatab)
+}

@@ -345,104 +345,47 @@ if(aggregate.pre.grouping==F){
 
 if(!is.null(plotting.vars)){
   
-  message("Making barplots")
-  
-  plotlist<-list()
-  for(i in 1:length(plotting.vars)){
-    plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = T,
-                                     hidelegend = hidelegend,grouping = sumrepsby)
+taxatabs.multilevels<-list()
+
+if(!is.null(plotting_levels)){
+  for(i in 1:length(plotting_levels)){
+    taxatabs.multilevels[[i]]<-aggregate.at.xLevel(all.taxatabs.ss,plotting_levels[i])
   }
+  taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
   
-  for(i in 1:length(plotting.vars)){
-    if(hidelegend==F) {
-      print(plotlist[[i]])
-    }else {
-      print(plotlist[[i]][[1]])
-      print(plotlist[[i]][[2]])
-    }
-  }
-    
+  message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
   
-  for(i in 1:length(plotting.vars)){
-    plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,as.dxns = F,hidelegend = hidelegend,
-                                     grouping = sumrepsby)
-  }
+} else taxatabs.multilevels[[1]]<-all.taxatabs.ss
+
+message("Making barplots")
   
-  for(i in 1:length(plotting.vars)){
-    if(hidelegend==F) {
-      print(plotlist[[i]])
-    }else {
-      print(plotlist[[i]][[1]])
-      print(plotlist[[i]][[2]])
-    }
-  }
+plot.as.percent<-c(F,T)
+plot.as.dxns<-c(F,T)
   
-  for(i in 1:length(plotting.vars)){
-    plotlist[[i]]<-taxatab.stackplot(all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,as.dxns = F,hidelegend = hidelegend,
-                                     grouping = sumrepsby)
-  }
-  
-  for(i in 1:length(plotting.vars)){
-    if(hidelegend==F) {
-      print(plotlist[[i]])
-    }else {
-      print(plotlist[[i]][[1]])
-      print(plotlist[[i]][[2]])
+  for(h in 1:length(plot.as.dxns)){
+    for(k in 1:length(plot.as.percent)){
+      for(j in 1:length(taxatabs.multilevels)){
+        for(i in 1:length(plotting.vars)){
+          print(suppressMessages(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],as.percent = plot.as.percent[k],
+                                as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby)))
+        }
+      }
     }
   }
   
   if(!is.null(facetcol)){
-    plotlist<-list()
-    for(i in 1:length(plotting.vars)){
-      if(plotting.vars[i]!=facetcol){
-        plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
-                                     as.dxns = T,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
-      }
-    }
-    
-    for(i in 1:length(plotting.vars)){
-      if(hidelegend==F) {
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
-      }else {
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
-      }
-    }
-    
-    plotlist<-list()
-    for(i in 1:length(plotting.vars)){
-      if(plotting.vars[i]!=facetcol){
-        plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = T,
-                                     as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
-      }
-    }
-    
-    for(i in 1:length(plotting.vars)){
-      if(hidelegend==F) {
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
-      }else {
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
-      }
-    }
-    
-    plotlist<-list()
-    for(i in 1:length(plotting.vars)){
-      if(plotting.vars[i]!=facetcol){
-        plotlist[[i]]<-taxatab.stackplot(taxatab = all.taxatabs.ss,master_sheet = ms_ss,column = plotting.vars[i],as.percent = F,
-                                     as.dxns = F,hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol)
-      }
-    }
-    
-    for(i in 1:length(plotting.vars)){
-      if(hidelegend==F) {
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]])
-      }else {
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[1]])
-        if(plotting.vars[i]!=facetcol) print(plotlist[[i]][[2]])
+    for(h in 1:length(plot.as.dxns)){
+      for(k in 1:length(plot.as.percent)){
+        for(j in 1:length(taxatabs.multilevels)){
+          for(i in 1:length(plotting.vars)){
+            print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],as.percent = plot.as.percent[k],
+                                as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol))
+          }
+        }
       }
     }
   }
+    
 } else message("plotting.vars=F...skipping barplots")
 ```
 
@@ -452,17 +395,29 @@ if(!is.null(plotting.vars)){
 #just an example, not interesting in this case
 if(!is.null(plotting.vars)){
   message("Plotting pca plot with lines")
-  for(i in 1:length(plotting.vars)){
-    p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
-    print(p)
+  for(j in 1:length(taxatabs.multilevels)){
+    for(i in 1:length(plotting.vars)){
+      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,
+                            factor1 = plotting.vars[i]))
+    }
   }
   
   message("Plotting pca plot without lines")
-  for(i in 1:length(plotting.vars)){
-    p<-taxatab.pca.plot.col(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,factor1 = plotting.vars[i])
-    print(p)
+  for(j in 1:length(taxatabs.multilevels)){
+    for(i in 1:length(plotting.vars)){
+      message("")
+      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,
+                            factor1 = plotting.vars[i]))
+    }
   }
 } else message("plotting.vars=F...skipping pca plots")
+```
+
+## species accumulation curve 
+```{r species accumulation curve, eval=TRUE,echo=F}
+print(bas.plot.specaccum(taxatab = all.taxatabs.ss,xlabel = sumrepsby))
+
+print(bas.plot.specrich(taxatab = all.taxatabs.ss))
 ```
 
 ## final table stats
@@ -471,10 +426,18 @@ if(!is.null(plotting.vars)){
 print(stats.by.rank(taxatab = all.taxatabs.ss))
 
 #summary
-summary.dxns.by.taxon(taxatab = all.taxatabs.ss)
+DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T))
 
 # final taxa list
 print(all.taxatabs.ss$taxon)
+```
+
+## qplot of % of detections that have x reads
+```{r qplot final table, eval=TRUE,echo=F}
+# qplots
+plot1<-qplot.taxatab(all.taxatabs.ss)
+title<-paste0("n_dxns=",sum(all.taxatabs.ss[,-1]>0), "; n_samples=",length(colnames(all.taxatabs.ss))-1)
+print(plot1 + ggtitle(label = title))
 ```
 
 ## combine counts and taxalists
@@ -505,7 +468,7 @@ for(i in 1:length(all.stats)){
 
 taxaSteps2<-taxaSteps
 for(i in 2:(grep("aggregate_by_xLevel_taxa",namesSteps)-1)){
-  taxaSteps2<-merge(taxaSteps2, all.stats[[i]][2][[1]],by.x = "start.taxon",by.y = "taxon",all.x = T)
+  taxaSteps2<-merge(taxaSteps2, all.stats[[i]][2][[1]][,1:2],by.x = "start.taxon",by.y = "taxon",all.x = T)
   colnames(taxaSteps2)[length(colnames(taxaSteps2))]<-namesSteps[i]
 }
 
@@ -533,9 +496,29 @@ stepPlot(all.counts,type="reads")
 stepPlot(all.counts,type="detections")
 stepPlot(all.counts,type="taxa")
 stepPlot(all.counts,type="samples")
+
+#colour plot for reads, coloured by rank
+for(i in 1:length(all.stats)){
+  all.stats[[i]][[2]]$step<-as.character(all.counts$step[i])
+}
+all.stats.df<-do.call(rbind,lapply(all.stats,'[[',2))
+all.stats.df$step <- factor(all.stats.df$step,levels = unique(all.stats.df$step))
+print(ggplot(all.stats.df,aes(x=step,y=total.reads,fill=rank))+geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45,hjust=1))+
+  theme(axis.line = element_line(colour = "black"))+
+  theme(panel.background = element_blank())+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  scale_y_continuous(labels = scales::comma)+
+  ylab("reads"))
+
 ```
 
 ## write final table
 ```{r write table, eval=TRUE,echo=F}
 if(!is.null(taxatab.out)) write.table(all.taxatabs.ss,taxatab.out,quote = F, row.names = F,col.names = T,sep = "\t")
+```
+
+## make final krona plot
+```{r write krona plot, eval=TRUE,echo=F}
+if(krona.out==T) bas.krona.plot(taxatab.out)
 ```

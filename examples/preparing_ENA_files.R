@@ -8,29 +8,30 @@ sheeturl<-"https://docs.google.com/spreadsheets/d/1LUN1siU0D7ZAkj7aq4p98rAoZaQJ8
 #options for subsetting sample sheet - if none use sample.subsetlist<-NULL
 #sample.subsetlist<-list(Site=c("Atar"))
 sample.subsetlist<-list(notes="Used for A case study of introduced rats consuming endemic New Zealand frogs")
-#options for subsetting library sheet 
-library.subsetlist<-list(library_construction_protocol=c("Primer_F=GACCCYATGGARCTTWARAC;Primer_R=TARCTTGGTYCGTTGATCA"))
+#options for subsetting library sheet (uses master_sheet)
+library.subsetlist<-list(study="NZ1")
 #email
 email="basegeter@gmail.com"
 #directory with files for upload
-fileDir<-"/mnt/Disk2/MISEQ_RUNS/20178_02_MICROSATS-SOILPHOS-FILTURB-NZFROG-IRANVERTS-ICVERTS-GUELTA/original_miseq_files/"
+fileDir<-"/mnt/Disk2/MISEQ_RUNS/2017_12_AZORES-IRANVERTS-NZFROG-OZ-GUELTA/PP121217-56327499/BEFORE_PAIRED_END/FIRST_ATTEMPT/"
 #outdir ENA upload sheets will be saved here
-outdir<-"/mnt/Disk2/MISEQ_RUNS/2018_02_MICROSATS-SOILPHOS-FILTURB-NZFROG-IRANVERTS-ICVERTS-GUELTA/original_miseq_files/"
+outdir<-"/mnt/Disk2/MISEQ_RUNS/2017_12_AZORES-IRANVERTS-NZFROG-OZ-GUELTA/"
 #final sample sheet filename
-sample_sheet_name<-"GUELTA1_ENA_SAMPLE_SHEET.txt"
+sample_sheet_name<-"NZFROG_CASE_STUDY_ENA_SAMPLE_SHEET.txt"
 #final library sheet filename
-library_sheet_name<-"GUELTA1_ENA_LIBRARY_SHEET.txt"
+library_sheet_name<-"NZFROG_CASE_STUDY_ENA_LIBRARY_SHEET.txt"
 #name to give list of files
-filelist<-"GUELTA1_ENA_FILES.txt"
+filelist<-"NZFROG_CASE_STUDY_ENA_FILES.txt"
 #ENA password
-passwd<-"your_password"
+passwd<-"tigress33"
 
 
 ########################################CODE
 
+source(paste0(bastoolsDir,"master_functions.R"))
+
 setwd(bastoolsDir)
 googlesheets4::sheets_auth(email = email)
-source("googlesheet.foos.R")
 setwd(outdir)
 
 ########################################SAMPLE DATA
@@ -51,7 +52,6 @@ master_xtabs(sub_sample_sheet,columns=c("sample_type",names(sample.subsetlist)))
 } else sub_sample_sheet<-sample_sheet
 
 #write 
-setwd(outdir)
 write.table(data.frame(V1=c("#checklist_accession","#unique_name_prefix"),V2=c("ERC000011","")),
             file = sample_sheet_name,quote = F,row.names = F,sep = "\t",col.names = F)
 write.table(sub_sample_sheet,file = sample_sheet_name,quote = F,row.names = F,sep = "\t",append = T)
@@ -59,7 +59,7 @@ write.table(sub_sample_sheet,file = sample_sheet_name,quote = F,row.names = F,se
 
 ########################################LIBRARY DATA
 #first read mastersheet to get libraries wanted
-master_sheet<-google.read.master.url(sheeturl)
+master_sheet<-google.overlord(url = sheeturl)
 
 if(!"library_name" %in% colnames(master_sheet)) stop("Must have column library_name in Master_Samplesheet")
 
@@ -99,6 +99,8 @@ sub_library_sheet$forward_file_md5<-checksum2$V1[1:length(sub_library_sheet$forw
 sub_library_sheet$reverse_file_md5<-checksum2$V1[length(sub_library_sheet$reverse_file_name)+1:
                                                 length(sub_library_sheet$reverse_file_name)]
 
+#change NAs to empty
+sub_library_sheet[is.na(sub_library_sheet)]<-""
 
 #write library sheet
 write.table(x = sub_library_sheet,file = library_sheet_name,quote = F,row.names = F,sep = "\t",col.names = T)
@@ -107,7 +109,7 @@ write.table(x = sub_library_sheet,file = library_sheet_name,quote = F,row.names 
 write.table(passwd,file = "ENA_password.txt",quote = F,row.names = F,sep = "\t",col.names = F)
 
 #run from terminal
-#emg_ena_upload.sh -l filelist -u Webin-51203 -p ENA_password.txt
+# emg_ena_upload.sh -l filelist -u Webin-51203 -p ENA_password.txt
         
 #go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
 #or here for real https://www.ebi.ac.uk/ena/submit/sra/
