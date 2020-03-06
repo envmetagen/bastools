@@ -68,6 +68,7 @@ bas.merge.taxatabs<-function(taxatabs){
   
   for(i in 1:length(taxatabs)){
     taxatabs.list[[i]]<-data.table::fread(taxatabs[i],sep = "\t",data.table = F)
+    taxatabs.list[[i]][1,1]<-"taxon" #this is for handling OTUtabs
     counts[i,2]<-sum(taxatabs.list[[i]][,-1])
     counts[i,3]<-length(taxatabs.list[[i]][,1])
     counts[i,4]<-length(colnames(taxatabs.list[[i]][,-1]))
@@ -3627,6 +3628,7 @@ full.negative.inspection<-function(taxatab,ms_ss,real){
       }
       
       message("Making barplots for only those taxa detected in both negatives and real samples - to help decide taxon filter and rm.contaminants filter")
+      
       plotlist1<-plot.negs.vs.real(taxatab = taxatab,ms_ss = ms_ss,real = real)
       
       for(i in 1:length(plotlist1)){

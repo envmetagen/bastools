@@ -95,6 +95,9 @@ xLevel<-NULL
 zLevel<-"species"
 #collapse taxa pre-grouping?
 aggregate.pre.grouping=F
+#group taxa before filtering?
+group.taxa.before.filtering=T
+
 #unwanted taxa - non-targets that are not required for final analysis. This is applied last. This is a grep, so 
 #form the taxa path accordingly and make sure you are only removing what you want (by checking output).
 #use problemTaxa<-c("NothingToAdd") to not use this 
