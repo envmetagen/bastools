@@ -43,9 +43,6 @@ master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 ## import taxatabs
 ```{r import taxatabs, eval=TRUE,echo=F, results='hide'}
 #import taxtabs
-
-
-
 all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
 #make new taxa table based on subsetted master sheet
@@ -58,64 +55,9 @@ all.taxatabs.ss<-rm.0readtaxSam(all.taxatabs.ss)
 stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = "start")
 
-#rank stats
-print(stats.by.rank(taxatab = all.taxatabs.ss))
 ```
 
-## remove problem taxa - usually human, predator, NAs and no_hits
-```{r remove problem taxa, eval=TRUE,echo=F}
-message("Removing no_hits")
-all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.nohits")
-
-message("Removing NAs - sequences that had blast hits but were not assigned to any taxon")
-all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="NA;NA;NA;NA;NA;NA;NA",]
-all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="unknown;unknown;unknown;unknown;NA;NA;NA",]
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.non-assigned")
-
-message("Removing problem taxa")
-all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxaGrep = problemTaxa)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.problem")
-
-#rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-
-if(do.first.negative.inspection==T) full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
-
-```
-## group taxa (only done here if group.taxa.before.filtering=T)
-```{r group taxa before filtering, eval=TRUE,echo=F}
-if(group.taxa.before.filtering==T){
-  
-  message("Pre-grouping")
-  print(DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T)))
-  
-  #rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-  
-  message("Taxa to group")
-  print(taxa.to.group)
-  
-  for(i in 1:nrow(taxa.to.group)){
-    all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon=as.character(taxa.to.group[i,1]), jointo=as.character(taxa.to.group[i,2]))
-  }
-  
-  message("Post-grouping")
-  print(DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T)))
-  
-  #rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-  
-  stepcounter<-stepcounter+1
-  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "group_taxa")
-}
-```
 
 ## apply taxon and sample filters
 ```{r apply taxon and sample filters, eval=TRUE,echo=F}
@@ -231,135 +173,6 @@ if (rep.rm.second==T){
   
 } else message("rep.rm.second=F...skipping removal of detections in less than 2 reps")
 
-```
-
-## sum reps
-```{r sum reps, eval=TRUE,echo=F}
-all.taxatabs.ss<-sumreps(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,discard = F)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "sumreps")
-
-#rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-```
-
-## apply 2nd detection filter (possibly makes more sense here?)
-```{r apply 2nd detection filter, eval=TRUE,echo=F}
-if(filter_dxn2>0){
-  message("Applying 2nd detection filter")
-  all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn2)
-  
-  stepcounter<-stepcounter+1
-  all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "dxnfilter2")
-  
-  #rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-  
-} else message("filter_dxn2=0...skipping 2nd detection filter")
-```
-
-## aggregate at chosen level and keep only that-level taxa 
-```{r aggregate at chosen level and keep only that-level taxa Pre-grouping, eval=TRUE,echo=F}
-if(aggregate.pre.grouping==T){
-  if(is.null(xLevel)) {
-    message("Skipping aggregate of taxa at xLevel")
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
-    
-  } else {
-    all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
-  }
-    
-  if(is.null(zLevel)) {
-    message("Skipping removal of taxa at zlevel")
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
-  } else {
-    all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = zLevel)
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
-  }
-  
-  #rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-}
-```
-                                                        
-
-## remove unwanted taxa for analysis
-```{r remove unwanted taxa for analysis, eval=TRUE,echo=F}
-message("Removing unwanted taxa")
-all.taxatabs.ss<-rm.taxa(taxatab = all.taxatabs.ss,taxa = unwantedTaxa)
-
-stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "unwanted")
-
-#rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-```
-
-## group taxa, where possible (only done here if group.taxa.before.filtering=F and taxa.to.group!=NULL)
-```{r group taxa, eval=TRUE,echo=F}
-if(group.taxa.before.filtering==F){
-  if(is.null(taxa.to.group)){
-    message("Skipping grouping of taxa")
-  } else {
-    
-    message("Pre-grouping")
-    print(DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T)))
-    
-    #rank stats
-    print(stats.by.rank(taxatab = all.taxatabs.ss))
-    
-    message("Taxa to group")
-    print(taxa.to.group)
-    
-    for(i in 1:nrow(taxa.to.group)){
-      all.taxatabs.ss<-bas.group.taxa(taxatab = all.taxatabs.ss,taxon=as.character(taxa.to.group[i,1]), jointo=as.character(taxa.to.group[i,2]))
-    }
-    
-    message("Post-grouping")
-    print(DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T)))
-    
-    #rank stats
-    print(stats.by.rank(taxatab = all.taxatabs.ss))
-    
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "group_taxa")
-  }
-}
-```
-
-## aggregate at chosen level and keep only that-level taxa 
-```{r aggregate at chosen level and keep only that-level taxa Post-grouping, eval=TRUE,echo=F}
-if(aggregate.pre.grouping==F){
-  if(is.null(xLevel)) {
-    message("Skipping aggregate of taxa at xLevel")
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
-    
-  } else {
-    all.taxatabs.ss<-aggregate.at.xLevel(taxatab=all.taxatabs.ss,xLevel = xLevel)
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "aggregate_by_xLevel") 
-  }
-    
-  if(is.null(zLevel)) {
-    message("Skipping removal of taxa at zlevel")
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
-  } else {
-    all.taxatabs.ss<-keep.below.xLevel.assigns(taxatab = all.taxatabs.ss,xLevel = zLevel)
-    stepcounter<-stepcounter+1
-    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "keep_only_zLevel") 
-  }
-  
-  #rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
-}
 ```
 
 ## some barplots
