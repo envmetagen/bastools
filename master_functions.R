@@ -68,6 +68,7 @@ bas.merge.taxatabs<-function(taxatabs){
   
   for(i in 1:length(taxatabs)){
     taxatabs.list[[i]]<-data.table::fread(taxatabs[i],sep = "\t",data.table = F)
+    colnames(taxatabs.list[[i]])[1]<-"taxon" #this is for handling OTUtabs
     counts[i,2]<-sum(taxatabs.list[[i]][,-1])
     counts[i,3]<-length(taxatabs.list[[i]][,1])
     counts[i,4]<-length(colnames(taxatabs.list[[i]][,-1]))
@@ -1163,14 +1164,14 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
 }
 
 taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F,grouping="ss_sample_id",
-                            taxonomic_level=NULL){
+                            taxonomic_level=NULL,out.tab=F){
   #If column names are not ss_sample_ids using 'grouping' to specify what they are
-  
-  taxa<-do.call(rbind,stringr::str_split(taxatab$taxon,";"))
-  taxa<-cbind(taxa,do.call(rbind,stringr::str_split(taxa[,7]," ")))
-  taxa2<-as.data.frame(substr(taxa,start = 1,stop = 3))
-  taxatab$taxon<-apply(taxa2,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],"_",x[9]))
-  
+  if(out.tab==T){
+    taxa<-do.call(rbind,stringr::str_split(taxatab$taxon,";"))
+    taxa<-cbind(taxa,do.call(rbind,stringr::str_split(taxa[,7]," ")))
+    taxa2<-as.data.frame(substr(taxa,start = 1,stop = 3))
+    taxatab$taxon<-apply(taxa2,MARGIN = 1,FUN = function(x) paste0(x[1],".",x[2],".",x[3],".",x[4],".",x[5],".",x[6],".",x[8],"_",x[9]))
+    }
   
   if(as.dxns==T) taxatab<-binarise.taxatab(taxatab,t=T)
   
@@ -3659,6 +3660,7 @@ full.negative.inspection<-function(taxatab,ms_ss,real){
       }
       
       message("Making barplots for only those taxa detected in both negatives and real samples - to help decide taxon filter and rm.contaminants filter")
+      
       plotlist1<-plot.negs.vs.real(taxatab = taxatab,ms_ss = ms_ss,real = real)
       
       for(i in 1:length(plotlist1)){
