@@ -528,7 +528,8 @@ check.blasts<-function(infastas,h){
   }
 }
 
-blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NULL,taxidname=NULL,ncbiTaxDir=NULL){
+blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NULL,inverse=F,taxidname=NULL,ncbiTaxDir=NULL,overWrite=F
+                        ,max_target_seqs=100){
   
   if(!is.null(taxidlimit)) if(is.null(ncbiTaxDir)) stop("to use taxidlimit, ncbiTaxDir must be supplied")
   if(!is.null(taxidlimit)) if(is.null(taxidname)) stop("to use taxidlimit, taxidname must be supplied")
@@ -543,8 +544,11 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   if(length(infastas)==7 | length(infastas)==8 | length(infastas)==9) threads<-2
   if(length(infastas)>9) threads<-1
   
+  if(overWrite==F) {
+  
   continue<-data.frame("file"<-infastas,"response"="y")
   continue$response<-as.character(continue$response)
+  
   for(i in 1:length(infastas)){
     if(paste0(gsub(x = infastas[i],pattern = ".fasta",replacement = ".blast.txt")) %in% list.files()){
       continue[i,2]<-readline(paste0("The following file already exists, Overwrite? (y/n):", "
@@ -552,16 +556,18 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     }
   }
   
+  
+  
   if("n" %in% continue$response) stop("Abandoned blast due to overwrite conflict")
+  
+  }
   
   if(!is.null(taxidlimit)){
     
     h<-list()
     
     for(i in 1:length(infastas)){
-      if(length(list.files(pattern = paste0(taxidname[i],"_taxidlimit.txt")))==0){
-        
-        system2(command = "taxonkit",args = c("list", "--ids", taxidlimit[i], "--indent", '""',"--data-dir",ncbiTaxDir)
+      system2(command = "taxonkit",args = c("list", "--ids", taxidlimit[i], "--indent", '""',"--data-dir",ncbiTaxDir)
                 ,wait=T,stdout = paste0(taxidname[i],"_taxidlimit.temp.txt"))
         
         #remove blank row
@@ -570,14 +576,23 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
         
         unlink(paste0(taxidname[i],"_taxidlimit.temp.txt"))
         message(paste("taxidlist saved to",paste0(taxidname[i],"_taxidlimit.txt")))
-      }else{ message(paste("The file",paste0(taxidname[i],"_taxidlimit.txt"),"already exists. Using that file."))}
       
-      h[[i]]<-process$new(command = blast_exec, 
+        if(inverse==F){
+          h[[i]]<-process$new(command = blast_exec, 
                           args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
                                  "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-taxidlist", 
-                                 paste0(taxidname[i],"_taxidlimit.txt"),"-max_target_seqs", "100", "-max_hsps","1", "-out",
+                                 paste0(taxidname[i],"_taxidlimit.txt"),"-max_target_seqs", max_target_seqs, "-max_hsps","1", "-out",
                                  paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),echo_cmd = T,
                           stderr = paste0("blast.error.temp.processx.file",i))
+        }
+        if(inverse==T){
+          h[[i]]<-process$new(command = blast_exec, 
+                              args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
+                                     "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-negative_taxids", 
+                                     paste0(taxidname[i],"_taxidlimit.txt"),"-max_target_seqs", max_target_seqs, "-max_hsps","1", "-out",
+                                     paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),echo_cmd = T,
+                              stderr = paste0("blast.error.temp.processx.file",i))
+        }
     }
   }
   
@@ -593,8 +608,8 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
                                  "100", "-max_hsps","1", "-out",
                                  paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),
                           echo_cmd = T,stderr = paste0("blast.error.temp.processx.file",i))
+      }
     }
-  }
   
   Sys.sleep(time = 2)
   
@@ -760,7 +775,7 @@ interp.lm <- function(model){
   }}
 
 
-make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=F, ncbiTaxDir, dbversion=4){
+make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=F, ncbiTaxDir, dbversion=4,do.checks=T){
   library(processx)
   
   message("Reminder: Assumes header includes taxid=taxid;")
@@ -777,21 +792,26 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
   taxids<-do.call(rbind,strsplit(as.character(tempfasta$seq.name),"taxid="))[,2]
   tempfasta$taxids<-do.call(rbind,strsplit(as.character(taxids),";"))[,1]
   
-  #give unique ids
-  if(length(unique(tempfasta$ids))!=length(tempfasta$ids)) {
-    message("IDs not unique - giving unique ids - ensure to check if mapping back!")
-    tempfasta$ids<-make.unique(tempfasta$ids, sep = ".")
-  }
-
   #Add "database name to header
   message("Adding db name to headers")
   tempfasta$db<-gsub(".fasta","",infasta)
   
-  #ensure ids are <50 characters
-  message("Ensuring ids are <50 characters - ensure to check if mapping back!")
-  tempfasta$ids<-stringr::str_trunc(as.character(tempfasta$ids),width = 49)
   #remove any quotes
   tempfasta$ids<-gsub('"',"",tempfasta$ids)
+  
+  #ensure ids are <50 characters
+  if(sum(nchar(tempfasta$ids)>50)>0) {
+    message("The following ids exceed 49 characters and will be reduced to the first 49:")
+    print(tempfasta[nchar(tempfasta$ids)>49,])
+    tempfasta$ids<-stringr::str_trunc(as.character(tempfasta$ids),width = 49)
+  }
+
+  #give unique ids
+  if(length(unique(tempfasta$ids))!=length(tempfasta$ids)) {
+    message("The following IDs not unique - giving unique ids - ensure to check if mapping back!")
+    print(tempfasta[duplicated(tempfasta$ids),])
+    tempfasta$ids<-make.unique(tempfasta$ids, sep = ".")
+  }
   
   #make final headers & write fasta
   tempfasta$seq.name<-paste0(tempfasta$ids," taxids=",tempfasta$taxids, "; db=",tempfasta$db)
@@ -810,6 +830,7 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
                  gsub(".fasta","",infasta)), stderr = "",wait = T)
   
   #testblast
+  if(do.checks){
   message("Running test blast")
   phylotools::dat2fasta(head(tempfasta,n=1),gsub(".fasta",".blastdbformatted.test.fasta",infasta))
   h<-blast.min.bas(gsub(".fasta",".blastdbformatted.test.fasta",infasta),refdb = gsub(".fasta","",infasta))
@@ -817,10 +838,13 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
   message("Does new db have taxids - column V3?")
   print(data.table::fread(gsub(".fasta",".blastdbformatted.test.blast.txt",infasta)))
   system2(command = "blastdbcheck",args = c("-must_have_taxids","-db",gsub(".fasta","",infasta)))
+  }
   
   unlink(gsub(".fasta",".blastdbformatted.test.blast.txt",infasta))
   unlink(gsub(".fasta",".blastdbformatted.test.fasta",infasta))
   unlink(mappingfile)
+  
+  message("Note: Final warning messages about number of columns ok")
 }
 
 #' Convert sequence files between various formats
@@ -948,6 +972,8 @@ bascount.gb<-function(gbfile){
 }
 
 remove.dashes.fasta<-function(infasta,outfasta){
+  if(infasta==outfasta) stop("infasta and outfasta must have different names")
+  require(processx)
   f<-process$new(command = "sed",args = c("-e","/^>/!s/-//g;/^$/d",infasta),echo_cmd = T, stdout = outfasta)
   f$wait()
 }
@@ -1577,109 +1603,115 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
   taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
   taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="No_hits",]
   taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="NA;NA;NA;NA;NA;NA;NA",]
-  btab<-data.table::fread(file = filtered_blastfile,sep = "\t",data.table = F)
-  btab$path<-paste0(btab$K,";",btab$P,";",btab$C,";",btab$O,";",btab$F,";",btab$G,";",btab$S)
   
-  contributorlist<-list()
-  for(i in 1:length(taxatab.tf$taxon)){
-    contributorlist[[i]]<-check.low.res.results(pathofinterest = taxatab.tf$taxon[i],bins = bins,btab = btab)
-  }
+  if(nrow(taxatab.tf)>0){ 
   
-  contributordf<-do.call(rbind,contributorlist)
-  
-  #add number of reads and no. of "pcrs" pathofinterest
-  taxatab.tf$readcounts<-rowSums(taxatab.tf[,2:length(colnames(taxatab.tf))])
-  taxatab.tf$n.samples<-rowSums(taxatab.tf[,2:(length(colnames(taxatab.tf))-1)]>0)
-  contributordf<-merge(contributordf,taxatab.tf[,c("taxon","readcounts","n.samples")],
-                       by.x = "pathofinterest",by.y = "taxon")
-  
-  #add disabled taxa columns
-  if(!is.null(disabledTaxaFile)){
-    disabledTaxaDf<-data.table::fread(disabledTaxaFile, data.table = T,sep = "\t")
-    if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
-    if(!"disable_species" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_species'")
-    if(!"disable_genus" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_genus'")
-    if(!"disable_family" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_family'")
+    btab<-data.table::fread(file = filtered_blastfile,sep = "\t",data.table = F)
+    btab$path<-paste0(btab$K,";",btab$P,";",btab$C,";",btab$O,";",btab$F,";",btab$G,";",btab$S)
     
-    disabledSpecies<-disabledTaxaDf[disabledTaxaDf$disable_species==T,"taxids"]
-    disabledSpecies<-disabledSpecies[!is.na(disabledSpecies)]
+    contributorlist<-list()
+    for(i in 1:length(taxatab.tf$taxon)){
+      contributorlist[[i]]<-check.low.res.results(pathofinterest = taxatab.tf$taxon[i],bins = bins,btab = btab)
+    }
     
-    disabledGenus<-disabledTaxaDf[disabledTaxaDf$disable_genus==T,"taxids"]
-    disabledGenus<-disabledGenus[!is.na(disabledGenus)]
+    contributordf<-do.call(rbind,contributorlist)
     
-    disabledFamily<-disabledTaxaDf[disabledTaxaDf$disable_family==T,"taxids"]
-    disabledFamily<-disabledFamily[!is.na(disabledFamily)]
+    #add number of reads and no. of "pcrs" pathofinterest
+    taxatab.tf$readcounts<-rowSums(taxatab.tf[,2:length(colnames(taxatab.tf))])
+    taxatab.tf$n.samples<-rowSums(taxatab.tf[,2:(length(colnames(taxatab.tf))-1)]>0)
+    contributordf<-merge(contributordf,taxatab.tf[,c("taxon","readcounts","n.samples")],
+                         by.x = "pathofinterest",by.y = "taxon")
     
-    contributordf$species_disabled<-contributordf$taxids %in% disabledSpecies
-    contributordf$genus_disabled<-contributordf$taxids %in% disabledGenus
-    contributordf$family_disabled<-contributordf$taxids %in% disabledFamily
+    #add disabled taxa columns
+    if(!is.null(disabledTaxaFile)){
+      disabledTaxaDf<-data.table::fread(disabledTaxaFile, data.table = T,sep = "\t")
+      if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
+      if(!"disable_species" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_species'")
+      if(!"disable_genus" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_genus'")
+      if(!"disable_family" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_family'")
+      
+      disabledSpecies<-disabledTaxaDf[disabledTaxaDf$disable_species==T,"taxids"]
+      disabledSpecies<-disabledSpecies[!is.na(disabledSpecies)]
+      
+      disabledGenus<-disabledTaxaDf[disabledTaxaDf$disable_genus==T,"taxids"]
+      disabledGenus<-disabledGenus[!is.na(disabledGenus)]
+      
+      disabledFamily<-disabledTaxaDf[disabledTaxaDf$disable_family==T,"taxids"]
+      disabledFamily<-disabledFamily[!is.na(disabledFamily)]
+      
+      contributordf$species_disabled<-contributordf$taxids %in% disabledSpecies
+      contributordf$genus_disabled<-contributordf$taxids %in% disabledGenus
+      contributordf$family_disabled<-contributordf$taxids %in% disabledFamily
+      
+    } else {contributordf$species_disabled<-"FALSE"
+    contributordf$genus_disabled<-"FALSE"
+    contributordf$family_disabled<-"FALSE"
+    }
     
-  } else {contributordf$species_disabled<-"FALSE"
-  contributordf$genus_disabled<-"FALSE"
-  contributordf$family_disabled<-"FALSE"
-  }
-  
-  #add rank
-  temprank<-stringr::str_count(contributordf$pathofinterest,";NA")
-  temprank<-gsub(0,"species",temprank)
-  temprank<-gsub(1,"genus",temprank)
-  temprank<-gsub(2,"family",temprank)
-  temprank<-gsub(3,"above_family",temprank)
-  
-  contributordf$rank<-temprank
-  
-  if(!is.null(spident) & !is.null(gpident) & !is.null(fpident) & !is.null(abspident)){
-    #add may_be_improved
-    max_pidents<-aggregate(contributordf$high.pident,by=list(contributordf$pathofinterest),FUN=max)
-    best_is_species<-max_pidents[max_pidents$x>spident,]
-    if(length(best_is_species$Group.1)>0) best_is_species$best_possible<-"species"
-    max_pidents<-max_pidents[!max_pidents$x>spident,]
-    best_is_genus<-max_pidents[max_pidents$x>gpident,]
-    if(length(best_is_genus$Group.1)>0) best_is_genus$best_possible<-"genus"
-    max_pidents<-max_pidents[!max_pidents$x>gpident,]
-    best_is_family<-max_pidents[max_pidents$x>fpident,]
-    if(length(best_is_family$Group.1)>0) best_is_family$best_possible<-"family"
-    max_pidents<-max_pidents[!max_pidents$x>fpident,]
-    best_is_above_family<-max_pidents[max_pidents$x>abspident,]
-    if(length(best_is_above_family$Group.1)>0) best_is_above_family$best_possible<-"above_family"
+    #add rank
+    temprank<-stringr::str_count(contributordf$pathofinterest,";NA")
+    temprank<-gsub(0,"species",temprank)
+    temprank<-gsub(1,"genus",temprank)
+    temprank<-gsub(2,"family",temprank)
+    temprank<-gsub(3,"above_family",temprank)
     
-    best_all<-rbind(best_is_species,best_is_genus,best_is_family,best_is_above_family)
-    colnames(best_all)[1]<-"pathofinterest"
-    best_all$x=NULL
+    contributordf$rank<-temprank
     
-    contributordf<-merge(contributordf,best_all)
-    contributordf$may_be_improved<-contributordf$rank!=contributordf$best_possible
-    contributordf<-contributordf[contributordf$may_be_improved=="TRUE",]
-    contributordf<-contributordf[!contributordf$high.pident<abspident,]
+    if(!is.null(spident) & !is.null(gpident) & !is.null(fpident) & !is.null(abspident)){
+      #add may_be_improved
+      max_pidents<-aggregate(contributordf$high.pident,by=list(contributordf$pathofinterest),FUN=max)
+      best_is_species<-max_pidents[max_pidents$x>spident,]
+      if(length(best_is_species$Group.1)>0) best_is_species$best_possible<-"species"
+      max_pidents<-max_pidents[!max_pidents$x>spident,]
+      best_is_genus<-max_pidents[max_pidents$x>gpident,]
+      if(length(best_is_genus$Group.1)>0) best_is_genus$best_possible<-"genus"
+      max_pidents<-max_pidents[!max_pidents$x>gpident,]
+      best_is_family<-max_pidents[max_pidents$x>fpident,]
+      if(length(best_is_family$Group.1)>0) best_is_family$best_possible<-"family"
+      max_pidents<-max_pidents[!max_pidents$x>fpident,]
+      best_is_above_family<-max_pidents[max_pidents$x>abspident,]
+      if(length(best_is_above_family$Group.1)>0) best_is_above_family$best_possible<-"above_family"
+      
+      best_all<-rbind(best_is_species,best_is_genus,best_is_family,best_is_above_family)
+      colnames(best_all)[1]<-"pathofinterest"
+      best_all$x=NULL
+      
+      contributordf<-merge(contributordf,best_all)
+      contributordf$may_be_improved<-contributordf$rank!=contributordf$best_possible
+      contributordf<-contributordf[contributordf$may_be_improved=="TRUE",]
+      contributordf<-contributordf[!contributordf$high.pident<abspident,]
+      
+    } else {(message("Not adding 'May be improved' column, as no pidents provided"))}
     
-  } else {(message("Not adding 'May be improved' column, as no pidents provided"))}
-  
-  
-  #if pathofinterest at genus level, dont output contributors from diferent genera
-  contributordf$contributors<-as.character(contributordf$contributors)
-  
-  #1. make column to see whether genera match
-  contributordf$contrGenus<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,6]
-  contributordf$pathGenus<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,6]
-  contributordf$contr.path.genus.match<-contributordf$contrGenus==contributordf$pathGenus
-  
-  #2. If rank=genus, and columns dont match, then remove
-  contributordf<-contributordf[!(contributordf$rank=="genus" & contributordf$contr.path.genus.match==FALSE),]
-  
-  #if pathofinterest at family level, dont output contributors from different families
-  
-  #1. make column to see whether families match
-  contributordf$contrFam<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,5]
-  contributordf$pathFam<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,5]
-  contributordf$contr.path.fam.match<-contributordf$contrFam==contributordf$pathFam
-  
-  #2. If rank=family, and columns dont match, then remove
-  contributordf<-contributordf[!(contributordf$rank=="family" & contributordf$contr.path.fam.match==FALSE),]
-  
-  contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:14]
-  
-  write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
-              sep="\t",quote = F,row.names = F)
+    
+    #if pathofinterest at genus level, dont output contributors from diferent genera
+    contributordf$contributors<-as.character(contributordf$contributors)
+    
+    #1. make column to see whether genera match
+    contributordf$contrGenus<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,6]
+    contributordf$pathGenus<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,6]
+    contributordf$contr.path.genus.match<-contributordf$contrGenus==contributordf$pathGenus
+    
+    #2. If rank=genus, and columns dont match, then remove
+    contributordf<-contributordf[!(contributordf$rank=="genus" & contributordf$contr.path.genus.match==FALSE),]
+    
+    #if pathofinterest at family level, dont output contributors from different families
+    
+    #1. make column to see whether families match
+    contributordf$contrFam<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,5]
+    contributordf$pathFam<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,5]
+    contributordf$contr.path.fam.match<-contributordf$contrFam==contributordf$pathFam
+    
+    #2. If rank=family, and columns dont match, then remove
+    contributordf<-contributordf[!(contributordf$rank=="family" & contributordf$contr.path.fam.match==FALSE),]
+    
+    contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:14]
+    
+    write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
+                sep="\t",quote = F,row.names = F)
+  } else message("
+                 ERROR: No sequences assigned to any taxon, not making contributor table
+                 ")
 }
 
 

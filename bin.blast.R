@@ -196,6 +196,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   }
   
   btabg<-btabg[btabg$pident>gpident,] ####line changed 
+  if(length(btabg$taxids)>0){
   lcag = aggregate(btabg$taxids, by=list(btabg$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   
   #get lca names
@@ -213,6 +214,10 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   }
   lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
   colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
+  } else {
+    lcag<-data.frame(matrix(nrow=1,ncol = 10))
+    colnames(lcag)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+  }
   
   rm(btabg)
   
@@ -314,7 +319,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   abs_level<-abs_level[!abs_level$qseqid %in% f_level$qseqid,]
   
   com_level<-rbind(sp_level,g_level,f_level,abs_level)
-  com_level<-merge(x=qseqids, y = com_level[,c(2,4:10)], by = "qseqid",all = T)
+  com_level<-merge(x=qseqids, y = com_level[,c(2,4:10)], by = "qseqid",all.x = T)
   
   #info
   t2<-Sys.time()

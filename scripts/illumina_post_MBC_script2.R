@@ -97,6 +97,7 @@ if("step10" %in% stepstotake){
 if("step11" %in% stepstotake){  
   
   message("STEP11")
+  message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-list.files(pattern = ".taxatable.txt$")
   
@@ -112,6 +113,7 @@ if("step11" %in% stepstotake){
 if("step12" %in% stepstotake){  
   
   message("STEP12")
+  message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-list.files(pattern = ".taxatable.tf.txt$")
   splice.taxatables(files)
@@ -126,6 +128,8 @@ if("step12" %in% stepstotake){
 if("step13" %in% stepstotake){  
   
   message("STEP13")
+  
+  message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   
@@ -159,6 +163,7 @@ if("step13" %in% stepstotake){
 if("step14" %in% stepstotake){  
   
   message("STEP14")
+  message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   for(i in 1:length(files)){

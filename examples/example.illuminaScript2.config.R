@@ -42,25 +42,18 @@ startingfastas<-data.frame(infasta=
 
 #full path to bastools directory
 bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" 
-
 #full path to out dir: this must exist and already contain the final fasta and corresponding otu table 
 outDir<-"/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/HSJUN19BAS/NT/" 
-
 #full path to ncbi taxonomy directory
 ncbiTaxDir<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/Jan2020/"
-
 #full path to obitools taxonomy - this is the stem filename of the obitaxonomy files
 obitaxdb<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/obitaxdump/Jan2020/obitaxdb_jan_2020" 
-
 #full path to blast exec
 blast_exec<-"/home/bastian.egeter/Tools/ncbi-blast-2.9.0+/bin/blastn"
-
 #full path to Krona exec
 KronaPath<-"/home/bastian.egeter/Tools/Krona.install/bin/ktImportText"
-
 #full path to blast db - this is the stem filename of the db files
 refdb = "/mnt/Disk1/Tools/BLAST+/DBs/nt_v5/nt_v5"
-
 #minimum query coverage for filtering blast results
 min_qcovs=70
 #maximum evalue for filtering blast results

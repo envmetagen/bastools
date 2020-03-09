@@ -22,8 +22,10 @@ if("step1" %in% stepstotake){
 
   a<-data.table::fread(cattedDLS.s2, data.table = F)
   
-  message("Selecting only those in ",taxonlimit)
-  a<-a[grep(taxonlimit,a$V7),]
+  if(!is.null(taxonlimit)){
+    message("Selecting only those in ",taxonlimit)
+    a<-a[grep(taxonlimit,a$V7),]
+  }
   
   message("Removing seqs with a lot (>27) of NNNs")
   a<-a[-grep("NNNNNNNNNNNNNNNNNNNNNNNNNNNN",a$V16),] 
@@ -173,7 +175,7 @@ if("step5" %in% stepstotake){
   
   #create final ecopcrdb
   obiconvert.Bas(infile = gsub(".fasta",".checked.wPos.plus.mapcaught.fasta",catted_DLS),
-                 in_type = "fasta",out = "final.ecopcrdb",taxo = obitaxo,
+                 in_type = "fasta",out = gsub(".fasta",".checked.wPos.plus.mapcaught.ecopcrdb",catted_DLS),taxo = obitaxo,
                  out_type = "--ecopcrdb-output",add2existing = F)
   
   message("STEP5 COMPLETE")
@@ -186,15 +188,16 @@ if("step6" %in% stepstotake){
   message("RUNNING STEP6 - final ecopcr and add stats")
     
   #run final ecopcr without buffer option
-  ecoPCR.Bas(Pf,Pr,ecopcrdb = "final.ecopcrdb",max_error = max_error_ecopcr,
-             min_length=min_length,max_length=max_length,out = "final.ecopcr.hits.txt")
+  ecoPCR.Bas(Pf,Pr,ecopcrdb = gsub(".fasta",".checked.wPos.plus.mapcaught.ecopcrdb",catted_DLS),max_error = max_error_ecopcr,
+             min_length=min_length,max_length=max_length,out = gsub(".fasta",".checked.wPos.plus.mapcaught.final.hits.txt",catted_DLS))
   
   #clean ecopcrfile
-  clean.ecopcroutput(ecopcrfile = "final.ecopcr.hits.txt",buffer.used = F,rm.buffer.insert = F,min_length = min_length,max_length = max_length)
+  clean.ecopcroutput(ecopcrfile = gsub(".fasta",".checked.wPos.plus.mapcaught.final.hits.txt",catted_DLS),
+                     buffer.used = F,rm.buffer.insert = F,min_length = min_length,max_length = max_length)
   
   #Add stats to ecopcrfile
   message("Adding stats to ecopcroutput")
-  ecopcroutput<-data.table::fread("final.ecopcr.hits.txt.clean",data.table = F)
+  ecopcroutput<-data.table::fread(gsub(".fasta",".checked.wPos.plus.mapcaught.final.hits.txt.clean",catted_DLS),data.table = F)
   ecopcrout.wstats<-add.stats.ecopcroutput(ecopcroutput = ecopcroutput,ncbiTaxDir = ncbiTaxDir,Ta = Ta,Pf = Pf,Pr = Pr)
   
   #add resolution using simple method
@@ -223,9 +226,11 @@ if("step7" %in% stepstotake){
   message("RUNNING STEP7 - Make family primer bias tables")
   #Make family primer bias tables
   #convert final ecopcrdb to tab
-  system2(command = "obitab", args=c("-o","final.ecopcrdb"), stdout="final.ecopcrdb.tab", wait = T)
+  system2(command = "obitab", args=c("-o",gsub(".fasta",".checked.wPos.plus.mapcaught.ecopcrdb",catted_DLS)), 
+          stdout=gsub(".fasta",".checked.wPos.plus.mapcaught.ecopcrdb.tab",catted_DLS), wait = T)
   
-  make.primer.bias.table(originaldbtab = "final.ecopcrdb.tab",mod_ecopcrout_file = out_mod_ecopcrout_file,
+  make.primer.bias.table(originaldbtab = gsub(".fasta",".checked.wPos.plus.mapcaught.ecopcrdb.tab",catted_DLS),
+                         mod_ecopcrout_file = out_mod_ecopcrout_file,
                          out_bias_file = out_bias_file,
                          Pf = Pf, Pr = Pr,
                          obitaxoR = obitaxoR,min_length = min_length,max_length = max_length)

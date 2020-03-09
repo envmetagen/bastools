@@ -26,7 +26,7 @@ out_bias_file = "18S.s2.metazoa.bias.txt"
 out_mod_ecopcrout_file = "18S.s2.metazoa.modecopcroutput.txt"
 catted_DLS<-"18S.s2.metazoa.fasta" #this is the starting fasta...usually made from nunos fasta
 cattedDLS.s2<-"18S.s2.tsv" #this is nunos table
-taxonlimit<-"Metazoa" #this is an inital limited of the table, helps a lot to reduce size
+taxonlimit<-"Metazoa" #this is an inital limited of the table, helps a lot to reduce size, set to NULL to ignore
 script<-paste0(bastoolsDir,"scripts/primer_script_FULLGB_Feb_2020.R")
 
 source(script)
