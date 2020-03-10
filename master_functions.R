@@ -589,7 +589,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
         if(inverse==T){
           h[[i]]<-process$new(command = blast_exec, 
                               args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
-                                     "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-negative_taxids", 
+                                     "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-negative_taxidlist", 
                                      paste0(taxidname[i],"_taxidlimit.txt"),"-max_target_seqs", max_target_seqs, "-max_hsps","1", "-out",
                                      paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),echo_cmd = T,
                               stderr = paste0("blast.error.temp.processx.file",i))
