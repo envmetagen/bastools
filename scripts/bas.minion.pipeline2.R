@@ -4,17 +4,16 @@ print(ls.str())
 
 library(processx)
 library(dplyr)
+library(ggplot2)
 source(paste0(bastoolsDir,"master_functions.R"))
 source(paste0(bastoolsDir,"bin.blast.R"))
 setwd(filesDir)
 
 ####################################################
 
-#step 0 master sheet creation
+#step 0 subset master sheet 
 
-if("step0" %in% stepstotake){
-  
-  message("STEP0")
+  message("STEP0 - subset mastersheet")
  
   mastersheet_df<-data.table::fread(mastersheet,data.table = F,sep = "\t")
   
@@ -25,8 +24,6 @@ if("step0" %in% stepstotake){
   master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
   
   message("STEP0 complete")
-
-}
 
 ####################################################
 #step 1 Cutadapt
@@ -48,8 +45,9 @@ if("step1" %in% stepstotake){
     message("Pf=",Pf)
     message("Pr=",Pr)
     
-    cutadaptlist[[i]]<-system2(command = "cutadapt",args = c("-g", paste0("'Or1=",Pf,";error_rate=0.2...",insect::rc(Pr),";max_error_rate=0.2'"), "-g",
-                                          paste0("'Or2=",Pr,";error_rate=0.2...",insect::rc(Pf),";max_error_rate=0.2'")
+    cutadaptlist[[i]]<-system2(command = "cutadapt",args = c("-g", paste0("'Or1=",Pf,";max_error_rate=",ca.error.rate,"...",insect::rc(Pr),
+                                                                          ";max_error_rate=",ca.error.rate,"'"), "-g",
+                                          paste0("'Or2=",Pr,";max_error_rate=",ca.error.rate,"...",insect::rc(Pf),";max_error_rate=",ca.error.rate,"'")
                                           ,"-o", gsub(".fastq.gz",".trimmed.fastq",file),file),wait = T,stderr = T,stdout = T)
     
     print(grep("Total reads processed",cutadaptlist[[i]],value = T))
@@ -66,12 +64,38 @@ if("step2" %in% stepstotake){
   message("STEP2 - print length data")
   
   files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
-  
-  #print histograms first
+  #get lengths of seqs in files
+  datalist<-list()
   for(i in 1:length(files)){
     message(files[i])
-    system2("seqkit", args=c("watch","--dump",files[i]),wait = T)
+    datalist[[i]]<-system2("seqkit", args=c("fx2tab","-l","-i","-n",files[i]),wait = T,stdout = T)
+    datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
+    datalist[[i]][,5]<-files[i]
+    datalist[[i]]<-datalist[[i]][,c(4:5)]
+    colnames(datalist[[i]])<-c("length","file")
   }
+
+  datalistdf<-as.data.frame(do.call(rbind,datalist))
+  
+  minlength<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"min_length"]
+  maxlength<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"max_length"]
+  
+  datalistdf$InsideRange<-!(datalistdf$length<minlength | datalistdf$length>maxlength)
+  
+  lengthplot<-ggplot(datalistdf,mapping = aes(x = length,fill=InsideRange))+geom_histogram(binwidth = 10) +
+    theme(axis.text.x=element_text(size=8,angle=45, hjust=1)) +
+    scale_x_continuous(breaks = round(seq(0, max(datalistdf$length), by = 100),1)) +
+    ggtitle("Range",subtitle = paste("Minlength=",minlength,"Maxlength=",maxlength))
+  print(lengthplot)
+  print(lengthplot + facet_wrap("file",scales="free_y"))
+  
+  plotfile1<-paste(gsub(", ",".",toString(unlist(subsetlist),)),"lengthplot.pdf",sep = ".")
+  plotfile2<-paste(gsub(", ",".",toString(unlist(subsetlist),)),"lengthplot.facet.pdf",sep = ".")
+  
+  ggsave(filename = plotfile1,plot = lengthplot,device = "pdf", width = 15,height = 10)
+  ggsave(filename = plotfile2, plot = lengthplot + facet_wrap("file",scales="free_y") ,device = "pdf", width = 15,height = 10)
+  
+  message(paste("Saving length plots to", plotfile1, "and", plotfile2))
   
   message("STEP2 complete")
 }
@@ -113,207 +137,77 @@ if("step3" %in% stepstotake){
     #count seqs after
     b<-system2("seqkit", args=c("stats","-T",gsub(".trimmed.fasta",".lenFilt.trimmed.fasta",file)),wait = T,stderr = T,stdout = T)
     b<-read.table(text = b,header = T)$num_seqs
-    message(b," reads removed, from ",a, " (",round(b/a*100,digits = 2)," %)")
+    message(a-b," reads removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
   }
   message("STEP3 complete")
 }
+
+####################################################
+#step 4 - cat files
+if("step4" %in% stepstotake){  
   
+  message("STEP4 - cat files")
+  
+  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.fasta") 
+  
+  #put ss_sample_ids in headers
+  for(i in 1:length(files)){
+    file=files[i]
+    ss_sample_id<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"ss_sample_id"]
+    
+    system2("seqkit", args=c("replace","-p", "'sampleid='", "-r", paste0("'ss_sample_id=",ss_sample_id," sampleid='"),file),wait = T,
+            stdout = gsub(".fasta",".ids.fasta",file))
+  }
+  
+  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.ids.fasta") 
+  
+  #cat files
+  catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist),)),"lenFilt.trimmed.ids.fasta",sep = ".")
+  system2(command = "cat",args = c(files),wait = T,stdout = catted_file)
+}
+    
 ####################################################
 #step 4 
 if("step4" %in% stepstotake){
   
   message("STEP4 - blast")
   
-  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.fasta")  
+  if(!is.null(taxidlimit)){
+     blast.status<-blast.min.bas(infastas = catted_file,refdb = refdb,blast_exec = blast_exec,
+                                wait = T,taxidlimit = taxidlimit,taxidname = taxidname, ncbiTaxDir = ncbiTaxDir,task="blastn")
+    } else blast.status<-blast.min.bas(infastas = startingfastas,refdb = refdb,blast_exec = blast_exec, wait = T, ncbiTaxDir = ncbiTaxDir,task="blastn")
   
-  for(i in 1:length(infastas)){
-    if(!is.null(taxidlimit)){
-
-    blast.status<-blast.min.bas(infastas = files[i],refdb = refdb,blast_exec = blast_exec,
-                                wait = T,taxidlimit = taxidlimit,taxidname = taxidname, ncbiTaxDir = ncbiTaxDir,)
-  } else{blast.status<-blast.min.bas(infastas = startingfastas,refdb = refdb,blast_exec = blast_exec, wait = T, ncbiTaxDir = ncbiTaxDir)
-  }
-  
-  if(class(startingfastas)=="data.frame"){
-    check.blasts(infastas = as.character(startingfastas[,1]),h = blast.status)
-  } else{check.blasts(infastas = startingfastas,h = blast.status)
-  }
-  
+    check.blasts(infastas = files,h = blast.status)
   
   message("STEP4 complete")
-    
-    
-    
-            
-  
-  
-  
-    
-  
-
-
-  #remove intermediates
-  unlink(paste0(outDir,barcodes.used,".fastq"))
-  unlink(paste0(outDir,barcodes.used,".fasta"))
-  unlink(paste0(outDir,list.files(path = outDir,pattern = "barcode[0-9][0-9].obi.fasta")))
-  
-  message("STEP1 complete")
 }
+  
 ####################################################
-#step 2 cat by frag
-if("step2" %in% stepstotake){  
-  
-  message("STEP2")
-  
-    #cat each frag
-    files<-list.files(path = outDir,pattern = "*.ss.obi.fasta")
-    for(i in 1:length(primer_combo.bcs)){
-      primercombofiles<-files[files %in% paste0(primer_combo.bcs[[i]],".ss.obi.fasta")]
-      system2(command = "cat",args = c(paste0(outDir,primercombofiles)),
-              wait = T,stdout = paste0(outDir,experiment_id,"_",names(primer_combo.bcs[[i]])[1],
-                                       ".fasta")) 
-    }
-    
-    message("STEP2 complete")
-}    
-####################################################
-#step 3 size select
-if("step3" %in% stepstotake){
-  
-  message("STEP3")
-  
-  #add length to fasta
-    
-    #add seq lengths
-    files<-grep(experiment_id,list.files(path = outDir,pattern = ".fasta"),value = T)
-    for(i in 1:length(files)){
-    system2(command = "obiannotate",args = c("--length", paste0(outDir,files[i])),wait = T,
-            stdout= gsub(".fasta",".wlen.obi.fasta",paste0(outDir,files[i])))
-    }
-    
-  #obigrep lengths
-  files<-grep(experiment_id,list.files(path = outDir,pattern = ".wlen.obi.fasta"),value = T)
-  for(i in 1:length(minlength)){
-    file<-paste0(outDir,grep(names(minlength[[i]]),files,value = T))
-    system2(command = "obigrep",args = c("-l",minlength[[i]],"-L",maxlength[[i]], file),wait = T,
-               stdout =  gsub(".wlen.obi.fasta",".filtlen.wlen.obi.fasta",file ))
-  }
-  
-  message("STEP3 complete")
-  
-} 
-
-
-####################################################
-#step 4 dereplicate
-if("step4" %in% stepstotake){
-  
-  message("STEP4")
-
-#do obiuniq
-files<-list.files(path = outDir,pattern="*.filtlen.wlen.obi.fasta")
-for(i in 1:length(files)){
-  system2(command = "obiuniq",args = c("-c", "ss_sample_id",paste0(outDir,files[i])),wait = T,
-          stdout =  gsub(".filtlen.wlen.obi.fasta",".uniq.filtlen.wlen.obi.fasta",paste0(outDir,files[i])))
-}
-message("STEP4 complete")
-
-}
-####################################################
-#step 5 make otu tabs
-if("step5" %in% stepstotake){
+#step 5 filter 
+if("step5" %in% stepstotake){  
   
   message("STEP5")
   
-  if("step4" %in% stepstotake) {
-    files<-list.files(path = outDir,pattern="*.uniq.filtlen.wlen.obi.fasta")} else {
-      files<-list.files(path = outDir,pattern="*.filtlen.wlen.obi.fasta")
-    }
-  
-  #make obitabs
-  
-  for(i in 1:length(files)){
-    system2(command = "obitab",args = c(paste0(outDir,files[i])),wait = T,
-              stdout =  gsub(".fasta",".tab",paste0(outDir,files[i])))
-  }
-  message("STEP5 complete")
-  
-}
-  
-####################################################
-# #step 6 create and tidy folders
-# if("step6" %in% stepstotake){
-# 
-#   dir.create(paste0(outDir,"post.minion.pipe"))
-#   dir.create(paste0(outDir,"post.minion.pipe/final_fastas"))
-#   dir.create(paste0(outDir,"post.minion.pipe/final_otutabs"))
-#   dir.create(paste0(outDir,"post.minion.pipe/blasts"))
-#   
-#   #move otutabs 
-#   files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.tab")
-#   for(i in 1:length(files)){
-#     file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_otutabs"))
-#     unlink(paste0(outDir,files[i]))
-#   }
-#   
-#   #move fastas 
-#   files<-list.files(path = outDir,pattern="*uniq.filtlen.wlen.obi.fasta")
-#   for(i in 1:length(files)){
-#     file.copy(paste0(outDir,files[i]),paste0(outDir,"post.minion.pipe/final_fastas"))
-#     unlink(paste0(outDir,files[i]))
-#   }
-# } 
-####################################################
-#step 7 blast
-if("step7" %in% stepstotake){
-  
-  message("STEP7")
-
-  #BLASTING NT
-  
-  
-  if(class(startingfastas)=="data.frame"){
-    blast.status<-blast.min.bas(infastas = as.character(startingfastas[,1]),refdb = refdb,blast_exec = blast_exec,
-                                wait = T,taxidlimit = startingfastas[,2],taxidname = as.character(startingfastas[,3]),
-                                ncbiTaxDir = ncbiTaxDir)
-  } else{blast.status<-blast.min.bas(infastas = startingfastas,refdb = refdb,blast_exec = blast_exec,
-                                     wait = T, ncbiTaxDir = ncbiTaxDir)
-  }
-  
-  if(class(startingfastas)=="data.frame"){
-  check.blasts(infastas = as.character(startingfastas[,1]),h = blast.status)
-  } else {check.blasts(infastas = as.character(startingfastas),h = blast.status)}
-  
-  message("STEP7 complete")
-}
- 
-####################################################
-#step 8 filter 
-if("step8" %in% stepstotake){  
-  
-  message("STEP8")
-  
-  #FILTER BLASTS
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".filtlen.wlen.obi.blast.txt"),
-                            value = T))
+  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.blast.txt")  
   
   for(i in 1:length(files)){
     message(paste("filtering blast results for",files[i]))
     blastfile = files[i]
     out<-gsub(".blast.txt",".blast.filt.txt",files[i])
-    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out,top = top)
+    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top)
   }
-  message("STEP8 complete")
   
-  }
- 
+  message("STEP5 complete")
+  
+}
+
 ####################################################
-#step 9 BIN
-if("step9" %in% stepstotake){ 
+#step 6 BIN
+if("step6" %in% stepstotake){ 
   
-  message("STEP9")
+  message("STEP6 - Bin")
   
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".blast.filt.txt"),value = T))
+  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.blast.filt.txt")  
   
   for(i in 1:length(files)){
     message(paste("binning filtered blast results for",files[i]))
@@ -322,70 +216,24 @@ if("step9" %in% stepstotake){
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
                obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
-  message("STEP9 complete")
+  
+  message("STEP6 complete")
   
 } 
 
 ####################################################
-#step 10 merge with otutab
 
-if("step10" %in% stepstotake){  
-  
-  message("STEP10")
-  
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".tab$"),value = T))
-  binfiles<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".bins.txt$"),value = T))
-  
-  for(i in 1:length(files)){
-    otutabfile<-files[i]
-    binfile<-gsub(".tab",".bins.txt",files[i])
-    out<-gsub(".tab",".taxatable.txt",files[i])
-    
-    otutab_bin_blast_merge_minion(otutabfile = otutabfile,binfile = binfile,experimentsheetfile = 
-                                    paste0(outDir,experiment_id,"_experiment_sheet.txt"),
-                                  hascount = hascount,  experiment_id = experiment_id,out=out)
-  }
-  message("STEP10 complete")
-  
-}
+message("Need to make otutabs")
 
+  
 ####################################################
-#step 11 apply taxon filter
+#step 7 make contributor files
 
-if("step11" %in% stepstotake){  
+if("step7" %in% stepstotake){  
   
-  message("STEP11")
+  message("STEP7 - Contributor files")
   
-  files<-paste0(outDir,grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.txt$"),value = T))
-  
-  taxon.filter.solo(files = files,filterpc = filterpc)
-  
-  message("STEP11 complete")
-  
-}
-
-####################################################
-#step 12 splice taxa tables
-
-if("step12" %in% stepstotake){  
-  
-  message("STEP12")
-  
-  files<-grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.tf.txt$"),value = T)
-  splice.taxatables(files = files,mastersheet = paste0(outDir,experiment_id,"_experiment_sheet.txt"))
-  
-  message("STEP12 complete")
-  
-}
-
-####################################################
-#step 13 make contributor files
-
-if("step13" %in% stepstotake){  
-  
-  message("STEP13")
-  
-  files<-grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.tf.spliced.txt$"),value = T)
+  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   
   #make contributor files
   for(i in 1:length(files)){
@@ -393,21 +241,20 @@ if("step13" %in% stepstotake){
     
     #first get blast file names (accounting for extra dashes)
     if(length(strsplit(files[i],"-")[[1]])==2) { 
-    filtered_blastfile = list.files(pattern = gsub("taxatable.tf.spliced.txt","blast.filt.txt",
-                                                  strsplit(files[i],"-")[[1]][2]))}
+      filtered_blastfile = list.files(pattern = gsub("taxatable.tf.spliced.txt","blast.filt.txt",
+                                                     strsplit(files[i],"-")[[1]][2]))}
     
     if(length(strsplit(files[i],"-")[[1]])>2) { 
       filtered_blastfile = list.files(pattern = gsub("taxatable.tf.spliced.txt","blast.filt.txt",
-           paste(strsplit(files[i],"-")[[1]][2:length(strsplit(files[i],"-")[[1]])],collapse = "-")))
+                                                     paste(strsplit(files[i],"-")[[1]][2:length(strsplit(files[i],"-")[[1]])],
+                                                           collapse = "-")))
     }
-    
-    #then get bin file names (accounting for extra dashes)
     
     check.low.res.df(
-      filtered.taxatab = files[i],filtered_blastfile,
-      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile)),
-      spident = spident, gpident = gpident,fpident = fpident,abspident = abspident)
-    }
+      filtered.taxatab = files[i],filtered_blastfile = filtered_blastfile,
+      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile))
+      ,disabledTaxaFile = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
+  }
   message("STEP13 complete")
   
 }
@@ -418,13 +265,18 @@ if("step13" %in% stepstotake){
 if("step14" %in% stepstotake){  
   
   message("STEP14")
+  message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
-  files<-grep(experiment_id,list.files(path = outDir,pattern = ".taxatable.tf.spliced.txt$"),value = T)
+  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   for(i in 1:length(files)){
-    bas.krona.plot(files[i],KronaPath = "/home/bastian.egeter/Tools/Krona.install/bin/ktImportText")
+    bas.krona.plot(files[i],KronaPath)
   }
   message("STEP14 complete")
   
 }
-    
-    
+
+
+
+  
+
+  

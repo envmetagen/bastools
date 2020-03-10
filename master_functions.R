@@ -530,7 +530,7 @@ check.blasts<-function(infastas,h){
 }
 
 blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NULL,inverse=F,taxidname=NULL,ncbiTaxDir=NULL,overWrite=F
-                        ,max_target_seqs=100){
+                        ,max_target_seqs=100,task="megablast"){
   
   if(!is.null(taxidlimit)) if(is.null(ncbiTaxDir)) stop("to use taxidlimit, ncbiTaxDir must be supplied")
   if(!is.null(taxidlimit)) if(is.null(taxidname)) stop("to use taxidlimit, taxidname must be supplied")
@@ -580,7 +580,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
       
         if(inverse==F){
           h[[i]]<-process$new(command = blast_exec, 
-                          args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
+                          args=c("-query", infastas[i], "-task", task,"-db",refdb,"-outfmt",
                                  "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-taxidlist", 
                                  paste0(taxidname[i],"_taxidlimit.txt"),"-max_target_seqs", max_target_seqs, "-max_hsps","1", "-out",
                                  paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),echo_cmd = T,
@@ -588,7 +588,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
         }
         if(inverse==T){
           h[[i]]<-process$new(command = blast_exec, 
-                              args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
+                              args=c("-query", infastas[i], "-task", task,"-db",refdb,"-outfmt",
                                      "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-negative_taxids", 
                                      paste0(taxidname[i],"_taxidlimit.txt"),"-max_target_seqs", max_target_seqs, "-max_hsps","1", "-out",
                                      paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),echo_cmd = T,
@@ -604,7 +604,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     for(i in 1:length(infastas)){
       
       h[[i]]<-process$new(command = blast_exec,
-                          args=c("-query", infastas[i], "-task", "megablast","-db",refdb,"-outfmt",
+                          args=c("-query", infastas[i], "-task", task,"-db",refdb,"-outfmt",
                                  "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-max_target_seqs", 
                                  "100", "-max_hsps","1", "-out",
                                  paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),
