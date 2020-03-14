@@ -28,7 +28,7 @@ if("step1" %in% stepstotake){
   }
   
   message("Removing seqs with a lot (>27) of NNNs")
-  a<-a[-grep("NNNNNNNNNNNNNNNNNNNNNNNNNNNN",a$V16),] 
+  if(length(grep("NNNNNNNNNNNNNNNNNNNNNNNNNNNN",a$V16))>0) a<-a[-grep("NNNNNNNNNNNNNNNNNNNNNNNNNNNN",a$V16),] 
   
   #make unique names, hmm lots, I dont think there should be - tell Nuno
   a$ids<-make.unique(a$V2, sep = "_")
