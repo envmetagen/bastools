@@ -40,9 +40,9 @@ master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 
 ```
 
-## import taxatabs
+## import otutabs
 ```{r import taxatabs, eval=TRUE,echo=F, results='hide'}
-#import taxtabs
+#import otutabs
 all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
 #make new taxa table based on subsetted master sheet
@@ -58,8 +58,13 @@ all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = 
 ```
 
 
+## first negatives inspection
+```{r first negative inspection, eval=TRUE,echo=F}
+if(do.first.negative.inspection==T) full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+```
 
-## apply taxon and sample filters
+
+## apply otu/taxon and sample filters
 ```{r apply taxon and sample filters, eval=TRUE,echo=F}
 if(taxonpc>0 && samplepc>0) {
     all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)

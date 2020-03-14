@@ -3373,24 +3373,27 @@ plot.negs.vs.real<-function(taxatab,ms_ss,real){
   
   plotlist<-list()
   
-  for(i in 1:length(splitdf3)){
-    df<-splitdf3[[i]]  
+  if(length(splitdf3)!=0) {
+  
+    for(i in 1:length(splitdf3)){
     
-    df$sum<-sum(df$value)
+      df<-splitdf3[[i]]  
     
-    df$pc<-round(df$value/df$sum*100,digits = 1)
+      df$sum<-sum(df$value)
     
-    plotlist[[i]]<-ggplot(data = df,aes(x=variable, y=value,color=sample_type)) + 
+      df$pc<-round(df$value/df$sum*100,digits = 1)
+    
+      plotlist[[i]]<-ggplot(data = df,aes(x=variable, y=value,color=sample_type)) + 
       geom_bar(fill="white", alpha=0.5, stat="identity") +
       theme(axis.text.x=element_text(size=8,angle=45, hjust=1),legend.title = element_blank()) +
       geom_text(aes(label=pc), position=position_dodge(width=0.9), vjust=-0.25) +
       ggtitle(unique(df$taxon)) +
       ylab("reads") +
       xlab("labels indicate % of reads in each sample of total reads for taxon")
-  }
-  
+    } 
+  } else message("No taxa appearing in both negatives and positives")
+   
   plotlist
-  
 }
 
 qplot.taxatab<-function(taxatab){
@@ -3452,48 +3455,51 @@ plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
   
   splitdf3<-splitdf3 %>% discard(is.null)
   
-  #get negatives that had a taxon in themselves and real samples
-  splitdf4<-list()
-  for(i in 1:length(splitdf3)){
-    splitdf4[[i]]<-splitdf3[[i]][splitdf3[[i]]$sample_type %in% neg.types,c("variable","sample_type")]
-  }
-  final.negs<-unique(do.call(rbind,splitdf4))
+  if(length(splitdf3)!=0) {
   
-  #get problem taxa (for %s later)
-  splitdf3taxa<-list()
-  for(i in 1:length(splitdf3)){
-    splitdf3taxa[[i]]<-splitdf3[[i]][1,1]
-  }
-  
-  final.taxa<-do.call(rbind,splitdf3taxa)
-  
-  #make data frame of problem samples
-  
-  finaltable<-taxatab[,c("taxon",as.character(final.negs[,"variable"]))]
-  finaltable<-rm.0readtaxSam(taxatab = finaltable)
-  
-  long<-reshape2::melt(finaltable)
-  long<-long[long$value>0,,drop=F]
-  
-  long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
-  long$taxon<-as.character(long$taxon)
-  
-  splitdf<-split(long, f = long$variable)
-  
-  plotlist<-list()
-  for(i in 1:length(splitdf)){
-    df<-splitdf[[i]]
-    df$sum<-sum(df$value)
-    df$pc<-round(df$value/df$sum*100,digits = 1)
+    #get negatives that had a taxon in themselves and real samples
+    splitdf4<-list()
+    for(i in 1:length(splitdf3)){
+      splitdf4[[i]]<-splitdf3[[i]][splitdf3[[i]]$sample_type %in% neg.types,c("variable","sample_type")]
+    }
+    final.negs<-unique(do.call(rbind,splitdf4))
     
-    plotlist[[i]]<-ggplot(data = df,aes(x=taxon, y=value,color=sample_type)) + 
-      geom_bar(fill="white", alpha=0.5, stat="identity") +
-      theme(axis.text.x=element_text(size=8,angle=45, hjust=1),legend.title = element_blank()) +
-      geom_text(aes(label=pc), position=position_dodge(width=0.9), vjust=-0.25) +
-      ggtitle(unique(df$variable)) +
-      ylab("reads") +
-      xlab("labels indicate % of reads in each taxon of total reads for sample")
-  }
+    #get problem taxa (for %s later)
+    splitdf3taxa<-list()
+    for(i in 1:length(splitdf3)){
+      splitdf3taxa[[i]]<-splitdf3[[i]][1,1]
+    }
+    
+    final.taxa<-do.call(rbind,splitdf3taxa)
+    
+    #make data frame of problem samples
+    
+    finaltable<-taxatab[,c("taxon",as.character(final.negs[,"variable"]))]
+    finaltable<-rm.0readtaxSam(taxatab = finaltable)
+    
+    long<-reshape2::melt(finaltable)
+    long<-long[long$value>0,,drop=F]
+    
+    long$sample_type<-ms_ss[match(long$variable,ms_ss$ss_sample_id),"sample_type"]
+    long$taxon<-as.character(long$taxon)
+    
+    splitdf<-split(long, f = long$variable)
+    
+    plotlist<-list()
+    for(i in 1:length(splitdf)){
+      df<-splitdf[[i]]
+      df$sum<-sum(df$value)
+      df$pc<-round(df$value/df$sum*100,digits = 1)
+      
+      plotlist[[i]]<-ggplot(data = df,aes(x=taxon, y=value,color=sample_type)) + 
+        geom_bar(fill="white", alpha=0.5, stat="identity") +
+        theme(axis.text.x=element_text(size=8,angle=45, hjust=1),legend.title = element_blank()) +
+        geom_text(aes(label=pc), position=position_dodge(width=0.9), vjust=-0.25) +
+        ggtitle(unique(df$variable)) +
+        ylab("reads") +
+        xlab("labels indicate % of reads in each taxon of total reads for sample")
+    }
+  } else message("No taxa appearing in both negatives and positives")
   
   plotlist
 }
@@ -3663,19 +3669,22 @@ full.negative.inspection<-function(taxatab,ms_ss,real){
       
       plotlist1<-plot.negs.vs.real(taxatab = taxatab,ms_ss = ms_ss,real = real)
       
-      for(i in 1:length(plotlist1)){
-        print(plotlist1[[i]])
+      if(length(plotlist1)>0){
+        for(i in 1:length(plotlist1)){
+          print(plotlist1[[i]])
+        }
       }
       
       message("Making barplots for only those taxa detected in both negatives and real samples - to help decide sample filter")
       plotlist2<-plot.negs.vs.taxa(taxatab = taxatab,ms_ss = ms_ss,real = real)
       
-      for(i in 1:length(plotlist2)){
-        print(plotlist2[[i]])
+      if(length(plotlist2)>0){
+        for(i in 1:length(plotlist2)){
+          print(plotlist2[[i]])
+        }
       }
     }
 }
-
 
 split.primer.into.cols<-function(primer.seq,ecopcroutput,primer.direction){
   pflist<-list()

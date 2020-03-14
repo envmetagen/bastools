@@ -45,13 +45,13 @@
   blastfilt<-"/media/sf_Documents/WORK/CIBIO/temp/12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.blast.filt.txt"
 
     #full path to this config file.
-  config="/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/IRAN-ILLUMINA_SCRIPT_OUTPUT/After_rebinning/PRS4.IRAN.config.R"
+  config="/home/tutorial/TOOLS/bastools/examples/PRS4.OTUTAB.config.R"
   
   #full path to target out html
-  out_html<-"/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/IRAN-ILLUMINA_SCRIPT_OUTPUT/After_rebinning/PRS4.IRAN.html"
+  out_html<-"/media/sf_Documents/WORK/CIBIO/temp/PRS4.OTUTAB.TEST.html"
   
-  #full path to taxatab out, put to NULL if not desired
-  taxatab.out<-"/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/IRAN-ILLUMINA_SCRIPT_OUTPUT/After_rebinning/PRS4_IRAN.taxatab.txt"
+  #full path to otutab out, put to NULL if not desired
+  taxatab.out<-"/media/sf_Documents/WORK/CIBIO/temp/PRS4.OTUTAB.out.txt"
   
   #datasheet url, not required if master_sheet_file is not NULL
   #url<-"https://docs.google.com/spreadsheets/d/1FUSaeVaYzms2EOGUoCAB4jaRKzguD3AKTsC8lYwaKP4/edit?ts=5dae01be#gid=0"
@@ -74,7 +74,7 @@
   #Detection below samplepc % of sample read count will be removed (0.1=0.1%)
   samplepc=0.1
   #the absolute value for removing detections in pcr reps (maybe not necessary here, wait til after sumreps...?, as we consider anything in 2 reps to be true)
-  filter_dxn = 10
+  filter_dxn = 60
   #the absolute value for removing detections after summing replicate level (not sure of level, could leave very low, as we consider anything in 2 reps to be true)
   filter_dxn2 = 0
   #sample_type used to descirbe your real samples (not negatives)
@@ -128,4 +128,4 @@
   #but Now I notice closing and restarting R / Rstudio is the biggest help
   
   #knit
-rmarkdown::render(input = paste0(bastoolsDir,"scripts/POST_REBIN_SCRIPT4.Rmd"),output_file = out_html)
+  rmarkdown::render(input = paste0(bastoolsDir,"scripts/OTU_FILTER.Rmd"),output_file = out_html)
