@@ -1,4 +1,4 @@
-out="18S.ntaxa.with.insert.txt"
+out="18S.nseqs.with.insert.txt"
 
 #check that sequences which mapped overlap target region  
 ##read in blast results
@@ -42,4 +42,7 @@ system2(command = "cat", args=c(gsub(".fasta",".checked.wPos.fasta",catted_DLS),
 ##ntaxa 
 taxa.afterchecks<-count.taxa.in.fams.in.fasta(fasta = gsub(".fasta",".checked.wPos.plus.mapcaught.insert.fasta",catted_DLS),ncbiTaxDir)
 
+nseqs.afterchecks<-count.nseqs.in.fams.in.fasta(fasta = gsub(".fasta",".checked.wPos.plus.mapcaught.insert.fasta",catted_DLS),ncbiTaxDir)
+
 write.table(taxa.afterchecks,file = out,append = F,quote = F,sep = "\t",row.names = F)
+write.table(nseqs.afterchecks,file = out,append = F,quote = F,sep = "\t",row.names = F)

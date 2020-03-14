@@ -8,6 +8,7 @@ library(ggplot2)
 source(paste0(bastoolsDir,"master_functions.R"))
 source(paste0(bastoolsDir,"bin.blast.R"))
 setwd(filesDir)
+catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
 
 ####################################################
 
@@ -162,40 +163,43 @@ if("step4" %in% stepstotake){
   files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.ids.fasta") 
   
   #cat files
-  catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist),)),"lenFilt.trimmed.ids.fasta",sep = ".")
+  catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
   system2(command = "cat",args = c(files),wait = T,stdout = catted_file)
+  
+  message("STEP4 complete")
 }
     
 ####################################################
-#step 4 
-if("step4" %in% stepstotake){
+#step 5 blast
+if("step5" %in% stepstotake){
   
-  message("STEP4 - blast")
+  message("STEP5 - blast")
+  
+  message("Using blastn for Minion data")
   
   if(!is.null(taxidlimit)){
      blast.status<-blast.min.bas(infastas = catted_file,refdb = refdb,blast_exec = blast_exec,
                                 wait = T,taxidlimit = taxidlimit,taxidname = taxidname, ncbiTaxDir = ncbiTaxDir,task="blastn")
-    } else blast.status<-blast.min.bas(infastas = startingfastas,refdb = refdb,blast_exec = blast_exec, wait = T, ncbiTaxDir = ncbiTaxDir,task="blastn")
+    } else blast.status<-blast.min.bas(infastas = catted_file,refdb = refdb,blast_exec = blast_exec, wait = T, ncbiTaxDir = ncbiTaxDir,
+                                       task="blastn")
   
-    check.blasts(infastas = files,h = blast.status)
+    check.blasts(infastas = catted_file,h = blast.status)
   
-  message("STEP4 complete")
+  message("STEP5 complete")
 }
   
 ####################################################
-#step 5 filter 
-if("step5" %in% stepstotake){  
+#step 6 filter 
+if("step6" %in% stepstotake){  
   
-  message("STEP5")
+  message("STEP6 - filter blast results")
   
-  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.blast.txt")  
+  blastfile<-gsub(".fasta",".blast.txt",catted_file)
   
-  for(i in 1:length(files)){
-    message(paste("filtering blast results for",files[i]))
+    message(paste("filtering blast results for",catted_file))
     blastfile = files[i]
     out<-gsub(".blast.txt",".blast.filt.txt",files[i])
     filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top)
-  }
   
   message("STEP5 complete")
   
@@ -203,7 +207,7 @@ if("step5" %in% stepstotake){
 
 ####################################################
 #step 6 BIN
-if("step6" %in% stepstotake){ 
+if("step7" %in% stepstotake){ 
   
   message("STEP6 - Bin")
   
@@ -229,7 +233,7 @@ message("Need to make otutabs")
 ####################################################
 #step 7 make contributor files
 
-if("step7" %in% stepstotake){  
+if("step8" %in% stepstotake){  
   
   message("STEP7 - Contributor files")
   

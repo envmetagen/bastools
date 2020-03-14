@@ -481,7 +481,7 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
 
 #############################decided to split function
 filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncbiTaxDir,out,min_qcovs=70,
-                       max_evalue=0.001,top=1){
+                       max_evalue=0.001,top=1,rm.unclassified=T){
   
   if(length(grep("qcovs",headers))<1) stop("qcovs not in headers")
   if(length(grep("evalue",headers))<1) stop("evalue not in headers")
@@ -497,9 +497,16 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
   colnames(btab)<-strsplit(headers,split = " ")[[1]]
   
   message("applying global min_qcovs threshold")
+  start<-length(unique(btab$qseqid))
   btab<-btab[btab$qcovs>min_qcovs,]
+  after_min_qcovs<-length(unique(btab$qseqid))
+  message(start-after_min_qcovs, " queries removed")
+  
   message("applying global max_evalue threshold")
   btab<-btab[btab$evalue<max_evalue,]
+  after_max_eval<-length(unique(btab$qseqid))
+  message(after_min_qcovs-after_max_eval, " queries removed")
+  
   message("applying global top threshold")
   if(length(btab[,1])==0) stop("No hits passing min_qcovs and max_evalue thresholds")
   topdf<-aggregate(x = btab[,colnames(btab) %in% c("qseqid","pident")],by=list(btab$qseqid),FUN = max)
@@ -513,26 +520,17 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
   btab<-add.lineage.df(btab,ncbiTaxDir)
   
   #remove crappy hits 
-  #1. btab$S contains uncultured
-  message("Removing species containing the terms: uncultured, environmental, 
-          unidentified,fungal, eukaryote or unclassified")
-  if(length(grep("uncultured",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("uncultured",btab$S,ignore.case = T),]}
-  #2. btab$S contains environmental
-  if(length(grep("environmental",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("environmental",btab$S,ignore.case = T),]}
-  #3. btab$S contains unclassified
-  if(length(grep("unclassified",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("unclassified",btab$S,ignore.case = T),]}
-  #4. btab$S contains "unidentified"
-  if(length(grep("unidentified",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("unidentified",btab$S,ignore.case = T),]}
-  #5. btab$S contains "fungal "
-  if(length(grep("fungal ",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("fungal ",btab$S,ignore.case = T),]}
-  #6. btab$S contains "eukaryote"
-  if(length(grep("eukaryote",btab$S,ignore.case = T))>0) {
-    btab<-btab[-grep("eukaryote",btab$S,ignore.case = T),]}
+  if(rm.unclassified==T){
+    #1. btab$S contains uncultured
+    message("Removing species containing the terms: uncultured, environmental, 
+            unidentified,fungal, eukaryote or unclassified")
+    if(length(grep("uncultured",btab$S,ignore.case = T))>0) btab<-btab[-grep("uncultured",btab$S,ignore.case = T),]
+    if(length(grep("environmental",btab$S,ignore.case = T))>0) btab<-btab[-grep("environmental",btab$S,ignore.case = T),]
+    if(length(grep("unclassified",btab$S,ignore.case = T))>0) btab<-btab[-grep("unclassified",btab$S,ignore.case = T),]
+    if(length(grep("unidentified",btab$S,ignore.case = T))>0) btab<-btab[-grep("unidentified",btab$S,ignore.case = T),]
+    if(length(grep("fungal ",btab$S,ignore.case = T))>0) btab<-btab[-grep("fungal ",btab$S,ignore.case = T),]
+    if(length(grep("eukaryote",btab$S,ignore.case = T))>0) btab<-btab[-grep("eukaryote",btab$S,ignore.case = T),]
+  }
   
   write.table(x = btab,file = out,sep="\t",quote = F,row.names = F)
   

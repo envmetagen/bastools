@@ -777,7 +777,7 @@ interp.lm <- function(model){
 
 
 make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta=F, ncbiTaxDir, dbversion=4,do.checks=T){
-  library(processx)
+  require(processx)
   
   message("Reminder: Assumes header includes taxid=taxid;")
   message("Reminder: Assumes there are only spaces between attributes, not within them, e.g. species names should not have spaces")
@@ -815,7 +815,7 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
   }
   
   #make final headers & write fasta
-  tempfasta$seq.name<-paste0(tempfasta$ids," taxids=",tempfasta$taxids, "; db=",tempfasta$db)
+  tempfasta$seq.name<-paste0(tempfasta$ids," taxid=",tempfasta$taxids, "; db=",tempfasta$db)
   phylotools::dat2fasta(tempfasta,gsub(".fasta",".blastdbformatted.fasta",infasta))
   
   #make mapping file
@@ -1392,7 +1392,7 @@ ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length=NULL,out,buf
   #cb <- function(line, proc) {cat(line, "\n")}
   
   if(length(grep("I",Pf))>0)(Pf<-gsub("I","N",Pf))
-  if(length(grep("I",Pr))>0)(Pf<-gsub("I","N",Pr))
+  if(length(grep("I",Pr))>0)(Pr<-gsub("I","N",Pr))
   
   if(!is.null(max_length)){
   if(is.null(buffer)){
@@ -3872,4 +3872,265 @@ bas.plot.specrich<-function(taxatab){
   
   pool.taxatab <- vegan::poolaccum(ttaxatab)
   plot(pool.taxatab)
+}
+
+#blast loop function
+
+threshold.blast<-function(ecopcr.clean.df,ncbiTaxDir,out,
+                          TaxlevelTest,blast_exec,makeblastdb_exec,task="megablast"){
+  
+  message("ecopcr.clean.df must have K,P,C,O,F,G,S taxonomy and 'taxids' column, as added by add.lineage.df")
+  
+  t1<-Sys.time()
+  
+  #function will overwrite 'out'
+  
+  #TaxLevelTest is the taxonomic level to test at
+  #--if "F" then seq_i, belonging to genus_A will be blasted against everything excluding other seqs belonging to genus_A
+  
+  if(!TaxlevelTest %in% c("F","G","S")) stop("thresholdlevel must be one of F,G,S")
+  if(TaxlevelTest=="F") ex.seqid.group<-"G"
+  if(TaxlevelTest=="G") ex.seqid.group<-"S"
+  if(TaxlevelTest=="S") stop("Havent done this yet") #ex.seqid.group<-"S"
+  
+  a2<-ecopcr.clean.df
+  a2$seq.name<-paste0(a2$AC," ","taxid=",a2$taxids,";")
+  a2$seq.text<-a2$sequence
+  
+  message("Creating blastDB")
+  phylotools::dat2fasta(a2[,c("seq.name","seq.text")],"temp.fasta")
+  
+  make.blastdb.bas(infasta = "temp.fasta",makeblastdb_exec = makeblastdb_exec,
+                   addtaxidsfasta = F,ncbiTaxDir,do.checks=T,dbversion = 4)
+  
+  
+  unlink(out)
+  
+  #loop blast
+  for(i in 1:nrow(a2)){
+    
+    message("loop ",i)
+    
+    #make query fasta
+    b<-a2[a2$AC==a2$AC[i],]
+    phylotools::dat2fasta(b[,c("seq.name","seq.text")],"temp.seq.fasta")
+    
+    #get seqids of query group
+    ex.seqids<-a2[a2[,ex.seqid.group]==b[,ex.seqid.group],"AC"]  
+    write.table(ex.seqids,file = "ex.seqids.txt",append = F,quote = F,sep = "\t",row.names = F,col.names = F)
+    
+    #blast
+    system2(command = blast_exec,
+            args=c("-query", "temp.seq.fasta", "-task", task,"-db","temp","-outfmt",
+                   "'6 qseqid sseqid evalue staxid pident qcovs'","-num_threads", "8", "-max_target_seqs", 
+                   "50", "-max_hsps","1","-negative_seqidlist", "ex.seqids.txt", "-out",
+                   "temp.seq.blast.txt"), wait = T)
+    
+    #store blast results
+    blastResults<-data.table::fread("temp.seq.blast.txt",sep = "\t",data.table = F)
+    
+    write.table(blastResults,file = out,append = T,quote = F,row.names = F,sep = "\t",col.names = F)
+  }
+  
+  t2<-Sys.time()
+  
+  message("Loop blast for TaxlevelTest=", TaxlevelTest," complete in ", round(difftime(t2,t1,units = "mins"),digits = 2)," mins")
+  message("Output saved in ",out)
+  
+  unlink("temp.blastdbformatted.fasta")
+  unlink("temp.fasta")
+  unlink("temp.n*")
+  unlink("temp.seq.blast.txt")
+  unlink("temp.seq.fasta")
+  unlink("ex.seqids.txt")
+  
+  message("Warnings usually ok, just happens when reading empty blast results")
+}
+
+path.at.level<-function(pathvector,level){
+  
+  require(stringr)
+  if(!level %in% c("K","P","C","O","F","G","S")) stop("level must be one of K,P,C,O,F,G,S")
+  
+  mat<-do.call(rbind,stringr::str_split(pathvector,";"))
+  
+  if(level=="K") newpath<-mat[,1]
+  if(level=="P") newpath<-paste(mat[,1],mat[,2],sep = ";")
+  if(level=="C") newpath<-paste(mat[,1],mat[,2],mat[,3],sep = ";")
+  if(level=="O") newpath<-paste(mat[,1],mat[,2],mat[,3],mat[,4],sep = ";")
+  if(level=="F") newpath<-paste(mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],sep = ";")
+  if(level=="G") newpath<-paste(mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],sep = ";")
+  
+  return(newpath)
+}
+
+# filtering and binning loop
+threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid evalue staxid pident qcovs",
+                              ncbiTaxDir = ncbiTaxDir,max_evalue = 0.001,min_qcovs = 70,top = c(1,5,10),
+                              TaxlevelTest="F", pidents=c(90,80,70)){
+  
+  t1<-Sys.time()
+  
+  message(blastfile)
+  
+  message("ecopcr.clean.df must have K,P,C,O,F,G,S taxonomy and 'taxids' column, as added by add.lineage.df")
+  
+  if(!TaxlevelTest %in% c("F","G","S")) stop("thresholdlevel must be one of F,G,S")
+  
+  #start making final table
+  ecopcr.clean.df$path<-paste(ecopcr.clean.df$K,ecopcr.clean.df$P,ecopcr.clean.df$C,ecopcr.clean.df$O,ecopcr.clean.df$F,
+                              ecopcr.clean.df$G,ecopcr.clean.df$S,sep = ";")
+  
+  if(TaxlevelTest=="F") ecopcr.clean.df$origpath<-path.at.level(ecopcr.clean.df$path,level = "F")
+  if(TaxlevelTest=="G") ecopcr.clean.df$origpath<-path.at.level(ecopcr.clean.df$path,level = "G")
+  
+  #filter blast results at each top
+  final.table.list<-list()
+  counts.list<-list()
+  
+  for(j in 1:length(top)){
+    
+    blast.filt.out<-paste(blastfile,"maxe",max_evalue,"qcov",min_qcovs,"top",top[j],sep = "_")
+    
+    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = blast.filt.out
+                 ,headers = "qseqid sseqid evalue staxid pident qcovs",max_evalue = max_evalue,min_qcovs = min_qcovs,
+                 top = top[j],rm.unclassified = F)
+    
+    btab.unfilt<-data.table::fread(blastfile,sep="\t",data.table = F)
+    btab<-data.table::fread(blast.filt.out,sep="\t",data.table = F)
+    
+    final.table<-ecopcr.clean.df[,c("AC","taxids","origpath")]
+    final.table$had.hits<-final.table$AC %in% btab.unfilt$V1
+    final.table$after.filt<-final.table$AC %in% btab$qseqid
+    
+    counts<-data.frame(correct=rep(0,length(pidents)),
+                       above=rep(0,length(pidents)),
+                       incorrect=rep(0,length(pidents)),
+                       fail.filt=rep(0,length(pidents)),
+                       no.hits=rep(0,length(pidents)),
+                       fail.bin=rep(0,length(pidents)),
+                       pident=pidents,
+                       file=blast.filt.out)
+    
+    for(i in 1:length(pidents)){
+      
+      pident<-pidents[i]
+      message("binning with pident=",pident) 
+      
+      if(TaxlevelTest=="F"){
+        btabf<-btab[!(btab$F=="unknown" & btab$G=="unknown" & btab$S=="unknown"),]   
+        btabf<-btabf[!(btabf$F=="unknown" & btabf$G=="unknown"),] 
+      }
+      
+      if(TaxlevelTest=="G") btabf<-btab[btab$G!="unknown",] 
+      
+      if(TaxlevelTest=="S") btabf<-btab 
+      
+      btabf<-btabf[btabf$pident>pident,]
+      if(length(btabf$taxids)>0){
+        lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxoR,x))
+        
+        #get lca names
+        colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
+        if(sum(is.na(lcaf$taxids))>0){
+          message("************
+                  ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
+                  *************")
+        }
+        
+        lcaf<-add.lineage.df(lcaf,ncbiTaxDir)
+        colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
+      } else {
+          lcaf<-data.frame(matrix(nrow=1,ncol = 10))
+          colnames(lcaf)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+      }
+      
+      if(TaxlevelTest=="F") lcaf$binpath<-paste(lcaf$K,lcaf$P,lcaf$C,lcaf$O,lcaf$F,sep = ";")
+      if(TaxlevelTest=="G") lcaf$binpath<-paste(lcaf$K,lcaf$P,lcaf$C,lcaf$O,lcaf$F,lcaf$G,sep = ";")
+      
+      colnames(lcaf)<-gsub("binpath",paste0("binpath_",pident),colnames(lcaf))
+      
+      final.table<-merge(final.table, lcaf[,c("qseqid",paste0("binpath_",pident))], by.x="AC",by.y = "qseqid",all.x = T)
+      
+      #correct 
+      final.table$holder<-"holder"
+      colnames(final.table)<-gsub("holder",paste0("correct_",pident),colnames(final.table))
+      final.table[,paste0("correct_",pident)]<-final.table$origpath==final.table[,paste0("binpath_",pident)]
+      counts$correct[i]<-sum(final.table[,paste0("correct_",pident)],na.rm = T)
+      
+      #above desired rank
+      final.table$holder<-"holder"
+      colnames(final.table)<-gsub("holder",paste0("rank_",pident),colnames(final.table))
+      if(TaxlevelTest=="F"){
+        final.table[,paste0("rank_",pident)]<-bas.get.ranks(data.frame(taxon=paste0(final.table[,paste0("binpath_",pident)],";NA;NA")))
+      }
+      if(TaxlevelTest=="G"){
+        final.table[,paste0("rank_",pident)]<-bas.get.ranks(data.frame(taxon=paste0(final.table[,paste0("binpath_",pident)],";NA")))
+      }
+      
+      #distinguish fail because of no_hits, fail_filt and fail_bin
+      final.table[final.table$had.hits==F,paste0("rank_",pident)]<-"no.hits"
+      final.table[final.table$had.hits==T & final.table$after.filt==F,paste0("rank_",pident)]<-"fail.filt"
+      final.table[final.table$had.hits==T & final.table$after.filt==T & is.na(final.table[,paste0("binpath_",pident)]),
+                  paste0("rank_",pident)]<-"fail.bin"
+      
+      if(TaxlevelTest=="F"){
+        counts$above[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="htf",])
+      }
+      if(TaxlevelTest=="G"){
+        counts$above[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="htf" | final.table[,paste0("rank_",pident),]=="family",])
+      }
+      
+      counts$fail.filt[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="fail.filt",])
+      counts$fail.bin[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="fail.bin",])
+      counts$no.hits[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="no.hits",])
+      
+      #incorrect 
+      final.table$holder<-"holder"
+      colnames(final.table)<-gsub("holder",paste0("incorrect_",pident),colnames(final.table))
+      
+      if(TaxlevelTest=="F"){
+        final.table[,paste0("incorrect_",pident)]<-
+          final.table$origpath!=final.table[,paste0("binpath_",pident)] & final.table[,paste0("rank_",pident)]=="family"
+      }
+      if(TaxlevelTest=="G"){
+        final.table[,paste0("incorrect_",pident)]<-
+          final.table$origpath!=final.table[,paste0("binpath_",pident)] & final.table[,paste0("rank_",pident)]=="genus"
+      }
+      
+      counts$incorrect[i]<-sum(final.table[,paste0("incorrect_",pident)],na.rm = T)
+      
+      #put all results in rank
+      final.table[final.table[paste0("correct_",pident)]==T & !is.na(final.table[paste0("correct_",pident)]),
+                  paste0("rank_",pident)]<-"correct"
+      final.table[final.table[paste0("incorrect_",pident)]==T & !is.na(final.table[paste0("incorrect_",pident)]),
+                  paste0("rank_",pident)]<-"incorrect"
+      
+      if(TaxlevelTest=="F") final.table[final.table[,paste0("rank_",pident)]=="htf",paste0("rank_",pident)]<-"above"
+      if(TaxlevelTest=="G") final.table[final.table[,paste0("rank_",pident),]=="htf" | 
+                                          final.table[,paste0("rank_",pident),]=="family",paste0("rank_",pident)]<-"above"
+      
+      final.table$file<-blast.filt.out
+      
+      print(counts[i,])
+      
+      if(sum(counts[i,1:6])!=nrow(ecopcr.clean.df)) stop("Something wrong with counts, check function")
+      
+      }
+    
+    counts.list[[j]]<-counts
+    final.table.list[[j]]<-final.table
+  }
+  
+  counts.complete<-do.call(rbind,counts.list)
+  final.table.complete<-do.call(rbind,final.table.list)
+  output.list<-list(counts.complete,final.table.complete)
+  
+  t2<-Sys.time()
+  
+  message("Loop binning complete in ", round(difftime(t2,t1,units = "mins"),digits = 2)," mins")
+  
+  message("NOTE TO CLEAN FILES")
+  
+  return(output.list)
 }

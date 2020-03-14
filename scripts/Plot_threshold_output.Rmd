@@ -1,0 +1,34 @@
+---
+title: "Plotting Threshold test outputs"
+html_notebook: default
+subtitle: ''
+classoption: portrait
+output: html_document
+---
+
+## Plots of top blast hit pidents
+```{r Plots of top blast hit pidents, eval=TRUE,echo=F}
+for(i in 1:length(outloopblast.plots)) print(outloopblast.plots[[i]])
+```
+
+## Count plot
+```{r Count plot, eval=TRUE,echo=F}
+print(count.plot)
+```
+
+## Facet by taxon 
+```{r Facet by taxon, eval=TRUE,echo=F}
+for(j in 1:length(facet.plots.taxon.list)) {
+  
+  title.list<-file.list.list[[j]]
+  
+  plotlist<-facet.plots.taxon.list[[j]]
+  
+  for(i in 1:length(plotlist)){
+    print(title.list[[i]])
+    message("
+            spacer")
+    print(plotlist[[i]])
+  }
+}
+```

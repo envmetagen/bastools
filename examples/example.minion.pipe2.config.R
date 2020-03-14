@@ -4,12 +4,13 @@
 
 #usually, one run, one primer
 
-stepstotake=c("step1","step2","step3")
+stepstotake=c("step1","step2","step3","step4","step5")
 
 #all dirs must have trailing /
-bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #bastools directory
-outDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001_Run8/" #must exist
-filesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001_Run8/fastq_files/"
+bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools//" #bastools directory
+outDir<-"/home/bastian.egeter/Minion_data/MINION.PIPE2/2019_September_001/" #must exist
+filesDir<-"/home/bastian.egeter/Minion_data/MINION.PIPE2/2019_September_001/"
+blast_exec<-"/home/bastian.egeter/Tools/ncbi-blast-2.9.0+/bin/blastn"
 # get sheet first separately (better than including in pipe)
 # source(paste0(bastoolsDir,"master_functions.R"))
 # mastersheet<-google.overlord("https://docs.google.com/spreadsheets/d/1k1mAGogWq9rXcwBKDyxG9oZ0OrWreBRRcSEUw0RGwyk/edit?ts=5d776492#gid=1377121809",email="basegeter@gmail.com")
@@ -24,7 +25,8 @@ subsetlist<-list(experiment_id="2019_September_001",primer_set=c("VENE"))
 ca.error.rate=0.3
 
 ##set taxidlimit and taxidname if desired. 
-taxidlimit=33208 #set to NULL if not required
-taxidname="metazoa"
+taxidlimit=NULL #set to NULL if not required
+taxidname=NULL
+refdb="/home/bastian.egeter/DATABASES/16S_Bivalves/16S.s2.Bivalvia"
 
 source(paste0(bastoolsDir,"scripts/bas.minion.pipeline2.R"))      
