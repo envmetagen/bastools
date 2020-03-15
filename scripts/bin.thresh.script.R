@@ -11,10 +11,18 @@ library(tidyverse)
 obitaxoR<-ROBITaxonomy::read.taxonomy(dbname = obitaxo)
 setwd(outDir)
 #######################################################
-#taxonlimit is to subset the starting ecopcr
+#check taxonlimit ok 
 if(!is.null(taxonlimit)) if(is.null(taxonlimitlevel)) stop("taxonlimitlevel cannot be NULL if taxonlimit specified")
 if(!is.null(taxonlimitlevel)) {
   if(!taxonlimitlevel %in% c("K","P","C","O","F","G","S")) stop("taxonlimitlevel must be one of K,P,C,O,F,G,S")
+}
+
+#set some file names
+outloopblast.files<-list()
+ecopcr.files<-list()
+for(i in 1:length(TaxlevelTest)){
+  outloopblast.files[[i]]<-paste0(gsub(".fasta","",starting_fasta),".",primer_set_name,".",TaxlevelTest[i],"_loopBlast.txt")
+  ecopcr.files[[i]]<-paste0(gsub(".fasta","",starting_fasta),".",primer_set_name,".",TaxlevelTest[i],"_ecopcrDB.txt")
 }
 
 #######################################################
@@ -67,13 +75,13 @@ if("step3" %in% stepstotake){
   if(nrow(a2)==0) stop("No sequences left...")
   
   #loop blast for each threshold
-  outloopblast.files<-list()
   for(i in 1:length(TaxlevelTest)){
     
     #remove seqs that dont have taxonomy at desired level
     a3<-a2[a2[,TaxlevelTest[i]]!="unknown",]
     
-    outloopblast.files[[i]]<-paste0(gsub(".fasta","",starting_fasta),".",primer_set_name,".",TaxlevelTest[i],"_loopBlast.txt")
+    #save ecopcroutput used for later
+    write.table(a3,ecopcr.files[[i]],append = F,quote = F,sep = "\t",row.names = F)
     
     threshold.blast(ecopcr.clean.df = a3,ncbiTaxDir = ncbiTaxDir,
                   out=outloopblast.files[[i]],TaxlevelTest=TaxlevelTest[i],
@@ -86,10 +94,15 @@ if("step3" %in% stepstotake){
   for(i in 1:length(outloopblast.files)){
     outloopblast.results[[i]]<-data.table::fread(outloopblast.files[[i]],sep="\t",data.table = F)
     tophits<-aggregate(V5~V1,outloopblast.results[[i]],max)
-    colnames(tophits)<-c("AC","maxpident")
+    colnames(tophits)<-c("AC","pident")
+    tophits$minmax<-"max"
+    minhits<-aggregate(V5~V1,outloopblast.results[[i]],min)
+    colnames(minhits)<-c("AC","pident")
+    minhits$minmax<-"min"
+    tophits<-rbind(tophits,minhits)
     tophits.m<-merge(tophits,a[,c("AC","path")],by = "AC",all.x = T,all.y = F)
     tophits.m$lev<-path.at.level(tophits.m$path,TaxlevelTest[i])
-    outloopblast.plots[[i]]<-ggplot(tophits.m,aes(y=lev,x=maxpident)) + geom_point() + ggtitle(outloopblast.files[[i]])
+    outloopblast.plots[[i]]<-ggplot(tophits.m,aes(y=lev,x=pident,colour=minmax)) + geom_point() + ggtitle(outloopblast.files[[i]])
     ggsave(filename = gsub(".txt",".tophits.pdf",outloopblast.files[[i]]),outloopblast.plots[[i]],device = "pdf", width = 15,height = 10)
   }
 
@@ -101,12 +114,15 @@ message("STEP 3 COMPLETE")
 if("step4" %in% stepstotake){
   
   message("STEP4 - loop binning")
-
+  
   results<-list()
   for(i in 1:length(outloopblast.files)){
     #function takes a single file and TaxlevelTest, but loops through tops and pidents
     #so here getting it to loop through TaxLevels, by giving it two blast files (one for each TaxlevelTest)
-    results[[i]]<-threshold.bin.blast(blastfile = outloopblast.files[[i]],ecopcr.clean.df = a3,
+    
+    ecopcr<-data.table::fread(ecopcr.files[[i]],data.table = F)
+    
+    results[[i]]<-threshold.bin.blast(blastfile = outloopblast.files[[i]],ecopcr.clean.df = ecopcr,
                                       headers = "qseqid sseqid evalue staxid pident qcovs",
                                       ncbiTaxDir = ncbiTaxDir,max_evalue = 10,min_qcovs = 70,top = tops,
                                       TaxlevelTest=TaxlevelTest[i], pidents=pidents.list[[i]]) 
@@ -124,7 +140,7 @@ if("step4" %in% stepstotake){
 }
   
 #######################################################
-#LOOP BINNING 
+#PLOTTING 
 if("step5" %in% stepstotake){
   
   message("STEP5 - plotting") 
@@ -135,7 +151,23 @@ if("step5" %in% stepstotake){
   longcount<-data.table::melt(combocounts[,-7],id.vars="file")
   longcount$pident<-rep(combocounts$pident,6)
   longcount$variable <- factor(longcount$variable, levels = c("no.hits","fail.filt","fail.bin","incorrect","above","correct"))
-  longcount$pident <- factor(longcount$pident, levels = unique(c(pidents.list[[1]],pidents.list[[2]])))
+  longcount$pident <- factor(longcount$pident, levels = sort(unique(c(pidents.list[[1]],pidents.list[[2]])),decreasing = T))
+  longcount$settings<-do.call(rbind,stringr::str_split(longcount$file,"loopBlast.txt_"))[,2]
+  longcount$taxlevel<-do.call(rbind,stringr::str_split(longcount$file,"loopBlast.txt_"))[,1]
+  longcount$taxlevel<-stringr::str_sub(longcount$taxlevel,start = -2)
+  longcount$settings<-paste0(longcount$taxlevel,longcount$settings)
+  
+  b<-list()
+  b2<-list()
+  for(j in 1:length(TaxlevelTest)){
+    for(i in 1:length(tops)){
+      greps<-paste0("^",TaxlevelTest[j],"(.)*top_",sort(tops)[i],"$")
+      b[[i]]<-grep(greps,unique(longcount$settings))
+    }
+    b2[[j]]<-b
+  }
+  
+  longcount$settings<-factor(longcount$settings, levels = unique(longcount$settings)[unlist(b2)])
   
   total.reads<-sum(combocounts[1,-8])
   
@@ -145,16 +177,14 @@ if("step5" %in% stepstotake){
               scale_fill_manual(values = MyCols) +
               geom_text(aes(label = paste(round(value/total.reads*100,digits = 0),"%")), 
               position = position_stack(vjust = 0.5), size = 2) +
-              facet_wrap(~file,scales = "free") 
+              facet_wrap(~settings,scales = "free") 
   
   ggsave(filename = paste0(gsub(".fasta","",starting_fasta),".",primer_set_name,"_summary.counts.plot.pdf"),
          count.plot,device = "pdf", width = 15,height = 10)
   
 #plot by taxon, optional filter by taxa  
   results<-list()
-  outloopblast.files<-list()
   for(i in 1:length(TaxlevelTest)){
-    outloopblast.files[[i]]<-paste0(gsub(".fasta","",starting_fasta),".",primer_set_name,".",TaxlevelTest[i],"_loopBlast.txt")
     results[[i]]<-data.table::fread(gsub(".txt",".bin.results.txt",outloopblast.files[[i]]),data.table = F)
   }
   
@@ -172,6 +202,29 @@ if("step5" %in% stepstotake){
     for(i in 1:length(unique(df$file))){
       
       df2<-df[df$file==unique(df$file)[i],]
+      
+      if(!is.null(plot.taxa.limit)) {
+        df2.list<-list()
+        for(i in 1:length(plot.taxa.limit)){
+          df2.list[[i]]<-df2[df2$plotpath==plot.taxa.limit[i],]
+        }
+        df2<-do.call(rbind,df2.list)
+      
+      
+        #counts of taxa in final plots
+        #report some counts
+        taxa.counts.list<-list()
+        taxlevels<-c("K","P","C","O","F","G")
+        plot.title.list<-list()
+        for(j in 1:length(plot.taxa.limit)){
+          for(i in 1:length(taxlevels)) {
+            taxa.counts<-path.at.level(df2.list[[j]]$path,taxlevels[i])
+            taxa.counts.list[[i]]<-paste0(taxlevels[i],":",length(unique(taxa.counts)))
+          }
+          plot.title.list[[j]]<-paste(plot.taxa.limit[j],toString(unlist(taxa.counts.list)),",S:",length(unique(df2.list[[j]]$path)))
+        }
+        plot.title<-unlist(plot.title.list)
+      }
     
       final.table2<-data.table::melt(df2[,c(length(colnames(df2)),
                                                   grep("rank",colnames(df2)))],id.vars="plotpath")
@@ -184,14 +237,6 @@ if("step5" %in% stepstotake){
       final.table3$outcome <- factor(final.table3$outcome, levels = c("no.hits","fail.filt","fail.bin","incorrect","above","correct"))
       final.table3$pident <- factor(final.table3$pident, levels = pidents.list[[j]])
     
-      if(!is.null(plot.taxa.limit)) {
-        final.table3.list<-list()
-        for(i in 1:length(plot.taxa.limit)){
-          final.table3.list[[i]]<-final.table3[final.table3$plotpath==plot.taxa.limit[i],]
-        }
-        final.table3<-do.call(rbind,final.table3.list)
-      }
-      
       taxa<-do.call(rbind,stringr::str_split(final.table3$plotpath,";"))
       
       final.table3$plotpath<-taxa[,ncol(taxa)]
@@ -204,6 +249,11 @@ if("step5" %in% stepstotake){
                             geom_text(aes(label = round(count,digits = 0)), 
                                 position = position_stack(vjust = 0.5), size = 2)
       
+      if(!is.null(plot.taxa.limit)) {
+        facet.plots.taxon[[i]]<-facet.plots.taxon[[i]]+labs(caption=toString(plot.title))+
+          theme(plot.caption=element_text(size=8, hjust=0, margin=margin(15,0,0,0)))
+      }
+      
       filelist[[i]]<-unique(df2$file)
     
       ggsave(filename = paste0(unique(df2$file),".pdf"),plot = facet.plots.taxon[[i]],
@@ -214,8 +264,8 @@ if("step5" %in% stepstotake){
     facet.plots.taxon.list[[j]]<-facet.plots.taxon
   }
   
-  rmarkdown::render(input = paste0(bastoolsDir,"scripts/Plot_threshold_output.Rmd"),output_file = plot.file.html)
-  
+  #rmarkdown::render(input = paste0(bastoolsDir,"scripts/Plot_threshold_output.Rmd"),output_file = plot.file.html)
+  #should probably fix this
   message("STEP5 - COMPLETE")
 }
 

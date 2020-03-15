@@ -4008,7 +4008,7 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
     btab.unfilt<-data.table::fread(blastfile,sep="\t",data.table = F)
     btab<-data.table::fread(blast.filt.out,sep="\t",data.table = F)
     
-    final.table<-ecopcr.clean.df[,c("AC","taxids","origpath")]
+    final.table<-ecopcr.clean.df[,c("AC","path","taxids","origpath")]
     final.table$had.hits<-final.table$AC %in% btab.unfilt$V1
     final.table$after.filt<-final.table$AC %in% btab$qseqid
     
