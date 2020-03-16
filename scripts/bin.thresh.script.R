@@ -74,6 +74,7 @@ if("step3" %in% stepstotake){
   
   if(nrow(a2)==0) stop("No sequences left...")
   
+  
   #loop blast for each threshold
   for(i in 1:length(TaxlevelTest)){
     
@@ -86,7 +87,8 @@ if("step3" %in% stepstotake){
     threshold.blast(ecopcr.clean.df = a3,ncbiTaxDir = ncbiTaxDir,
                   out=outloopblast.files[[i]],TaxlevelTest=TaxlevelTest[i],
                   blast_exec=blast_exec,makeblastdb_exec=makeblastdb_exec,task = task)
-  }
+    }
+  
 
   #read blast results, add query paths and plot
   outloopblast.results<-list()
@@ -101,7 +103,11 @@ if("step3" %in% stepstotake){
     minhits$minmax<-"min"
     tophits<-rbind(tophits,minhits)
     tophits.m<-merge(tophits,a[,c("AC","path")],by = "AC",all.x = T,all.y = F)
-    tophits.m$lev<-path.at.level(tophits.m$path,TaxlevelTest[i])
+    if(TaxlevelTest[i]!="S") {
+      tophits.m$lev<-path.at.level(tophits.m$path,TaxlevelTest[i])
+    } else {
+      tophits.m$lev<-tophits.m$path
+    }
     outloopblast.plots[[i]]<-ggplot(tophits.m,aes(y=lev,x=pident,colour=minmax)) + geom_point() + ggtitle(outloopblast.files[[i]])
     ggsave(filename = gsub(".txt",".tophits.pdf",outloopblast.files[[i]]),outloopblast.plots[[i]],device = "pdf", width = 15,height = 10)
   }
@@ -124,7 +130,7 @@ if("step4" %in% stepstotake){
     
     results[[i]]<-threshold.bin.blast(blastfile = outloopblast.files[[i]],ecopcr.clean.df = ecopcr,
                                       headers = "qseqid sseqid evalue staxid pident qcovs",
-                                      ncbiTaxDir = ncbiTaxDir,max_evalue = 10,min_qcovs = 70,top = tops,
+                                      ncbiTaxDir = ncbiTaxDir,max_evalue = 20,min_qcovs = 70,top = tops,
                                       TaxlevelTest=TaxlevelTest[i], pidents=pidents.list[[i]]) 
     
     write.table(results[[i]][[2]],file = gsub(".txt",".bin.results.txt",outloopblast.files[[i]]),append = F,quote = F,sep = "\t",row.names = F)
@@ -151,7 +157,7 @@ if("step5" %in% stepstotake){
   longcount<-data.table::melt(combocounts[,-7],id.vars="file")
   longcount$pident<-rep(combocounts$pident,6)
   longcount$variable <- factor(longcount$variable, levels = c("no.hits","fail.filt","fail.bin","incorrect","above","correct"))
-  longcount$pident <- factor(longcount$pident, levels = sort(unique(c(pidents.list[[1]],pidents.list[[2]])),decreasing = T))
+  longcount$pident <- factor(longcount$pident, levels = sort(unique(unlist(pidents.list)),decreasing = T))
   longcount$settings<-do.call(rbind,stringr::str_split(longcount$file,"loopBlast.txt_"))[,2]
   longcount$taxlevel<-do.call(rbind,stringr::str_split(longcount$file,"loopBlast.txt_"))[,1]
   longcount$taxlevel<-stringr::str_sub(longcount$taxlevel,start = -2)

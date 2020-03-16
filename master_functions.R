@@ -846,6 +846,11 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
   unlink(mappingfile)
   
   message("Note: Final warning messages about number of columns ok")
+  message("An error like:
+          Testing 1 volume(s).
+  /media/sf_Documents/WORK/CIBIO/temp/temp / MetaData:   [ERROR] caught exception.
+ Result=FAILURE. 1 errors reported in 1 volume(s).
+          Probably means you need to put the taxdb.bti and taxdb.btd files in the path or in the same folder as database")
 }
 
 #' Convert sequence files between various formats
@@ -3900,7 +3905,7 @@ threshold.blast<-function(ecopcr.clean.df,ncbiTaxDir,out,
   if(!TaxlevelTest %in% c("F","G","S")) stop("thresholdlevel must be one of F,G,S")
   if(TaxlevelTest=="F") ex.seqid.group<-"G"
   if(TaxlevelTest=="G") ex.seqid.group<-"S"
-  if(TaxlevelTest=="S") stop("Havent done this yet") #ex.seqid.group<-"S"
+  if(TaxlevelTest=="S") ex.seqid.group<-NULL 
   
   a2<-ecopcr.clean.df
   a2$seq.name<-paste0(a2$AC," ","taxid=",a2$taxids,";")
@@ -3912,33 +3917,41 @@ threshold.blast<-function(ecopcr.clean.df,ncbiTaxDir,out,
   make.blastdb.bas(infasta = "temp.fasta",makeblastdb_exec = makeblastdb_exec,
                    addtaxidsfasta = F,ncbiTaxDir,do.checks=T,dbversion = 4)
   
-  
   unlink(out)
   
-  #loop blast
-  for(i in 1:nrow(a2)){
-    
-    message("loop ",i)
-    
-    #make query fasta
-    b<-a2[a2$AC==a2$AC[i],]
-    phylotools::dat2fasta(b[,c("seq.name","seq.text")],"temp.seq.fasta")
-    
-    #get seqids of query group
-    ex.seqids<-a2[a2[,ex.seqid.group]==b[,ex.seqid.group],"AC"]  
-    write.table(ex.seqids,file = "ex.seqids.txt",append = F,quote = F,sep = "\t",row.names = F,col.names = F)
-    
+  if(TaxlevelTest=="S"){
     #blast
     system2(command = blast_exec,
-            args=c("-query", "temp.seq.fasta", "-task", task,"-db","temp","-outfmt",
-                   "'6 qseqid sseqid evalue staxid pident qcovs'","-num_threads", "8", "-max_target_seqs", 
-                   "50", "-max_hsps","1","-negative_seqidlist", "ex.seqids.txt", "-out",
-                   "temp.seq.blast.txt"), wait = T)
-    
-    #store blast results
-    blastResults<-data.table::fread("temp.seq.blast.txt",sep = "\t",data.table = F)
-    
-    write.table(blastResults,file = out,append = T,quote = F,row.names = F,sep = "\t",col.names = F)
+            args=c("-query", "temp.fasta", "-task", task,"-db","temp","-outfmt",
+                   "'6 qseqid sseqid evalue staxid pident qcovs'","-evalue",80,"-num_threads", "8", "-max_target_seqs", 
+                   "100", "-max_hsps","1", "-out", out), wait = T)
+  } else {
+  
+    #loop blast
+    for(i in 1:nrow(a2)){
+      
+      message("loop ",i)
+      
+      #make query fasta
+      b<-a2[a2$AC==a2$AC[i],]
+      phylotools::dat2fasta(b[,c("seq.name","seq.text")],"temp.seq.fasta")
+      
+      #get seqids of query group
+      ex.seqids<-a2[a2[,ex.seqid.group]==b[,ex.seqid.group],"AC"]  
+      write.table(ex.seqids,file = "ex.seqids.txt",append = F,quote = F,sep = "\t",row.names = F,col.names = F)
+      
+      #blast
+      system2(command = blast_exec,
+              args=c("-query", "temp.seq.fasta", "-task", task,"-db","temp","-outfmt",
+                     "'6 qseqid sseqid evalue staxid pident qcovs'","-evalue",80,"-num_threads", "8", "-max_target_seqs", 
+                     "100", "-max_hsps","1","-negative_seqidlist", "ex.seqids.txt", "-out",
+                     "temp.seq.blast.txt"), wait = T)
+      
+      #store blast results
+      blastResults<-data.table::fread("temp.seq.blast.txt",sep = "\t",data.table = F)
+      
+      write.table(blastResults,file = out,append = T,quote = F,row.names = F,sep = "\t",col.names = F)
+    }
   }
   
   t2<-Sys.time()
@@ -3947,7 +3960,6 @@ threshold.blast<-function(ecopcr.clean.df,ncbiTaxDir,out,
   message("Output saved in ",out)
   
   unlink("temp.blastdbformatted.fasta")
-  unlink("temp.fasta")
   unlink("temp.n*")
   unlink("temp.seq.blast.txt")
   unlink("temp.seq.fasta")
@@ -3992,6 +4004,7 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
   
   if(TaxlevelTest=="F") ecopcr.clean.df$origpath<-path.at.level(ecopcr.clean.df$path,level = "F")
   if(TaxlevelTest=="G") ecopcr.clean.df$origpath<-path.at.level(ecopcr.clean.df$path,level = "G")
+  if(TaxlevelTest=="S") ecopcr.clean.df$origpath<-ecopcr.clean.df$path
   
   #filter blast results at each top
   final.table.list<-list()
@@ -4056,6 +4069,7 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
       
       if(TaxlevelTest=="F") lcaf$binpath<-paste(lcaf$K,lcaf$P,lcaf$C,lcaf$O,lcaf$F,sep = ";")
       if(TaxlevelTest=="G") lcaf$binpath<-paste(lcaf$K,lcaf$P,lcaf$C,lcaf$O,lcaf$F,lcaf$G,sep = ";")
+      if(TaxlevelTest=="S") lcaf$binpath<-paste(lcaf$K,lcaf$P,lcaf$C,lcaf$O,lcaf$F,lcaf$G,lcaf$S,sep = ";")
       
       colnames(lcaf)<-gsub("binpath",paste0("binpath_",pident),colnames(lcaf))
       
@@ -4076,6 +4090,9 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
       if(TaxlevelTest=="G"){
         final.table[,paste0("rank_",pident)]<-bas.get.ranks(data.frame(taxon=paste0(final.table[,paste0("binpath_",pident)],";NA")))
       }
+      if(TaxlevelTest=="S"){
+        final.table[,paste0("rank_",pident)]<-bas.get.ranks(data.frame(taxon=final.table[,paste0("binpath_",pident)]))
+      }
       
       #distinguish fail because of no_hits, fail_filt and fail_bin
       final.table[final.table$had.hits==F,paste0("rank_",pident)]<-"no.hits"
@@ -4088,6 +4105,10 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
       }
       if(TaxlevelTest=="G"){
         counts$above[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="htf" | final.table[,paste0("rank_",pident),]=="family",])
+      }
+      if(TaxlevelTest=="S"){
+        counts$above[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="htf" | final.table[,paste0("rank_",pident),]=="family"
+                                          | final.table[,paste0("rank_",pident),]=="genus",])
       }
       
       counts$fail.filt[i]<-nrow(final.table[final.table[,paste0("rank_",pident),]=="fail.filt",])
@@ -4106,6 +4127,10 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
         final.table[,paste0("incorrect_",pident)]<-
           final.table$origpath!=final.table[,paste0("binpath_",pident)] & final.table[,paste0("rank_",pident)]=="genus"
       }
+      if(TaxlevelTest=="S"){
+        final.table[,paste0("incorrect_",pident)]<-
+          final.table$origpath!=final.table[,paste0("binpath_",pident)] & final.table[,paste0("rank_",pident)]=="species"
+      }
       
       counts$incorrect[i]<-sum(final.table[,paste0("incorrect_",pident)],na.rm = T)
       
@@ -4117,7 +4142,10 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
       
       if(TaxlevelTest=="F") final.table[final.table[,paste0("rank_",pident)]=="htf",paste0("rank_",pident)]<-"above"
       if(TaxlevelTest=="G") final.table[final.table[,paste0("rank_",pident),]=="htf" | 
-                                          final.table[,paste0("rank_",pident),]=="family",paste0("rank_",pident)]<-"above"
+                                        final.table[,paste0("rank_",pident),]=="family",paste0("rank_",pident)]<-"above"
+      if(TaxlevelTest=="S") final.table[final.table[,paste0("rank_",pident),]=="htf" | 
+                                        final.table[,paste0("rank_",pident),]=="family" |
+                                        final.table[,paste0("rank_",pident),]=="genus",paste0("rank_",pident)]<-"above"
       
       final.table$file<-blast.filt.out
       
