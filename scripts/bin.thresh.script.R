@@ -216,12 +216,12 @@ if("step5" %in% stepstotake){
         taxa.counts.list<-list()
         taxlevels<-c("K","P","C","O","F","G")
         plot.title.list<-list()
-        for(j in 1:length(plot.taxa.limit)){
+        for(k in 1:length(plot.taxa.limit)){
           for(i in 1:length(taxlevels)) {
-            taxa.counts<-path.at.level(df2.list[[j]]$path,taxlevels[i])
+            taxa.counts<-path.at.level(df2.list[[k]]$path,taxlevels[i])
             taxa.counts.list[[i]]<-paste0(taxlevels[i],":",length(unique(taxa.counts)))
           }
-          plot.title.list[[j]]<-paste(plot.taxa.limit[j],toString(unlist(taxa.counts.list)),",S:",length(unique(df2.list[[j]]$path)))
+          plot.title.list[[k]]<-paste(plot.taxa.limit[k],toString(unlist(taxa.counts.list)),",S:",length(unique(df2.list[[k]]$path)))
         }
         plot.title<-unlist(plot.title.list)
       }
