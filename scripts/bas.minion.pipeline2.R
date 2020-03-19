@@ -195,33 +195,29 @@ if("step6" %in% stepstotake){
   message("STEP6 - filter blast results")
   
   blastfile<-gsub(".fasta",".blast.txt",catted_file)
+  message(paste("filtering blast results for",catted_file))
+  out<-gsub(".blast.txt",".blast.filt.txt",blastfile)
+  filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top,min_qcovs = min_qcovs,max_evalue = max_evalue)
   
-    message(paste("filtering blast results for",catted_file))
-    blastfile = files[i]
-    out<-gsub(".blast.txt",".blast.filt.txt",files[i])
-    filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top)
-  
-  message("STEP5 complete")
+  message("STEP6 complete")
   
 }
 
 ####################################################
-#step 6 BIN
+#step 7 BIN
 if("step7" %in% stepstotake){ 
   
-  message("STEP6 - Bin")
+  message("STEP7 - Bin")
   
-  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.blast.filt.txt")  
+  filtered_blastfile<-gsub(".fasta",".blast.filt.txt",catted_file)
+
+  message(paste("binning filtered blast results for",filtered_blastfile))
+  binfile<-gsub(".blast.filt.txt",".bins.txt",filtered_blastfile)
   
-  for(i in 1:length(files)){
-    message(paste("binning filtered blast results for",files[i]))
-    filtered_blastfile<-files[i]
-    binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
-    bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
+  bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
                obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
-  }
   
-  message("STEP6 complete")
+  message("STEP7 complete")
   
 } 
 

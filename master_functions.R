@@ -1150,7 +1150,12 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
   b<-as.data.frame(do.call(rbind, stringr::str_split(a[,1],";")))
   colnames(b)<-c("K","P","C","O","F","G","S")
   
-  a$all<-rowSums(a[,2:length(colnames(a))])
+  if(length(colnames(a))>2) {
+    a$all<-rowSums(a[,2:length(colnames(a))])
+  } else {
+    a$all<-a[,2]
+  }
+  
   d<-colnames(a[,2:length(colnames(a))])
   
   for(i in 1:length(d)){
@@ -3891,7 +3896,7 @@ bas.plot.specrich<-function(taxatab){
 #blast loop function
 
 threshold.blast<-function(ecopcr.clean.df,ncbiTaxDir,out,
-                          TaxlevelTest,blast_exec,makeblastdb_exec,task="megablast"){
+                          TaxlevelTest,blast_exec,makeblastdb_exec,task="megablast",all.sp.in.db=F){
   
   message("ecopcr.clean.df must have K,P,C,O,F,G,S taxonomy and 'taxids' column, as added by add.lineage.df")
   
@@ -3919,12 +3924,14 @@ threshold.blast<-function(ecopcr.clean.df,ncbiTaxDir,out,
   
   unlink(out)
   
-  if(TaxlevelTest=="S"){
+  if(TaxlevelTest=="S" | all.sp.in.db==T){
     #blast
+    message("straight BLAST running...")
     system2(command = blast_exec,
             args=c("-query", "temp.fasta", "-task", task,"-db","temp","-outfmt",
-                   "'6 qseqid sseqid evalue staxid pident qcovs'","-evalue",80,"-num_threads", "8", "-max_target_seqs", 
-                   "100", "-max_hsps","1", "-out", out), wait = T)
+                   "'6 qseqid sseqid evalue staxid pident qcovs'","-evalue","100", "-max_target_seqs", 
+                   "100", "-max_hsps","1","-word_size", "6","-perc_identity", "10","-qcov_hsp_perc","70",
+                   "-gapopen", "0", "-gapextend", "2", "-reward", "1", "-penalty", "-1","-out", out), wait = T)
   } else {
   
     #loop blast
@@ -3943,8 +3950,9 @@ threshold.blast<-function(ecopcr.clean.df,ncbiTaxDir,out,
       #blast
       system2(command = blast_exec,
               args=c("-query", "temp.seq.fasta", "-task", task,"-db","temp","-outfmt",
-                     "'6 qseqid sseqid evalue staxid pident qcovs'","-evalue",80,"-num_threads", "8", "-max_target_seqs", 
-                     "100", "-max_hsps","1","-negative_seqidlist", "ex.seqids.txt", "-out",
+                     "'6 qseqid sseqid evalue staxid pident qcovs'","-evalue","100","-num_threads", "8", "-max_target_seqs", 
+                     "100", "-max_hsps","1","-word_size", "6","-perc_identity", "10","-qcov_hsp_perc","70",
+                     "-gapopen", "0", "-gapextend", "2", "-reward", "1", "-penalty", "-1","-negative_seqidlist", "ex.seqids.txt", "-out",
                      "temp.seq.blast.txt"), wait = T)
       
       #store blast results
@@ -3981,6 +3989,7 @@ path.at.level<-function(pathvector,level){
   if(level=="O") newpath<-paste(mat[,1],mat[,2],mat[,3],mat[,4],sep = ";")
   if(level=="F") newpath<-paste(mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],sep = ";")
   if(level=="G") newpath<-paste(mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],sep = ";")
+  if(level=="S") newpath<-paste(mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7],sep = ";")
   
   return(newpath)
 }
@@ -4046,7 +4055,7 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
       
       if(TaxlevelTest=="G") btabf<-btab[btab$G!="unknown",] 
       
-      if(TaxlevelTest=="S") btabf<-btab 
+      if(TaxlevelTest=="S") btabf<-btab
       
       btabf<-btabf[btabf$pident>pident,]
       if(length(btabf$taxids)>0){
