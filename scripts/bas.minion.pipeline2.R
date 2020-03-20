@@ -2,13 +2,17 @@ message("settings:
         ")
 print(ls.str())
 
+library(rlang,preffered_rlibsfolder)
+library(tidyr,preffered_rlibsfolder)
 library(processx)
 library(dplyr)
 library(ggplot2)
-library(tidyr)
 source(paste0(bastoolsDir,"master_functions.R"))
 setwd(filesDir)
-catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
+if(!is.null(catted_suffix)) {
+  catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids",catted_suffix,"fasta",sep = ".")
+} else catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
+
 
 ####################################################
 
@@ -179,7 +183,6 @@ if("step4" %in% stepstotake){
   files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.ids.fasta") 
   
   #cat files
-  catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
   system2(command = "cat",args = c(files),wait = T,stdout = catted_file)
   
   t2<-Sys.time()
@@ -265,13 +268,14 @@ if("step8" %in% stepstotake){
   
   t1<-Sys.time()
 
-  otutab<-data.table::fread(cmd = paste("grep", "'>'", catted_file),header = F,select = c(1,3),col.names = c("otu","ss_sample_id"),data.table = F)
+  otutab<-data.table::fread(cmd = paste("grep", "'>'", catted_file),header = F,select = c(1,3),col.names = c("otu","ss_sample_id"),
+                            data.table = F)
   otutab$ss_sample_id<-gsub("ss_sample_id=","",otutab$ss_sample_id)
   otutab$otu<-gsub(">","",otutab$otu)
   otutab$count<-1
-  otutab<-as.data.frame(pivot_wider(otutab,names_from = ss_sample_id,values_from=count,values_fill = list(count = 0)))
+  otutab<-as.data.frame(tidyr::pivot_wider(otutab,names_from = ss_sample_id,values_from=count,values_fill = list(count = 0)))
   
-  write.table(otutab,gsub(".fasta","otutab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
+  write.table(otutab,gsub(".fasta",".otutab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
@@ -287,20 +291,16 @@ if("step9" %in% stepstotake){
   
   t1<-Sys.time()
     
-  otutab<-data.table::fread(gsub(".fasta","otutab.txt",catted_file),data.table = F)
-  binfile<-gsub(".fasta",".bins.txt",catted_file)  
-  taxon_input<-data.table::fread(binfile, sep = "\t",data.table = F)
+  otutab<-data.table::fread(gsub(".fasta",".otutab.txt",catted_file),data.table = F)
+  taxon_input<-data.table::fread(gsub(".fasta",".bins.txt",catted_file) , sep = "\t",data.table = F)
   taxon_input$path<-paste(taxon_input$K,taxon_input$P,taxon_input$C,taxon_input$O,taxon_input$F,taxon_input$G,taxon_input$S,sep = ";")
- 
+  merged.table<-merge(otutab,taxon_input[,c("qseqid","path")],by.x = "otu",by.y = "qseqid",all = TRUE)
+  merged.table$otu<-NULL
+  merged.table<-merged.table %>% select(path,everything())
+  taxatab<-aggregate(merged.table[,-1],by = list(merged.table$path),FUN=sum)
+  colnames(taxatab)[1]<-"taxon"
   
-  
-   merged.table<-merge(taxon_input[,c("qseqid","path")],otutab_input[,c("id","barcode","count")],
-                      by.x = "qseqid",by.y = "id",all = TRUE)
-  
-  taxatable<-reshape2::dcast(merged.table[,c("path","barcode","count")],path~barcode,value.var = "count",
-                             fun.aggregate = sum)
-  
-  write.table(otutab,gsub(".fasta","otutab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
+  write.table(taxatab,gsub(".fasta",".taxatab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
     
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
@@ -314,30 +314,17 @@ if("step10" %in% stepstotake){
   
   message("STEP10 - Contributor files")
   
+  message(paste("making contributor file for",gsub(".fasta",".otutab.txt",catted_file)))
+  
   t1<-Sys.time()
   
-  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
+  filtered_blastfile<-gsub(".fasta",".blast.filt.txt",catted_file)
+  binfile<-gsub(".blast.filt.txt",".bins.txt",filtered_blastfile)
+  taxatab<-gsub(".fasta",".taxatab.txt",catted_file)
   
-  #make contributor files
-  for(i in 1:length(files)){
-    message(paste("making contributor file for",files[i]))
-    
-    #first get blast file names (accounting for extra dashes)
-    if(length(strsplit(files[i],"-")[[1]])==2) { 
-      filtered_blastfile = list.files(pattern = gsub("taxatable.tf.spliced.txt","blast.filt.txt",
-                                                     strsplit(files[i],"-")[[1]][2]))}
-    
-    if(length(strsplit(files[i],"-")[[1]])>2) { 
-      filtered_blastfile = list.files(pattern = gsub("taxatable.tf.spliced.txt","blast.filt.txt",
-                                                     paste(strsplit(files[i],"-")[[1]][2:length(strsplit(files[i],"-")[[1]])],
-                                                           collapse = "-")))
-    }
-    
-    check.low.res.df(
-      filtered.taxatab = files[i],filtered_blastfile = filtered_blastfile,
-      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile))
-      ,disabledTaxaFile = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
-  }
+  check.low.res.df(
+      filtered.taxatab = taxatab,filtered_blastfile = filtered_blastfile,
+      binfile = binfile,disabledTaxaFile = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
@@ -352,14 +339,10 @@ if("step11" %in% stepstotake){
   
   t1<-Sys.time()
   
-  message("STEP14")
-  message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
-  
-  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
-  for(i in 1:length(files)){
-    bas.krona.plot(files[i],KronaPath)
-  }
-  
+  message("STEP11 - make krona plots")
+
+  bas.krona.plot(gsub(".fasta",".taxatab.txt",catted_file),KronaPath)
+
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
   message("STEP11 COMPLETE in ", t3, " min")

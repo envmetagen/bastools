@@ -609,7 +609,7 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
       h[[i]]<-process$new(command = blast_exec,
                           args=c("-query", infastas[i], "-task", task,"-db",refdb,"-outfmt",
                                  "6 qseqid evalue staxid pident qcovs","-num_threads", threads, "-max_target_seqs", 
-                                 "100", "-max_hsps","1",more, "-out",
+                                 max_target_seqs, "-max_hsps","1",more, "-out",
                                  paste0(gsub(x = infastas[i],pattern = "\\.fasta",replacement = ".blast.txt"))),
                           echo_cmd = T,stderr = paste0("blast.error.temp.processx.file",i))
       }
@@ -1722,7 +1722,7 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
     
     contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:14]
     
-    write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
+    write.table(x = contributordf,file=gsub(".txt",".contr.txt",filtered.taxatab),
                 sep="\t",quote = F,row.names = F)
   } else message("
                  ERROR: No sequences assigned to any taxon, not making contributor table
@@ -4520,150 +4520,6 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
         the results will be NA for all taxon levels.
         If the lca for a particular OTU is above kingdom, e.g. cellular organisms or root, 
         the results will be unknown for all taxon levels.")
-}
-
-check.low.res.results<-function(pathofinterest,bins,btab){
-  #first query otus that contributed to pathofinterest
-  bins<-bins[bins$path==pathofinterest,"qseqid"]
-  
-  #next, query otus in btab
-  btab<-btab[btab$qseqid %in% bins,]
-  
-  #find average pident for each contributor taxon
-  contributors<-do.call(data.frame,aggregate(x = btab$pident,by=list(btab$path),
-                                             FUN=function(x) c(mn = mean(x), n = range(x) )))
-  colnames(contributors)<-c("contributors","mean.pident","low.pident","high.pident")
-  
-  #add pathofinterest for reference
-  contributors$pathofinterest<-pathofinterest
-  
-  #add taxid for later
-  btab2<-btab[!duplicated(btab$path),]
-  btab3<-btab2[,c("taxids","path")]
-  contributors<-merge(contributors,btab3,by.x = "contributors",by.y = "path")
-  
-  return(contributors)
-}
-
-check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabledTaxaFile=NULL,
-                           spident=NULL,gpident=NULL,fpident=NULL,abspident=NULL,rm.excess=T,out=T){
-  
-  bins<-data.table::fread(binfile,sep = "\t",data.table = F)
-  bins$path<-paste0(bins$K,";",bins$P,";",bins$C,";",bins$O,";",bins$F,";",bins$G,";",bins$S)
-  taxatab.tf<-data.table::fread(filtered.taxatab,sep = "\t",data.table = F)
-  taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
-  taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="No_hits",]
-  taxatab.tf<-taxatab.tf[taxatab.tf$taxon!="NA;NA;NA;NA;NA;NA;NA",]
-  btab<-data.table::fread(file = filtered_blastfile,sep = "\t",data.table = F)
-  btab$path<-paste0(btab$K,";",btab$P,";",btab$C,";",btab$O,";",btab$F,";",btab$G,";",btab$S)
-  
-  contributorlist<-list()
-  for(i in 1:length(taxatab.tf$taxon)){
-    contributorlist[[i]]<-check.low.res.results(pathofinterest = taxatab.tf$taxon[i],bins = bins,btab = btab)
-  }
-  
-  contributordf<-do.call(rbind,contributorlist)
-  
-  #add number of reads and no. of "pcrs" pathofinterest
-  taxatab.tf$readcounts<-rowSums(taxatab.tf[,2:length(colnames(taxatab.tf))])
-  taxatab.tf$n.samples<-rowSums(taxatab.tf[,2:(length(colnames(taxatab.tf))-1)]>0)
-  contributordf<-merge(contributordf,taxatab.tf[,c("taxon","readcounts","n.samples")],
-                       by.x = "pathofinterest",by.y = "taxon")
-  
-  #add disabled taxa columns
-  if(!is.null(disabledTaxaFile)){
-    disabledTaxaDf<-read.table(disabledTaxaFile, header=T,sep = "\t")
-    if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
-    if(!"disable_species" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_species'")
-    if(!"disable_genus" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_genus'")
-    if(!"disable_family" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_family'")
-    
-    disabledSpecies<-disabledTaxaDf[disabledTaxaDf$disable_species==T,"taxids"]
-    disabledSpecies<-disabledSpecies[!is.na(disabledSpecies)]
-    
-    disabledGenus<-disabledTaxaDf[disabledTaxaDf$disable_genus==T,"taxids"]
-    disabledGenus<-disabledGenus[!is.na(disabledGenus)]
-    
-    disabledFamily<-disabledTaxaDf[disabledTaxaDf$disable_family==T,"taxids"]
-    disabledFamily<-disabledFamily[!is.na(disabledFamily)]
-    
-    contributordf$species_disabled<-contributordf$taxids %in% disabledSpecies
-    contributordf$genus_disabled<-contributordf$taxids %in% disabledGenus
-    contributordf$family_disabled<-contributordf$taxids %in% disabledFamily
-    
-  } else {contributordf$species_disabled<-"FALSE"
-  contributordf$genus_disabled<-"FALSE"
-  contributordf$family_disabled<-"FALSE"
-  }
-  
-  #add rank
-  temprank<-stringr::str_count(contributordf$pathofinterest,";NA")
-  temprank<-gsub(0,"species",temprank)
-  temprank<-gsub(1,"genus",temprank)
-  temprank<-gsub(2,"family",temprank)
-  temprank<-gsub(3,"above_family",temprank)
-  
-  contributordf$rank<-temprank
-  
-  if(!is.null(spident) & !is.null(gpident) & !is.null(fpident) & !is.null(abspident)){
-    #add may_be_improved
-    max_pidents<-aggregate(contributordf$high.pident,by=list(contributordf$pathofinterest),FUN=max)
-    best_is_species<-max_pidents[max_pidents$x>spident,]
-    if(length(best_is_species$Group.1)>0) best_is_species$best_possible<-"species"
-    max_pidents<-max_pidents[!max_pidents$x>spident,]
-    best_is_genus<-max_pidents[max_pidents$x>gpident,]
-    if(length(best_is_genus$Group.1)>0) best_is_genus$best_possible<-"genus"
-    max_pidents<-max_pidents[!max_pidents$x>gpident,]
-    best_is_family<-max_pidents[max_pidents$x>fpident,]
-    if(length(best_is_family$Group.1)>0) best_is_family$best_possible<-"family"
-    max_pidents<-max_pidents[!max_pidents$x>fpident,]
-    best_is_above_family<-max_pidents[max_pidents$x>abspident,]
-    if(length(best_is_above_family$Group.1)>0) best_is_above_family$best_possible<-"above_family"
-    
-    best_all<-rbind(best_is_species,best_is_genus,best_is_family,best_is_above_family)
-    colnames(best_all)[1]<-"pathofinterest"
-    best_all$x=NULL
-    
-    contributordf<-merge(contributordf,best_all)
-    contributordf$may_be_improved<-contributordf$rank!=contributordf$best_possible
-    contributordf<-contributordf[contributordf$may_be_improved=="TRUE",]
-    contributordf<-contributordf[!contributordf$high.pident<abspident,]
-    
-  } else {(message("Not adding 'May be improved' column as no pidents provided"))}
-  
-  if(rm.excess==T){
-    #if pathofinterest at genus level, dont output contributors from diferent genera
-    contributordf$contributors<-as.character(contributordf$contributors)
-    
-    #1. make column to see whether genera match
-    contributordf$contrGenus<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,6]
-    contributordf$pathGenus<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,6]
-    contributordf$contr.path.genus.match<-contributordf$contrGenus==contributordf$pathGenus
-    
-    #2. If rank=genus, and columns dont match, then remove
-    contributordf<-contributordf[!(contributordf$rank=="genus" & contributordf$contr.path.genus.match==FALSE),]
-    
-    #if pathofinterest at family level, dont output contributors from different families
-    
-    #1. make column to see whether families match
-    contributordf$contrFam<-do.call(rbind,stringr::str_split(contributordf$contributors,";"))[,5]
-    contributordf$pathFam<-do.call(rbind,stringr::str_split(contributordf$pathofinterest,";"))[,5]
-    contributordf$contr.path.fam.match<-contributordf$contrFam==contributordf$pathFam
-    
-    #2. If rank=family, and columns dont match, then remove
-    contributordf<-contributordf[!(contributordf$rank=="family" & contributordf$contr.path.fam.match==FALSE),]
-    
-    contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:14]
-  } else {
-    
-    contributordf<-contributordf[order(contributordf$pathofinterest,-contributordf$high.pident),1:12]
-    
-  }
-  
-  if(out==T){
-    write.table(x = contributordf,file=gsub("spliced.txt","spliced.contr.txt",filtered.taxatab),
-                sep="\t",quote = F,row.names = F)
-  } else (return(contributordf))
 }
 
 #############################decided to split function
