@@ -5,8 +5,8 @@ print(ls.str())
 library(processx)
 library(dplyr)
 library(ggplot2)
+library(tidyr)
 source(paste0(bastoolsDir,"master_functions.R"))
-source(paste0(bastoolsDir,"bin.blast.R"))
 setwd(filesDir)
 catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
 
@@ -29,7 +29,10 @@ catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.
 ####################################################
 #step 1 Cutadapt
 if("step1" %in% stepstotake){
+  
   message("STEP1 - Cutadapt")
+  
+  t1<-Sys.time()
   
   files<-paste0(ms_ss$barcode_name,".fastq.gz")
   
@@ -55,7 +58,9 @@ if("step1" %in% stepstotake){
     print(grep("Reads with adapters",cutadaptlist[[i]],value = T))
   }
   
-  message("STEP1 complete")
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP1 COMPLETE in ", t3, " min")
 }
 
 ####################################################
@@ -63,6 +68,8 @@ if("step1" %in% stepstotake){
 if("step2" %in% stepstotake){
   
   message("STEP2 - print length data")
+  
+  t1<-Sys.time()
   
   files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
   #get lengths of seqs in files
@@ -98,7 +105,9 @@ if("step2" %in% stepstotake){
   
   message(paste("Saving length plots to", plotfile1, "and", plotfile2))
   
-  message("STEP2 complete")
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP2 COMPLETE in ", t3, " min")
 }
 
 ####################################################
@@ -106,6 +115,8 @@ if("step2" %in% stepstotake){
 if("step3" %in% stepstotake){
   
   message("STEP3 - size select")
+  
+  t1<-Sys.time()
   
   files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
   
@@ -140,7 +151,10 @@ if("step3" %in% stepstotake){
     b<-read.table(text = b,header = T)$num_seqs
     message(a-b," reads removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
   }
-  message("STEP3 complete")
+  
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP3 COMPLETE in ", t3, " min")
 }
 
 ####################################################
@@ -148,6 +162,8 @@ if("step3" %in% stepstotake){
 if("step4" %in% stepstotake){  
   
   message("STEP4 - cat files")
+  
+  t1<-Sys.time()
   
   files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.fasta") 
   
@@ -166,7 +182,9 @@ if("step4" %in% stepstotake){
   catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
   system2(command = "cat",args = c(files),wait = T,stdout = catted_file)
   
-  message("STEP4 complete")
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP4 COMPLETE in ", t3, " min")
 }
     
 ####################################################
@@ -175,32 +193,42 @@ if("step5" %in% stepstotake){
   
   message("STEP5 - blast")
   
-  message("Using blastn for Minion data")
+  t1<-Sys.time()
+  
+  options=c("-word_size", 6, "-perc_identity", 50, "-qcov_hsp_perc", min_qcovs, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)
+  
+  message("Using blastn for Minion data. Defaulting to ", options)
   
   if(!is.null(taxidlimit)){
      blast.status<-blast.min.bas(infastas = catted_file,refdb = refdb,blast_exec = blast_exec,
-                                wait = T,taxidlimit = taxidlimit,taxidname = taxidname, ncbiTaxDir = ncbiTaxDir,task="blastn")
+                                wait = T,taxidlimit = taxidlimit,taxidname = taxidname, ncbiTaxDir = ncbiTaxDir,task="blastn",
+                                max_target_seqs = max_target_seqs,more = options)
     } else blast.status<-blast.min.bas(infastas = catted_file,refdb = refdb,blast_exec = blast_exec, wait = T, ncbiTaxDir = ncbiTaxDir,
-                                       task="blastn")
+                                       task="blastn",overWrite = T,max_target_seqs = max_target_seqs,more = options)
   
-    check.blasts(infastas = catted_file,h = blast.status)
+  check.blasts(infastas = catted_file,h = blast.status)
   
-  message("STEP5 complete")
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP5 COMPLETE in ", t3, " min")
 }
   
 ####################################################
-#step 6 filter 
+#step 6 filter blast results 
 if("step6" %in% stepstotake){  
   
   message("STEP6 - filter blast results")
   
+  t1<-Sys.time()
+  
   blastfile<-gsub(".fasta",".blast.txt",catted_file)
-  message(paste("filtering blast results for",catted_file))
+  message(paste("filtering blast results for",blastfile))
   out<-gsub(".blast.txt",".blast.filt.txt",blastfile)
-  filter.blast(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top,min_qcovs = min_qcovs,max_evalue = max_evalue)
+  filter.blast2(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, min_qcovs = min_qcovs,max_evalue = max_evalue)
   
-  message("STEP6 complete")
-  
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP6 COMPLETE in ", t3, " min")
 }
 
 ####################################################
@@ -209,29 +237,84 @@ if("step7" %in% stepstotake){
   
   message("STEP7 - Bin")
   
+  t1<-Sys.time()
+  
   filtered_blastfile<-gsub(".fasta",".blast.filt.txt",catted_file)
 
   message(paste("binning filtered blast results for",filtered_blastfile))
   binfile<-gsub(".blast.filt.txt",".bins.txt",filtered_blastfile)
   
-  bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
-               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
+  bin.blast3(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
+               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,
+             fpident = fpident,abspident = abspident,topS=topS,topG=topG,topF=topF,topAbs=topAbs)
   
   message("STEP7 complete")
+  
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP7 COMPLETE in ", t3, " min")
   
 } 
 
 ####################################################
+#step 8 make otutab
+  
+if("step8" %in% stepstotake){  
+    
+  message("STEP8 - Making otutab")
+  
+  t1<-Sys.time()
 
-message("Need to make otutabs")
+  otutab<-data.table::fread(cmd = paste("grep", "'>'", catted_file),header = F,select = c(1,3),col.names = c("otu","ss_sample_id"),data.table = F)
+  otutab$ss_sample_id<-gsub("ss_sample_id=","",otutab$ss_sample_id)
+  otutab$otu<-gsub(">","",otutab$otu)
+  otutab$count<-1
+  otutab<-as.data.frame(pivot_wider(otutab,names_from = ss_sample_id,values_from=count,values_fill = list(count = 0)))
+  
+  write.table(otutab,gsub(".fasta","otutab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
+  
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP8 COMPLETE in ", t3, " min")
+}
 
+####################################################
+#step 9 merge with otutab
+  
+if("step9" %in% stepstotake){  
+  
+  message("STEP9 - Merging bins and otutab into taxatab")
+  
+  t1<-Sys.time()
+    
+  otutab<-data.table::fread(gsub(".fasta","otutab.txt",catted_file),data.table = F)
+  binfile<-gsub(".fasta",".bins.txt",catted_file)  
+  taxon_input<-data.table::fread(binfile, sep = "\t",data.table = F)
+  taxon_input$path<-paste(taxon_input$K,taxon_input$P,taxon_input$C,taxon_input$O,taxon_input$F,taxon_input$G,taxon_input$S,sep = ";")
+ 
+  
+  
+   merged.table<-merge(taxon_input[,c("qseqid","path")],otutab_input[,c("id","barcode","count")],
+                      by.x = "qseqid",by.y = "id",all = TRUE)
+  
+  taxatable<-reshape2::dcast(merged.table[,c("path","barcode","count")],path~barcode,value.var = "count",
+                             fun.aggregate = sum)
+  
+  write.table(otutab,gsub(".fasta","otutab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
+    
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP9 COMPLETE in ", t3, " min")
+}    
   
 ####################################################
-#step 7 make contributor files
+#step10  make contributor files
 
-if("step8" %in% stepstotake){  
+if("step10" %in% stepstotake){  
   
-  message("STEP7 - Contributor files")
+  message("STEP10 - Contributor files")
+  
+  t1<-Sys.time()
   
   files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   
@@ -255,14 +338,19 @@ if("step8" %in% stepstotake){
       binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile))
       ,disabledTaxaFile = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
-  message("STEP13 complete")
+  
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP10 COMPLETE in ", t3, " min")
   
 }
 
 ####################################################
-#step 14 make krona plots
+#step 11 make krona plots
 
-if("step14" %in% stepstotake){  
+if("step11" %in% stepstotake){  
+  
+  t1<-Sys.time()
   
   message("STEP14")
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
@@ -271,7 +359,10 @@ if("step14" %in% stepstotake){
   for(i in 1:length(files)){
     bas.krona.plot(files[i],KronaPath)
   }
-  message("STEP14 complete")
+  
+  t2<-Sys.time()
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  message("STEP11 COMPLETE in ", t3, " min")
   
 }
 

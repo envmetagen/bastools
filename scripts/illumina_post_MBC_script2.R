@@ -12,7 +12,9 @@ setwd(outDir)
 #step 7 blast
 if("step7" %in% stepstotake){
   
-  message("STEP7")
+  message("STEP7-BLAST")
+  
+  message("Note to self, consider using different blastn options")
   
   #BLASTING NT
   if(class(startingfastas)=="data.frame"){
@@ -36,7 +38,7 @@ if("step7" %in% stepstotake){
 #step 8 filter 
 if("step8" %in% stepstotake){  
   
-  message("STEP8")
+  message("STEP8-filter blast")
   
   #FILTER BLASTS
   files<-list.files(pattern = ".blast.txt$")
@@ -56,7 +58,7 @@ if("step8" %in% stepstotake){
 #step 9 BIN
 if("step9" %in% stepstotake){ 
   
-  message("STEP9")
+  message("STEP9 - bin")
   
   files<-list.files(pattern = ".blast.filt.txt")
   
@@ -65,7 +67,8 @@ if("step9" %in% stepstotake){
     filtered_blastfile<-files[i]
     binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
-               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
+               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,
+               fpident = fpident,abspident = abspident)
   }
   message("STEP9 complete")
   
@@ -76,7 +79,7 @@ if("step9" %in% stepstotake){
 
 if("step10" %in% stepstotake){  
   
-  message("STEP10")
+  message("STEP10 - merge with otutab")
   
   files<-list.files(pattern = ".otutab.tsv$")
   
@@ -96,7 +99,7 @@ if("step10" %in% stepstotake){
 
 if("step11" %in% stepstotake){  
   
-  message("STEP11")
+  message("STEP11 - taxon filter")
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-list.files(pattern = ".taxatable.txt$")
@@ -112,7 +115,7 @@ if("step11" %in% stepstotake){
 
 if("step12" %in% stepstotake){  
   
-  message("STEP12")
+  message("STEP12 - splice tables")
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-list.files(pattern = ".taxatable.tf.txt$")
@@ -127,7 +130,7 @@ if("step12" %in% stepstotake){
 
 if("step13" %in% stepstotake){  
   
-  message("STEP13")
+  message("STEP13 - make contributor files")
   
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
@@ -162,7 +165,7 @@ if("step13" %in% stepstotake){
 
 if("step14" %in% stepstotake){  
   
-  message("STEP14")
+  message("STEP14 - krona plots")
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-list.files(pattern = ".taxatable.tf.spliced.txt$")

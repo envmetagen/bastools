@@ -3,7 +3,6 @@ message("settings:
 print(ls.str())
 
 source(paste0(bastoolsDir,"master_functions.R"))
-source(paste0(bastoolsDir,"bin.blast.R"))
 library(processx)
 library(dplyr)
 library(ggplot2)
@@ -13,9 +12,6 @@ setwd(outDir)
 #######################################################
 #check taxonlimit ok 
 if(!is.null(taxonlimit)) if(is.null(taxonlimitlevel)) stop("taxonlimitlevel cannot be NULL if taxonlimit specified")
-if(!is.null(taxonlimitlevel)) {
-  if(!taxonlimitlevel %in% c("K","P","C","O","F","G","S")) stop("taxonlimitlevel must be one of K,P,C,O,F,G,S")
-}
 
 #set some file names
 outloopblast.files<-list()
@@ -47,23 +43,25 @@ if("step2" %in% stepstotake){
   message("Creating references. maxL not used, min_length=10, buffer = F, max_error=",max_error_buildrefs)
   
   ecoPCR.Bas(Pf = Pf,Pr = Pr,ecopcrdb = gsub(".fasta",".ecopcrdb",starting_fasta),max_error = max_error_buildrefs,
-           min_length = 10,out = gsub(".fasta",".ecopcrResults.txt",starting_fasta))
+           min_length = 10,out = gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta))
 
   #clean
-  clean.ecopcroutput(ecopcrfile = gsub(".fasta",".ecopcrResults.txt",starting_fasta),rm.buffer = F,buffer.used = F)
+  clean.ecopcroutput(ecopcrfile = gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),rm.buffer = F,buffer.used = F)
   
   #read ecopcroutput and add taxonomy
-  a<-data.table::fread(gsub(".fasta",".ecopcrResults.txt.clean",starting_fasta),sep = "\t",data.table = F)
+  a<-data.table::fread(paste0(gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),".clean"),sep = "\t",data.table = F)
   colnames(a)<-gsub("taxid","taxids",colnames(a))
   a<-add.lineage.df(a,ncbiTaxDir)
   a$path<-paste(a$K,a$P,a$C,a$O,a$F,a$G,a$S,sep = ";")
-  write.table(a,gsub(".fasta",".ecopcrResults.txt.clean",starting_fasta),append = F,quote = F,row.names = F,sep = "\t")
+  write.table(a,paste0(gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),".clean"),append = F,quote = F,row.names = F,sep = "\t")
   
   #krona plot
   a$count<-1
   a<-a[,c("path","count")]
-  write.table(a,gsub(".fasta",".ecopcrResults.ForKrona.txt",starting_fasta),append = F,quote = F,row.names = F,sep = "\t")
-  bas.krona.plot(taxatable = gsub(".fasta",".ecopcrResults.ForKrona.txt",starting_fasta))
+  write.table(a,paste0(gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),".clean.Forkrona.txt")
+              ,append = F,quote = F,row.names = F,sep = "\t")
+              
+  bas.krona.plot(taxatable = paste0(gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),".clean.Forkrona.txt"))
 }
 
 
@@ -72,7 +70,7 @@ if("step2" %in% stepstotake){
 if("step3" %in% stepstotake){
   
   message("STEP3 - loop blast")
-  a<-data.table::fread(gsub(".fasta",".ecopcrResults.txt.clean",starting_fasta),sep = "\t",data.table = F)
+  a<-data.table::fread(paste0(gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),".clean"),sep = "\t",data.table = F)
   
   #subset by taxonlimit
   message("ecoPCR table length:",nrow(a))
@@ -160,7 +158,7 @@ if("step4" %in% stepstotake){
     write.table(results[[i]][[2]],file = gsub(".txt",".bin.results.txt",outloopblast.files[[i]]),append = F,quote = F,sep = "\t",row.names = F)
   }
   
-  #finally, do a check of if species not in db, do we get to family level
+  #finally, do a check if species not in db, do we get to family level
   if(all.sp.in.db==F) if("G" %in% TaxlevelTest) {
     results[[i+1]]<-threshold.bin.blast(blastfile = grep(".G_",outloopblast.files,value = T),ecopcr.clean.df = ecopcr,
                                        headers = "qseqid sseqid evalue staxid pident qcovs",
@@ -212,7 +210,7 @@ if("step5" %in% stepstotake){
     b2[[j]]<-b
   }
   
-  longcount$settings<-factor(longcount$settings, levels = unique(longcount$settings)[unlist(b2)])
+  longcount$settings<-factor(longcount$settings, levels = unique(longcount$settings))
   
   
   plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
@@ -235,86 +233,95 @@ if("step5" %in% stepstotake){
 #############################################  
 #plot by taxon, optional filter by taxa  
   results<-list()
-  for(i in 1:length(TaxlevelTest)){
+  for(i in 1:length(outloopblast.files)){
     results[[i]]<-data.table::fread(gsub(".txt",".bin.results.txt",outloopblast.files[[i]]),data.table = F)
   }
+  if(all.sp.in.db==F) if("F" %in% TaxlevelTest) results[[i+1]]<-data.table::fread(gsub("F_loopBlast.bin.results.txt","G_loopBlast.SbyF.bin.results.txt",
+                                                                   gsub(".txt",".bin.results.txt",grep(".F_",outloopblast.files,value = T)))
+                                                                   ,data.table = F)
   
   facet.plots.taxon<-list()
   facet.plots.taxon.list<-list() 
   filelist<-list()
   file.list.list<-list()
 
-  for(j in 1:length(TaxlevelTest)) { 
+  for(j in 1:length(results)) { 
     
     df<-results[[j]]
     
-    df$plotpath<-path.at.level(pathvector = df$origpath,level = plot.levels[j])
-    
-    if(!is.null(plot.taxa.limit)) {
-      plot.taxa.limit2<-path.at.level(pathvector = plot.taxa.limit,level = plot.levels[j]) 
-      }else plot.taxa.limit2<-NULL
-    
-    for(i in 1:length(unique(df$file))){
+    for(l in 1:length(plot.levels)){
       
-      df2<-df[df$file==unique(df$file)[i],]
-      
-      if(!is.null(plot.taxa.limit2)) {
-        df2.list<-list()
-        for(i in 1:length(plot.taxa.limit2)){
-          df2.list[[i]]<-df2[df2$plotpath==plot.taxa.limit2[i],]
-        }
-        df2<-do.call(rbind,df2.list)
-      
-      
-        #counts of taxa in final plots
-        #report some counts
-        taxa.counts.list<-list()
-        taxlevels<-c("K","P","C","O","F","G")
-        plot.title.list<-list()
-        for(k in 1:length(plot.taxa.limit2)){
-          for(i in 1:length(taxlevels)) {
-            taxa.counts<-path.at.level(df2.list[[k]]$path,taxlevels[i])
-            taxa.counts.list[[i]]<-paste0(taxlevels[i],":",length(unique(taxa.counts)))
-          }
-          plot.title.list[[k]]<-paste(plot.taxa.limit2[k],toString(unlist(taxa.counts.list)),",S:",length(unique(df2.list[[k]]$path)))
-        }
-        plot.title<-toString(unlist(plot.title.list))
-      }
-    
-      final.table2<-reshape2::melt(df2[,c(length(colnames(df2)),
-                                                  grep("rank",colnames(df2)))],id.vars="plotpath")
-    
-      final.table2$pident<-do.call(rbind,stringr::str_split(final.table2$variable,"_"))[,2]
-      final.table2$count<-1 
-      colnames(final.table2)<-gsub("value","outcome",colnames(final.table2))
-    
-      final.table3<-aggregate(count~plotpath+pident+outcome,final.table2,sum)
-      final.table3$outcome <- factor(final.table3$outcome, levels = c("no.hits","fail.filt","fail.bin","incorrect","above","correct"))
-      final.table3$pident <- factor(final.table3$pident, levels = pidents.list[[j]])
-    
-      taxa<-do.call(rbind,stringr::str_split(final.table3$plotpath,";"))
-      
-      final.table3$plotpath<-taxa[,ncol(taxa)]
-      
-      facet.plots.taxon[[i]]<-ggplot2::ggplot(data=final.table3 , aes(x=pident,y=count,fill=outcome))+geom_bar(stat = "identity")+
-                            theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
-                            axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical")+
-                            scale_fill_manual(values = plot.cols) +
-                            facet_wrap(~plotpath,scales = "free") +
-                            geom_text(aes(label = round(count,digits = 0)), 
-                                position = position_stack(vjust = 0.5), size = 2)
+      df$plotpath<-path.at.level(pathvector = df$origpath,level = plot.levels[l])
       
       if(!is.null(plot.taxa.limit)) {
-        facet.plots.taxon[[i]]<-facet.plots.taxon[[i]]+labs(caption=toString(plot.title))+
-          theme(plot.caption=element_text(size=8, hjust=0, margin=margin(15,0,0,0)))
-      }
+        plot.taxa.limit2<-path.at.level(pathvector = plot.taxa.limit,level = plot.levels[l]) 
+        }else plot.taxa.limit2<-NULL
       
-      filelist[[i]]<-unique(df2$file)
-    
-      ggsave(filename = paste0(unique(df2$file),".pdf"),plot = facet.plots.taxon[[i]],
-             device = "pdf", width = 15,height = 10)
+      for(i in 1:length(unique(df$file))){
+        
+        df2<-df[df$file==unique(df$file)[i],]
+        
+        if(!is.null(plot.taxa.limit2)) {
+          df2.list<-list()
+          for(n in 1:length(plot.taxa.limit2)){
+            df2.list[[n]]<-df2[df2$plotpath==plot.taxa.limit2[n],]
+          }
+          df2<-do.call(rbind,df2.list)
+        
+        
+          #counts of taxa in final plots
+          #report some counts
+          taxa.counts.list<-list()
+          taxlevels<-c("K","P","C","O","F","G")
+          plot.title.list<-list()
+          for(k in 1:length(plot.taxa.limit2)){
+            for(m in 1:length(taxlevels)) {
+              taxa.counts<-path.at.level(df2.list[[k]]$path,taxlevels[m])
+              taxa.counts.list[[m]]<-paste0(taxlevels[m],":",length(unique(taxa.counts)))
+            }
+            plot.title.list[[k]]<-paste(plot.taxa.limit2[k],toString(unlist(taxa.counts.list)),",S:",length(unique(df2.list[[k]]$path)))
+          }
+          plot.title<-toString(unlist(plot.title.list))
+        }
+      
+        final.table2<-reshape2::melt(df2[,c(length(colnames(df2)),
+                                                    grep("rank",colnames(df2)))],id.vars="plotpath")
+      
+        final.table2$pident<-do.call(rbind,stringr::str_split(final.table2$variable,"_"))[,2]
+        final.table2$count<-1 
+        colnames(final.table2)<-gsub("value","outcome",colnames(final.table2))
+      
+        final.table3<-aggregate(count~plotpath+pident+outcome,final.table2,sum)
+        final.table3$outcome <- factor(final.table3$outcome, levels = c("no.hits","fail.filt","fail.bin","incorrect","above","correct"))
+        
+        if(length(grep("SbyF", unique(df$file)[i]))>0) pident.levs<-pidents.list[[grep("F",TaxlevelTest)]] else pident.levs<-pidents.list[[j]]
+
+        final.table3$pident <- factor(final.table3$pident, levels = pident.levs)
+      
+        taxa<-do.call(rbind,stringr::str_split(final.table3$plotpath,";"))
+        
+        final.table3$plotpath<-taxa[,ncol(taxa)]
+        
+        facet.plots.taxon[[i]]<-ggplot2::ggplot(data=final.table3 , aes(x=pident,y=count,fill=outcome))+geom_bar(stat = "identity")+
+                              theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
+                              axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical")+
+                              scale_fill_manual(values = plot.cols) +
+                              facet_wrap(~plotpath,scales = "free") +
+                              geom_text(aes(label = round(count,digits = 0)), 
+                                  position = position_stack(vjust = 0.5), size = 2)
+        
+        if(!is.null(plot.taxa.limit)) {
+          facet.plots.taxon[[i]]<-facet.plots.taxon[[i]]+labs(caption=toString(plot.title))+
+            theme(plot.caption=element_text(size=8, hjust=0, margin=margin(15,0,0,0)))
+        }
+        
+        filelist[[i]]<-paste0(unique(df2$file),"_plotlev",plot.levels[l],".pdf")
+      
+        ggsave(filename = paste0(unique(df2$file),"_plotlev",plot.levels[l],".pdf"),plot = facet.plots.taxon[[i]],
+               device = "pdf", width = 15,height = 10)
+      }
     }
-    
+      
     file.list.list[[j]]<-filelist
     facet.plots.taxon.list[[j]]<-facet.plots.taxon
   }
