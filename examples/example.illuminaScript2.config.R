@@ -46,8 +46,6 @@ bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/"
 outDir<-"/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/HSJUN19BAS/NT/" 
 #full path to ncbi taxonomy directory
 ncbiTaxDir<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/Jan2020/"
-#full path to obitools taxonomy - this is the stem filename of the obitaxonomy files
-obitaxdb<-"/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/obitaxdump/Jan2020/obitaxdb_jan_2020" 
 #full path to blast exec
 blast_exec<-"/home/bastian.egeter/Tools/ncbi-blast-2.9.0+/bin/blastn"
 #full path to Krona exec

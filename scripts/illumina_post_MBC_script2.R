@@ -5,7 +5,6 @@ print(ls.str())
 library(processx)
 library(dplyr)
 source(paste0(bastoolsDir,"master_functions.R"))
-source(paste0(bastoolsDir,"bin.blast.R"))
 setwd(outDir)
 
 ####################################################
@@ -67,7 +66,7 @@ if("step9" %in% stepstotake){
     filtered_blastfile<-files[i]
     binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
     bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
-               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,
+               out = binfile,spident = spident,gpident = gpident,
                fpident = fpident,abspident = abspident)
   }
   message("STEP9 complete")

@@ -88,6 +88,7 @@ if("step3" %in% stepstotake){
   #if(assume.no.other.taxa==T) a2<-a2[a2$path %in% plot.taxa.limit,]
   
   #loop blast for each taxonlevel
+  
   for(i in 1:length(TaxlevelTest)){
     
     #remove seqs that dont have taxonomy at desired level

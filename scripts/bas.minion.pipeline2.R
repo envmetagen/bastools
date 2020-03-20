@@ -9,6 +9,7 @@ library(dplyr)
 library(ggplot2)
 source(paste0(bastoolsDir,"master_functions.R"))
 setwd(filesDir)
+
 if(!is.null(catted_suffix)) {
   catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids",catted_suffix,"fasta",sep = ".")
 } else catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
@@ -248,7 +249,7 @@ if("step7" %in% stepstotake){
   binfile<-gsub(".blast.filt.txt",".bins.txt",filtered_blastfile)
   
   bin.blast3(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
-               obitaxdb = obitaxdb,out = binfile,spident = spident,gpident = gpident,
+               out = binfile,spident = spident,gpident = gpident,
              fpident = fpident,abspident = abspident,topS=topS,topG=topG,topF=topF,topAbs=topAbs)
   
   message("STEP7 complete")

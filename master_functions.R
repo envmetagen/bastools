@@ -4062,22 +4062,20 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
       if(TaxlevelTest=="S") btabf<-btab
       
       btabf<-btabf[btabf$pident>pident,]
-      if(length(btabf$taxids)>0){
-        lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxoR,x))
+      
+      if(nrow(btabf)>0){
         
-        #get lca names
-        colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
-        if(sum(is.na(lcaf$taxids))>0){
-          message("************
-                  ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-                  *************")
-        }
+        btabf$path<-paste(btabf$K,btabf$P,btabf$C,btabf$O,btabf$F,btabf$G,btabf$S,sep = ";")
+        lcaf = aggregate(btabf$path, by=list(btabf$qseqid),function(x) lca(x,sep=";"))
+        colnames(lcaf)<-c("qseqid","binpath")
+        lcaf<-add.unknown.lca(lcaf)
+        mat<-do.call(rbind,stringr::str_split(lcaf$binpath,";"))
+        lcaf<-as.data.frame(cbind(lcaf$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+        colnames(lcaf)<-c("qseqid","K","P","C","O","F","G","S")
         
-        lcaf<-add.lineage.df(lcaf,ncbiTaxDir)
-        colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
       } else {
-          lcaf<-data.frame(matrix(nrow=1,ncol = 10))
-          colnames(lcaf)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+        lcaf<-data.frame(matrix(nrow=1,ncol = 8))
+        colnames(lcaf)<-c("qseqid","K","P","C","O","F","G","S")
       }
       
       if(TaxlevelTest=="F") lcaf$binpath<-paste(lcaf$K,lcaf$P,lcaf$C,lcaf$O,lcaf$F,sep = ";")
@@ -4230,7 +4228,7 @@ threshold.bin.blast<-function(blastfile,ecopcr.clean.df,headers = "qseqid sseqid
 #' bin.blast.bas(blastfile,headers,ncbiTaxDir,obitaxdb,out="blast_bins.txt",min_qcovs=70,max_evalue=0.001,top=1,spident=99,gpident=97,fpident=93)
 #' @export
 bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
-                     obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,
+                     out,spident=98,gpident=95,fpident=92,abspident=80,
                      disabledTaxaFiles=NULL,disabledTaxaOut=NULL,
                      force=F,full.force=F,consider_sp.=F){
   t1<-Sys.time()
@@ -4242,8 +4240,6 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   require(treemap)
   
   ###################################################
-  #read in obitools taxonomy
-  obitaxdb2=ROBITaxonomy::read.taxonomy(obitaxdb)
   
   btab<-data.table::fread(filtered_blastfile,sep="\t",data.table = F)
   
@@ -4345,27 +4341,20 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   } else(message("Considering species with 'sp.', numbers or more than one space"))
   
   btabsp<-btabsp[btabsp$pident>spident,]
-  if(length(btabsp$taxids)>0){
-    lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+  
+  if(nrow(btabsp)>0){
     
-    #get lca names
-    colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
-    if(sum(is.na(lcasp$taxids))>0){
-      message("************
-              ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-              *************")
-      problem.contributors<-btabsp[!duplicated(btabsp[lcasp[is.na(lcasp$taxids),1] %in% btabsp$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                   c("taxids","K","P","C","O","F","G","S")]
-      for(i in 1:length(problem.contributors$taxids)){
-        problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-      }
-      print(problem.contributors[is.na(problem.contributors$validate),])
-    }
-    lcasp<-add.lineage.df(df = lcasp,ncbiTaxDir)
-    colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
+    btabsp$path<-paste(btabsp$K,btabsp$P,btabsp$C,btabsp$O,btabsp$F,btabsp$G,btabsp$S,sep = ";")
+    lcasp = aggregate(btabsp$path, by=list(btabsp$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcasp)<-c("qseqid","binpath")
+    lcasp<-add.unknown.lca(lcasp)
+    mat<-do.call(rbind,stringr::str_split(lcasp$binpath,";"))
+    lcasp<-as.data.frame(cbind(lcasp$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcasp)<-c("qseqid","K","P","C","O","F","G","S")
+    
   } else {
-    lcasp<-data.frame(matrix(nrow=1,ncol = 10))
-    colnames(lcasp)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+    lcasp<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcasp)<-c("qseqid","K","P","C","O","F","G","S")
   }
   
   rm(btabsp)
@@ -4382,28 +4371,21 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
     btabg<-btabg[!btabg$taxids %in% unique(c(childrenG,childrenF)),]
   }
   
-  btabg<-btabg[btabg$pident>gpident,] ####line changed 
-  if(length(btabg$taxids)>0){
-    lcag = aggregate(btabg$taxids, by=list(btabg$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+  btabg<-btabg[btabg$pident>gpident,]  
+  
+  if(nrow(btabg)>0){
     
-    #get lca names
-    colnames(lcag)<-gsub("x","taxids",colnames(lcag))
-    if(sum(is.na(lcag$taxids))>0){
-      message("************
-            ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-            *************")
-      problem.contributors<-btabg[!duplicated(btabg[lcag[is.na(lcag$taxids),1] %in% btabg$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                  c("taxids","K","P","C","O","F","G","S")]
-      for(i in 1:length(problem.contributors$taxids)){
-        problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-      }
-      print(problem.contributors[is.na(problem.contributors$validate),])
-    }
-    lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
-    colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
+    btabg$path<-paste(btabg$K,btabg$P,btabg$C,btabg$O,btabg$F,btabg$G,btabg$S,sep = ";")
+    lcag = aggregate(btabg$path, by=list(btabg$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcag)<-c("qseqid","binpath")
+    lcag<-add.unknown.lca(lcag)
+    mat<-do.call(rbind,stringr::str_split(lcag$binpath,";"))
+    lcag<-as.data.frame(cbind(lcag$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcag)<-c("qseqid","K","P","C","O","F","G","S")
+    
   } else {
-    lcag<-data.frame(matrix(nrow=1,ncol = 10))
-    colnames(lcag)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+    lcag<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcag)<-c("qseqid","K","P","C","O","F","G","S")
   }
   
   rm(btabg)
@@ -4434,23 +4416,21 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   }
   
   btabf<-btabf[btabf$pident>fpident,]
-  lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   
-  #get lca names
-  colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
-  if(sum(is.na(lcaf$taxids))>0){
-    message("************
-            ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-            *************")
-    problem.contributors<-btabf[!duplicated(btabf[lcaf[is.na(lcaf$taxids),1] %in% btabf$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                c("taxids","K","P","C","O","F","G","S")]
-    for(i in 1:length(problem.contributors$taxids)){
-      problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-    }
-    print(problem.contributors[is.na(problem.contributors$validate),])
+  if(nrow(btabf)>0){
+    
+    btabf$path<-paste(btabf$K,btabf$P,btabf$C,btabf$O,btabf$F,btabf$G,btabf$S,sep = ";")
+    lcaf = aggregate(btabf$path, by=list(btabf$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcaf)<-c("qseqid","binpath")
+    lcaf<-add.unknown.lca(lcaf)
+    mat<-do.call(rbind,stringr::str_split(lcaf$binpath,";"))
+    lcaf<-as.data.frame(cbind(lcaf$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcaf)<-c("qseqid","K","P","C","O","F","G","S")
+    
+  } else {
+    lcaf<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcaf)<-c("qseqid","K","P","C","O","F","G","S")
   }
-  lcaf<-add.lineage.df(df = lcaf,ncbiTaxDir)
-  colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
   
   rm(btabf)
   
@@ -4463,25 +4443,21 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   # }
   
   btabhtf<-btabhtf[btabhtf$pident>abspident,]
-  lcahtf = aggregate(btabhtf$taxids, by=list(btabhtf$qseqid),
-                     function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   
-  #get lca names
-  colnames(lcahtf)<-gsub("x","taxids",colnames(lcahtf))
-  if(sum(is.na(lcahtf$taxids))>0){
-    message("************
-            ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-            *************")
-    problem.contributors<-btabhtf[!duplicated(btabhtf[lcahtf[is.na(lcahtf$taxids),1] %in% btabhtf$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                  c("taxids","K","P","C","O","F","G","S")]
-    for(i in 1:length(problem.contributors$taxids)){
-      problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-    }
-    print(problem.contributors[is.na(problem.contributors$validate),])
+  if(nrow(btabhtf)>0){
+    
+    btabhtf$path<-paste(btabhtf$K,btabhtf$P,btabhtf$C,btabhtf$O,btabhtf$F,btabhtf$G,btabhtf$S,sep = ";")
+    lcahtf = aggregate(btabhtf$path, by=list(btabhtf$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcahtf)<-c("qseqid","binpath")
+    lcahtf<-add.unknown.lca(lcahtf)
+    mat<-do.call(rbind,stringr::str_split(lcahtf$binpath,";"))
+    lcahtf<-as.data.frame(cbind(lcahtf$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcahtf)<-c("qseqid","K","P","C","O","F","G","S")
+    
+  } else {
+    lcahtf<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcahtf)<-c("qseqid","K","P","C","O","F","G","S")
   }
-  
-  lcahtf<-add.lineage.df(df = lcahtf,ncbiTaxDir)
-  colnames(lcahtf)<-gsub("Group.1","qseqid",colnames(lcahtf))
   
   rm(btabhtf)
   
@@ -4489,24 +4465,24 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   #combine
   sp_level<-lcasp[lcasp$S!="unknown",]
   g_level<-lcag[lcag$G!="unknown",]
-  if(length(g_level$taxids)>0) g_level$S<-NA
+  if(nrow(g_level)>0) g_level$S<-NA
   g_level<-g_level[!g_level$qseqid %in% sp_level$qseqid,]
   f_level<-lcaf[lcaf$F!="unknown",]
-  if(length(f_level$taxids)>0) f_level$G<-NA
-  if(length(f_level$taxids)>0) f_level$S<-NA
+  if(nrow(f_level)>0) f_level$G<-NA
+  if(nrow(f_level)>0) f_level$S<-NA
   f_level<-f_level[!f_level$qseqid %in% sp_level$qseqid,]
   f_level<-f_level[!f_level$qseqid %in% g_level$qseqid,]
   
   abs_level<-lcahtf
-  if(length(abs_level$taxids)>0) abs_level$G<-NA
-  if(length(abs_level$taxids)>0) abs_level$S<-NA
-  if(length(abs_level$taxids)>0) abs_level$F<-NA
+  if(nrow(abs_level)>0) abs_level$G<-NA
+  if(nrow(abs_level)>0) abs_level$S<-NA
+  if(nrow(abs_level)>0) abs_level$F<-NA
   abs_level<-abs_level[!abs_level$qseqid %in% sp_level$qseqid,]
   abs_level<-abs_level[!abs_level$qseqid %in% g_level$qseqid,]
   abs_level<-abs_level[!abs_level$qseqid %in% f_level$qseqid,]
   
   com_level<-rbind(sp_level,g_level,f_level,abs_level)
-  com_level<-merge(x=qseqids, y = com_level[,c(2,4:10)], by = "qseqid",all.x = T)
+  com_level<-merge(x=qseqids, y = com_level, by = "qseqid",all.x = T)
   
   #info
   t2<-Sys.time()
@@ -4851,20 +4827,17 @@ filter.blast2<-function(blastfile,headers="qseqid evalue staxid pident qcovs",nc
 }
 
 bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
-                     obitaxdb,out,spident=98,gpident=95,fpident=92,abspident=80,topS=1,topG=1,topF=1,topAbs=1,
+                     out,spident=98,gpident=95,fpident=92,abspident=80,topS=1,topG=1,topF=1,topAbs=1,
                      disabledTaxaFiles=NULL,disabledTaxaOut=NULL,
                      force=F,full.force=F,consider_sp.=F){
   t1<-Sys.time()
   
   if(is.null(out)) stop("out not specified")
   if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
-  if(is.null(obitaxdb)) stop("obitaxdb not specified")
-  
+
   require(treemap)
   
   ###################################################
-  #read in obitools taxonomy
-  obitaxdb2=ROBITaxonomy::read.taxonomy(obitaxdb)
   
   btab<-data.table::fread(filtered_blastfile,sep="\t",data.table = F)
   
@@ -4973,29 +4946,21 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   } else(message("Considering species with 'sp.', numbers or more than one space"))
   
   btabsp<-btabsp[btabsp$pident>spident,]
-  if(length(btabsp$taxids)>0){
-    lcasp = aggregate(btabsp$taxids, by=list(btabsp$qseqid),function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+ 
+  if(nrow(btabsp)>0){
     
-    #get lca names
-    colnames(lcasp)<-gsub("x","taxids",colnames(lcasp))
-    if(sum(is.na(lcasp$taxids))>0){
-      message("************
-              ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-              *************")
-      problem.contributors<-btabsp[!duplicated(btabsp[lcasp[is.na(lcasp$taxids),1] %in% btabsp$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                   c("taxids","K","P","C","O","F","G","S")]
-      for(i in 1:length(problem.contributors$taxids)){
-        problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-      }
-      print(problem.contributors[is.na(problem.contributors$validate),])
-    }
-    lcasp<-add.lineage.df(df = lcasp,ncbiTaxDir)
-    colnames(lcasp)<-gsub("Group.1","qseqid",colnames(lcasp))
+    btabsp$path<-paste(btabsp$K,btabsp$P,btabsp$C,btabsp$O,btabsp$F,btabsp$G,btabsp$S,sep = ";")
+    lcasp = aggregate(btabsp$path, by=list(btabsp$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcasp)<-c("qseqid","binpath")
+    lcasp<-add.unknown.lca(lcasp)
+    mat<-do.call(rbind,stringr::str_split(lcasp$binpath,";"))
+    lcasp<-as.data.frame(cbind(lcasp$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcasp)<-c("qseqid","K","P","C","O","F","G","S")
+    
   } else {
-    lcasp<-data.frame(matrix(nrow=1,ncol = 10))
-    colnames(lcasp)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+    lcasp<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcasp)<-c("qseqid","K","P","C","O","F","G","S")
   }
-  
   rm(btabsp)
   
   #genus-level assignments
@@ -5018,27 +4983,20 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   }
   
   btabg<-btabg[btabg$pident>gpident,] 
-  if(length(btabg$taxids)>0){
-    lcag = aggregate(btabg$taxids, by=list(btabg$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
+  
+  if(nrow(btabg)>0){
     
-    #get lca names
-    colnames(lcag)<-gsub("x","taxids",colnames(lcag))
-    if(sum(is.na(lcag$taxids))>0){
-      message("************
-            ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-            *************")
-      problem.contributors<-btabg[!duplicated(btabg[lcag[is.na(lcag$taxids),1] %in% btabg$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                  c("taxids","K","P","C","O","F","G","S")]
-      for(i in 1:length(problem.contributors$taxids)){
-        problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-      }
-      print(problem.contributors[is.na(problem.contributors$validate),])
-    }
-    lcag<-add.lineage.df(df = lcag,ncbiTaxDir)
-    colnames(lcag)<-gsub("Group.1","qseqid",colnames(lcag))
+    btabg$path<-paste(btabg$K,btabg$P,btabg$C,btabg$O,btabg$F,btabg$G,btabg$S,sep = ";")
+    lcag = aggregate(btabg$path, by=list(btabg$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcag)<-c("qseqid","binpath")
+    lcag<-add.unknown.lca(lcag)
+    mat<-do.call(rbind,stringr::str_split(lcag$binpath,";"))
+    lcag<-as.data.frame(cbind(lcag$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcag)<-c("qseqid","K","P","C","O","F","G","S")
+    
   } else {
-    lcag<-data.frame(matrix(nrow=1,ncol = 10))
-    colnames(lcag)<-c("taxids","qseqid","old_taxids","K","P","C","O","F","G","S")
+    lcag<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcag)<-c("qseqid","K","P","C","O","F","G","S")
   }
   
   rm(btabg)
@@ -5076,23 +5034,21 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   }
   
   btabf<-btabf[btabf$pident>fpident,]
-  lcaf = aggregate(btabf$taxids, by=list(btabf$qseqid), function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   
-  #get lca names
-  colnames(lcaf)<-gsub("x","taxids",colnames(lcaf))
-  if(sum(is.na(lcaf$taxids))>0){
-    message("************
-            ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-            *************")
-    problem.contributors<-btabf[!duplicated(btabf[lcaf[is.na(lcaf$taxids),1] %in% btabf$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                c("taxids","K","P","C","O","F","G","S")]
-    for(i in 1:length(problem.contributors$taxids)){
-      problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-    }
-    print(problem.contributors[is.na(problem.contributors$validate),])
+  if(nrow(btabf)>0){
+    
+    btabf$path<-paste(btabf$K,btabf$P,btabf$C,btabf$O,btabf$F,btabf$G,btabf$S,sep = ";")
+    lcaf = aggregate(btabf$path, by=list(btabf$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcaf)<-c("qseqid","binpath")
+    lcaf<-add.unknown.lca(lcaf)
+    mat<-do.call(rbind,stringr::str_split(lcaf$binpath,";"))
+    lcaf<-as.data.frame(cbind(lcaf$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcaf)<-c("qseqid","K","P","C","O","F","G","S")
+    
+  } else {
+    lcaf<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcaf)<-c("qseqid","K","P","C","O","F","G","S")
   }
-  lcaf<-add.lineage.df(df = lcaf,ncbiTaxDir)
-  colnames(lcaf)<-gsub("Group.1","qseqid",colnames(lcaf))
   
   rm(btabf)
   
@@ -5108,50 +5064,47 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   btabhtf<-btabhtf[btabhtf$pident>btabhtf$min_pident,]
   
   btabhtf<-btabhtf[btabhtf$pident>abspident,]
-  lcahtf = aggregate(btabhtf$taxids, by=list(btabhtf$qseqid),
-                     function(x) ROBITaxonomy::lowest.common.ancestor(obitaxdb2,x))
   
-  #get lca names
-  colnames(lcahtf)<-gsub("x","taxids",colnames(lcahtf))
-  if(sum(is.na(lcahtf$taxids))>0){
-    message("************
-            ERROR: Some taxids were not recognized by ROBITaxonomy::lowest.common.ancestor, probably need to update obitaxdb using NCBI2obitaxonomy
-            *************")
-    problem.contributors<-btabhtf[!duplicated(btabhtf[lcahtf[is.na(lcahtf$taxids),1] %in% btabhtf$qseqid,c("taxids","K","P","C","O","F","G","S")]),
-                                  c("taxids","K","P","C","O","F","G","S")]
-    for(i in 1:length(problem.contributors$taxids)){
-      problem.contributors$validate[i]<-ROBITaxonomy::validate(obitaxdb2,problem.contributors$taxids[i])
-    }
-    print(problem.contributors[is.na(problem.contributors$validate),])
+  if(nrow(btabhtf)>0){
+    
+    btabhtf$path<-paste(btabhtf$K,btabhtf$P,btabhtf$C,btabhtf$O,btabhtf$F,btabhtf$G,btabhtf$S,sep = ";")
+    lcahtf = aggregate(btabhtf$path, by=list(btabhtf$qseqid),function(x) lca(x,sep=";"))
+    colnames(lcahtf)<-c("qseqid","binpath")
+    lcahtf<-add.unknown.lca(lcahtf)
+    mat<-do.call(rbind,stringr::str_split(lcahtf$binpath,";"))
+    lcahtf<-as.data.frame(cbind(lcahtf$qseqid,mat[,1],mat[,2],mat[,3],mat[,4],mat[,5],mat[,6],mat[,7]))
+    colnames(lcahtf)<-c("qseqid","K","P","C","O","F","G","S")
+    
+  } else {
+    lcahtf<-data.frame(matrix(nrow=1,ncol = 8))
+    colnames(lcahtf)<-c("qseqid","K","P","C","O","F","G","S")
   }
-  
-  lcahtf<-add.lineage.df(df = lcahtf,ncbiTaxDir)
-  colnames(lcahtf)<-gsub("Group.1","qseqid",colnames(lcahtf))
   
   rm(btabhtf)
   
   ###################################################
   #combine
+  #combine
   sp_level<-lcasp[lcasp$S!="unknown",]
   g_level<-lcag[lcag$G!="unknown",]
-  if(length(g_level$taxids)>0) g_level$S<-NA
+  if(nrow(g_level)>0) g_level$S<-NA
   g_level<-g_level[!g_level$qseqid %in% sp_level$qseqid,]
   f_level<-lcaf[lcaf$F!="unknown",]
-  if(length(f_level$taxids)>0) f_level$G<-NA
-  if(length(f_level$taxids)>0) f_level$S<-NA
+  if(nrow(f_level)>0) f_level$G<-NA
+  if(nrow(f_level)>0) f_level$S<-NA
   f_level<-f_level[!f_level$qseqid %in% sp_level$qseqid,]
   f_level<-f_level[!f_level$qseqid %in% g_level$qseqid,]
   
   abs_level<-lcahtf
-  if(length(abs_level$taxids)>0) abs_level$G<-NA
-  if(length(abs_level$taxids)>0) abs_level$S<-NA
-  if(length(abs_level$taxids)>0) abs_level$F<-NA
+  if(nrow(abs_level)>0) abs_level$G<-NA
+  if(nrow(abs_level)>0) abs_level$S<-NA
+  if(nrow(abs_level)>0) abs_level$F<-NA
   abs_level<-abs_level[!abs_level$qseqid %in% sp_level$qseqid,]
   abs_level<-abs_level[!abs_level$qseqid %in% g_level$qseqid,]
   abs_level<-abs_level[!abs_level$qseqid %in% f_level$qseqid,]
   
   com_level<-rbind(sp_level,g_level,f_level,abs_level)
-  com_level<-merge(x=qseqids, y = com_level[,c(2,4:10)], by = "qseqid",all.x = T)
+  com_level<-merge(x=qseqids, y = com_level, by = "qseqid",all.x = T)
   
   #info
   t2<-Sys.time()
@@ -5165,4 +5118,98 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
         the results will be NA for all taxon levels.
         If the lca for a particular OTU is above kingdom, e.g. cellular organisms or root, 
         the results will be unknown for all taxon levels.")
+}
+
+# =========================================================
+# Copyright 2019-2020,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
+#
+#
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# if not, see <http://www.gnu.org/licenses/>.
+#
+#
+# =========================================================
+lca <- function(paths, threshold=1.0, sep=":",                
+                remove.dups=FALSE,
+                normalize.entries=FALSE,
+                remove.trailing.nas=FALSE) {
+  
+  if (is.null(paths)) return(NA)
+  # remove dups...  or not 
+  if (remove.dups) paths<-unique(paths)
+  ## Normalize netries
+  if ( normalize.entries ) {
+    paths <- sapply(paths,FUN=sub,pattern=" [^:]+$",replacement="",ignore.case=TRUE)
+    paths <- sapply(paths,FUN=sub,pattern="([^0-9])[0-9]+$",replacement="\\1",ignore.case=TRUE)
+    
+  }
+  
+  ## remove trailing NAs
+  if ( remove.trailing.nas ) {
+    paths <- sapply(paths,FUN=sub,pattern="(:NA)+$",replacement="",ignore.case=TRUE)   
+  }
+  ## workaround to handle paths with toplevel entries only
+  paths<-paste(paths,":NA-",sep="")
+  v<-sapply(paths,function(l) strsplit(l,sep)[[1]])
+  ##
+  if ( typeof(v) == "list" ) {
+    ## ensure that length of all elements is the same
+    lens<-sapply(v,length)
+    target<-max(lens,na.rm=TRUE)
+    unilength<-function(l,tlen) {
+      nnewels<-tlen-length(l)
+      if (nnewels==0) return(l)
+      return(append(l,rep(x="NA",nnewels)))
+    }
+    v<-lapply(v,unilength,tlen=target)
+  } 
+  
+  v<-data.frame(v,check.names=FALSE,stringsAsFactors=FALSE)    
+  nt<-apply(v,1,table,useNA="no")
+  if (typeof(nt) == "integer") {
+    ## single entry        
+    return(sub(":NA-$","",x=paths[1]))
+  }
+  vals<-lapply(nt,function(x) x/sum(x,na.rm=TRUE))#,simplify=FALSE)
+  
+  w<-NA
+  for ( e in 1:length(vals)) {
+    w<-vals[[e]]
+    if (max(w)<threshold) {
+      e<-e-1
+      break;
+    }
+  }
+  if (e==0) return(NA)
+  w<-vals[[e]]
+  # get the full paths
+  l<-names(which(w>=threshold))
+  cols<-as.character(v[e,])%in%l
+  v2<-v[1:e,cols,drop=FALSE]
+  
+  r<-unique(apply(v2,c(2),paste,sep=sep,collapse=sep))
+  return(sub(":NA-$","",x=r))
+}
+
+add.unknown.lca<-function(lca.out){
+  
+  lca.out$binpath[is.na(lca.out$binpath)]<-"unknown;unknown;unknown;unknown;unknown;unknown;unknown"
+  lca.out$binpath[stringr::str_count(lca.out$binpath,";")==5]<-paste0(lca.out$binpath[stringr::str_count(lca.out$binpath,";")==5],";unknown")
+  lca.out$binpath[stringr::str_count(lca.out$binpath,";")==4]<-paste0(lca.out$binpath[stringr::str_count(lca.out$binpath,";")==4],";unknown;unknown")
+  lca.out$binpath[stringr::str_count(lca.out$binpath,";")==3]<-paste0(lca.out$binpath[stringr::str_count(lca.out$binpath,";")==3],";unknown;unknown;unknown")
+  lca.out$binpath[stringr::str_count(lca.out$binpath,";")==2]<-paste0(lca.out$binpath[stringr::str_count(lca.out$binpath,";")==2],";unknown;unknown;unknown;unknown")
+  lca.out$binpath[stringr::str_count(lca.out$binpath,";")==1]<-paste0(lca.out$binpath[stringr::str_count(lca.out$binpath,";")==1],";unknown;unknown;unknown;unknown;unknown")
+  lca.out$binpath[stringr::str_count(lca.out$binpath,";")==0]<-paste0(lca.out$binpath[stringr::str_count(lca.out$binpath,";")==0],";unknown;unknown;unknown;unknown;unknown;unknown")
+  
+  return(lca.out)
 }
