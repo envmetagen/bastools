@@ -21,26 +21,28 @@
 stepstotake=c("step3a","step4","step5","step5a","step6","step7","step8","step9","step10","step11")
 
 #all dirs must have trailing /
-bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #bastools directory
-filesDir<-"/home/bastian.egeter/Minion_data/MINION.PIPE2/2019_August_002/polished/Run7V3_16sBiv/"
-blast_exec<-"/home/bastian.egeter/Tools/ncbi-blast-2.9.0+/bin/blastn"
-ncbiTaxDir="/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/Jan2020/"
-KronaPath<-"/home/bastian.egeter/Tools/Krona.install/bin/ktImportText"
+bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #bastools directory
+filesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/test_polishing/"
+blast_exec<-"/home/tutorial/TOOLS/ncbi-blast-2.9.0+/bin/blastn"
+ncbiTaxDir="/home/tutorial/TOOLS/DBS/ncbi_taxonomy/taxdump/"
+KronaPath<-"/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
 
-preffered_rlibsfolder="~/MBC_pipelines/MBC/Rlibs" #had to add this for emg1
+preffered_rlibsfolder="~/MBC/Rlibs/" #had to add this for emg1
 
-#used polishing script (then start at step 4a), remember this file will conatin all primers, so dont limit by primer
+#used polishing script (then start at step 2)
 polished=T
+#if using polishing, then specifiy location of unpolished raw reads, must be separate folder
+origfilesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/test_polishing/raw/"
 
 # get sheet first separately (better than including in pipe)
 # source(paste0(bastoolsDir,"master_functions.R"))
 # mastersheet<-google.overlord("https://docs.google.com/spreadsheets/d/1k1mAGogWq9rXcwBKDyxG9oZ0OrWreBRRcSEUw0RGwyk/edit?ts=5d776492#gid=1377121809",email="basegeter@gmail.com")
 # write.table(mastersheet,paste0(outDir,"mastersheet.txt"),append = F,quote = F,row.names = F,sep = "\t")
-mastersheet<-"mastersheet.txt"
+mastersheet<-"MUSSELS_mastersheet.txt"
 #options for subsetting master sheet. This functions to select the samples you want to analyse.
 #Each item in list is a column heading in master sheet and each character within the item should be what you want to include 
 #(sample_type should always be lower case, even if it is not so on google)
-subsetlist<-list(experiment_id="2019_August_002")
+subsetlist<-list(experiment_id="2019_August_002",primer_set=c("VENE"))
 
 #cutadapt error rate
 ca.error.rate=0.3
@@ -51,7 +53,7 @@ catted_suffix<-"SC3"
 ##set BLAST taxidlimit and taxidname if desired. 
 taxidlimit=NULL #set to NULL if not required
 taxidname=NULL
-refdb="/home/bastian.egeter/DATABASES/16S_Bivalves/16S.s2.Bivalvia.7species"
+refdb="/home/tutorial/TOOLS/mussels/databases/16S_Bivalves_7_species/16S.s2.Bivalvia.7species"
 max_target_seqs = 50
 
 #filtering/binning options #based on results, scenario3

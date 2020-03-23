@@ -38,7 +38,7 @@ if("step1" %in% stepstotake){
   
   message("STEP1 - Cutadapt")
   
-  if(polished) stop("If using polished reads should start from step 4a")
+  if(polished) stop("If using polished reads should start from step 2")
   
   t1<-Sys.time()
   
@@ -77,10 +77,21 @@ if("step2" %in% stepstotake){
   
   message("STEP2 - print length data")
   
-  if(polished) stop("If using polished reads should start from step 4a")
-  
-  
   t1<-Sys.time()
+  
+  #format polished results
+  if(polished){
+    message("assumes polished reads are in results.fasta.gz")
+    ##remove seqs with "adapter=no_adapter"
+    system2("seqkit", args=c("grep","-r","-n","-v","-p","'adapter=no_adapter'","results.fasta.gz"),wait = T,stdout = "results.fasta.temp.gz")
+    
+    #split polished by barcode
+    for(i in 1:length(ms_ss$barcode_name)){
+      system2("seqkit", args=c("grep","-r","-n","-p",ms_ss$barcode_name[i],"results.fasta.temp.gz"),wait = T,
+              stdout = paste0(ms_ss$barcode_name[i],".trimmed.fastq"))
+    }
+  }
+
   
   files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
   #get lengths of seqs in files
@@ -90,7 +101,22 @@ if("step2" %in% stepstotake){
     datalist[[i]]<-system2("seqkit", args=c("fx2tab","-l","-i","-n",files[i]),wait = T,stdout = T)
     datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
     datalist[[i]][,5]<-files[i]
-    datalist[[i]]<-datalist[[i]][,c(4:5)]
+    
+    if(polished){
+      datalist[[i]][,6]<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(datalist[[i]][,1],"size="))[,2],":"))[,1])
+      
+      rep.row<-function(x,n){
+        matrix(rep(x,each=n),nrow=n)
+      }
+      expanded_lengths<-list()
+      for(j in 1:nrow(datalist[[i]])){
+        expanded_lengths[[j]]<-rep.row(datalist[[i]][j,4],n = datalist[[i]][j,6])
+      }
+      expanded_lengthsdf<-as.data.frame(unlist(expanded_lengths))
+      expanded_lengthsdf$file<-files[i]
+      datalist[[i]]<-expanded_lengthsdf
+    } else datalist[[i]]<-datalist[[i]][,c(4:5)]
+    
     colnames(datalist[[i]])<-c("length","file")
   }
 
@@ -126,8 +152,6 @@ if("step2" %in% stepstotake){
 if("step3" %in% stepstotake){
   
   message("STEP3 - size select")
-  
-  if(polished) stop("If using polished reads should start from step 4a")
   
   t1<-Sys.time()
   
@@ -175,15 +199,12 @@ if("step3" %in% stepstotake){
   
 if("step3a" %in% stepstotake){  
   
-  if(polished) stop("If using polished reads should start from step 4a")
-  
-    
     t1<-Sys.time()
     
     message("STEP3a - calculate step counts")
     
-    #count seqsin starting files
-    files<-paste0(ms_ss$barcode_name,".fastq.gz")
+    #count seqs in starting files
+    files<-paste0(origfilesDir,ms_ss$barcode_name,".fastq.gz")
     
     datalist<-list()
     for(i in 1:length(files)){
@@ -196,30 +217,54 @@ if("step3a" %in% stepstotake){
     
     #count after cutadapt
     files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
-    
     datalist<-list()
-    for(i in 1:length(files)){
-      datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
-      datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
-    }
     
-    after.cutadapt<-do.call(rbind,datalist)
-    after.cutadapt<-sum(after.cutadapt$num_seqs)  
-    
+    if(polished==F){
+      for(i in 1:length(files)){
+        datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
+        datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
+      }
+      after.cutadapt<-do.call(rbind,datalist)
+      after.cutadapt<-sum(after.cutadapt$num_seqs) 
+      } else {
+          count.polished<-function(fastx.file){
+          counts<-system2("seqkit", args=c("fx2tab","-l","-i","-n",fastx.file),wait = T,stdout = T)
+          counts<-read.table(text = counts,header = T,sep = "\t")
+          counts$size<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(counts[,1],"size="))[,2],":"))[,1])
+          sum(counts$size)
+        }
+        
+        for(i in 1:length(files)){
+          datalist[[i]]<-count.polished(files[i])
+        }
+          after.polishing<-sum(do.call(rbind,datalist))
+      }
+   
     #after length filtering
+    datalist<-list()
     files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.fasta")
     
-    datalist<-list()
-    for(i in 1:length(files)){
-      datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
-      datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
-    }
-    
-    after.length.filt<-do.call(rbind,datalist)
-    after.length.filt<-sum(after.length.filt$num_seqs) 
-    
-    counts<-data.frame(step=c("Starting fastq files","After primer trimming", "After length filtering"),
+    if(polished==F){
+      for(i in 1:length(files)){
+          datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
+          datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
+        } 
+      after.length.filt<-do.call(rbind,datalist)
+      after.length.filt<-sum(after.cutadapt$num_seqs) 
+    } else {
+        for(i in 1:length(files)){
+          datalist[[i]]<-count.polished(files[i])
+        }
+        after.length.filt<-sum(do.call(rbind,datalist))
+      }
+     
+    if(polished){
+      counts<-data.frame(step=c("Starting fastq files","After polishing", "After length filtering"),
+                         reads=c(starting.counts,after.polishing,after.length.filt))
+    } else {
+      counts<-data.frame(step=c("Starting fastq files","After primer trimming", "After length filtering"),
                        reads=c(starting.counts,after.cutadapt,after.length.filt))
+    }
     
     counts$step<-factor(counts$step,levels = counts$step)
     
@@ -241,8 +286,6 @@ if("step3a" %in% stepstotake){
 if("step4" %in% stepstotake){  
   
   message("STEP4 - cat files")
-  
-  if(polished) stop("If using polished reads should start from step 4a")
   
   t1<-Sys.time()
   
@@ -267,29 +310,6 @@ if("step4" %in% stepstotake){
   message("STEP4 COMPLETE in ", t3, " min")
 }
   
-####################################################
-#step 4a - format polished files
-if("step4a" %in% stepstotake){  
-  
-  message("STEP4a - format polished files")
-  
-  t1<-Sys.time()
-  
-  
-  
-  
-  #put ss_sample_ids in headers
-  for(i in 1:length(files)){
-    file=files[i]
-    ss_sample_id<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"ss_sample_id"]
-    
-    system2("seqkit", args=c("replace","-p", "'sampleid='", "-r", paste0("'ss_sample_id=",ss_sample_id," sampleid='"),file),wait = T,
-            stdout = gsub(".fasta",".ids.fasta",file))
-  }
-  
-  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.ids.fasta") 
-    
-    
 ####################################################
 #step 5 blast
 if("step5" %in% stepstotake){
@@ -389,19 +409,30 @@ if("step8" %in% stepstotake){
   message("STEP8 - Making otutab")
   
   t1<-Sys.time()
+  
+  if(polished==F){
 
-  otutab<-data.table::fread(cmd = paste("grep", "'>'", catted_file),header = F,select = c(1,3),col.names = c("otu","ss_sample_id"),
-                            data.table = F)
-  otutab$ss_sample_id<-gsub("ss_sample_id=","",otutab$ss_sample_id)
-  otutab$otu<-gsub(">","",otutab$otu)
-  otutab$count<-1
-  otutab<-as.data.frame(tidyr::pivot_wider(otutab,names_from = ss_sample_id,values_from=count,values_fill = list(count = 0)))
+    otutab<-data.table::fread(cmd = paste("grep", "'>'", catted_file),header = F,select = c(1,3),col.names = c("otu","ss_sample_id"),
+                              data.table = F)
+    otutab$ss_sample_id<-gsub("ss_sample_id=","",otutab$ss_sample_id)
+    otutab$otu<-gsub(">","",otutab$otu)
+    otutab$count<-1
+    otutab<-as.data.frame(tidyr::pivot_wider(otutab,names_from = ss_sample_id,values_from=count,values_fill = list(count = 0)))
+  }  else {
+      otutab<-data.table::fread(cmd = paste("grep", "'>'", catted_file),header = F, data.table = F)
+      otutab$otu<-otutab[,1]
+      otutab$otu<-gsub(">","",otutab$otu)
+      otutab$ss_sample_id<-do.call(rbind,stringr::str_split(otutab$otu,"ss_sample_id="))[,2]
+      
+      otutab$count<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(otutab[,2],"size="))[,2],":"))[,1])
+      otutab<-as.data.frame(tidyr::pivot_wider(otutab[,c(-1,-2)],names_from = ss_sample_id,values_from=count,values_fill = list(count = 0)))
+  }
   
-  write.table(otutab,gsub(".fasta",".otutab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
-  
-  t2<-Sys.time()
-  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP8 COMPLETE in ", t3, " min")
+    write.table(otutab,gsub(".fasta",".otutab.txt",catted_file),append = F,quote = F,sep = "\t",row.names = F)
+    
+    t2<-Sys.time()
+    t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+    message("STEP8 COMPLETE in ", t3, " min")
 }
 
 ####################################################
