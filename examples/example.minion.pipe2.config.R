@@ -22,12 +22,15 @@ stepstotake=c("step3a","step4","step5","step5a","step6","step7","step8","step9",
 
 #all dirs must have trailing /
 bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #bastools directory
-filesDir<-"/home/bastian.egeter/Minion_data/MINION.PIPE2/2019_August_002/"
+filesDir<-"/home/bastian.egeter/Minion_data/MINION.PIPE2/2019_August_002/polished/Run7V3_16sBiv/"
 blast_exec<-"/home/bastian.egeter/Tools/ncbi-blast-2.9.0+/bin/blastn"
 ncbiTaxDir="/mnt/Disk1/Tools/BLAST+/DBs/nt_taxonomy/taxdump/Jan2020/"
 KronaPath<-"/home/bastian.egeter/Tools/Krona.install/bin/ktImportText"
 
 preffered_rlibsfolder="~/MBC_pipelines/MBC/Rlibs" #had to add this for emg1
+
+#used polishing script (then start at step 4a), remember this file will conatin all primers, so dont limit by primer
+polished=T
 
 # get sheet first separately (better than including in pipe)
 # source(paste0(bastoolsDir,"master_functions.R"))
@@ -37,7 +40,7 @@ mastersheet<-"mastersheet.txt"
 #options for subsetting master sheet. This functions to select the samples you want to analyse.
 #Each item in list is a column heading in master sheet and each character within the item should be what you want to include 
 #(sample_type should always be lower case, even if it is not so on google)
-subsetlist<-list(experiment_id="2019_August_002",primer_set=c("UNIO"))
+subsetlist<-list(experiment_id="2019_August_002")
 
 #cutadapt error rate
 ca.error.rate=0.3

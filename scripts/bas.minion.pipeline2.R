@@ -10,10 +10,11 @@ library(ggplot2)
 source(paste0(bastoolsDir,"master_functions.R"))
 setwd(filesDir)
 
-if(!is.null(catted_suffix)) {
-  catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids",catted_suffix,"fasta",sep = ".")
-} else catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
+catted_file<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lenFilt.trimmed.ids.fasta",sep = ".")
 
+if(!is.null(catted_suffix)) catted_file<-gsub(".fasta",paste0(".",catted_suffix,".fasta"),catted_file)
+  
+if(polished) catted_file<-gsub(".fasta",".pol.fasta",catted_file)
 
 ####################################################
 
@@ -36,6 +37,8 @@ if(!is.null(catted_suffix)) {
 if("step1" %in% stepstotake){
   
   message("STEP1 - Cutadapt")
+  
+  if(polished) stop("If using polished reads should start from step 4a")
   
   t1<-Sys.time()
   
@@ -73,6 +76,9 @@ if("step1" %in% stepstotake){
 if("step2" %in% stepstotake){
   
   message("STEP2 - print length data")
+  
+  if(polished) stop("If using polished reads should start from step 4a")
+  
   
   t1<-Sys.time()
   
@@ -121,6 +127,8 @@ if("step3" %in% stepstotake){
   
   message("STEP3 - size select")
   
+  if(polished) stop("If using polished reads should start from step 4a")
+  
   t1<-Sys.time()
   
   files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
@@ -166,6 +174,9 @@ if("step3" %in% stepstotake){
 #step 3a plot step counts
   
 if("step3a" %in% stepstotake){  
+  
+  if(polished) stop("If using polished reads should start from step 4a")
+  
     
     t1<-Sys.time()
     
@@ -231,6 +242,8 @@ if("step4" %in% stepstotake){
   
   message("STEP4 - cat files")
   
+  if(polished) stop("If using polished reads should start from step 4a")
+  
   t1<-Sys.time()
   
   files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.fasta") 
@@ -253,6 +266,29 @@ if("step4" %in% stepstotake){
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
   message("STEP4 COMPLETE in ", t3, " min")
 }
+  
+####################################################
+#step 4a - format polished files
+if("step4a" %in% stepstotake){  
+  
+  message("STEP4a - format polished files")
+  
+  t1<-Sys.time()
+  
+  
+  
+  
+  #put ss_sample_ids in headers
+  for(i in 1:length(files)){
+    file=files[i]
+    ss_sample_id<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"ss_sample_id"]
+    
+    system2("seqkit", args=c("replace","-p", "'sampleid='", "-r", paste0("'ss_sample_id=",ss_sample_id," sampleid='"),file),wait = T,
+            stdout = gsub(".fasta",".ids.fasta",file))
+  }
+  
+  files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.ids.fasta") 
+    
     
 ####################################################
 #step 5 blast
