@@ -5213,3 +5213,22 @@ add.unknown.lca<-function(lca.out){
   
   return(lca.out)
 }
+
+blast.plot.maxmin<-function(blastfile,pident_col="V5",qseqid_col="V1"){
+  
+  btab<-data.table::fread(blastfile,sep="\t",data.table = F)
+  
+  tophits<-aggregate(btab[,pident_col],by=list(btab[,qseqid_col]),FUN=max)
+  colnames(tophits)<-c("qseqid","pident")
+  tophits$minmax<-"max"
+  
+  minhits<-aggregate(btab[,pident_col],by=list(btab[,qseqid_col]),FUN=min)
+  colnames(minhits)<-c("qseqid","pident")
+  minhits$minmax<-"min"
+  
+  tophits<-rbind(tophits,minhits)
+  
+  a<-ggplot(tophits,aes(x=minmax,y=pident)) + geom_violin() 
+  
+  return(a)
+}

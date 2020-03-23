@@ -7,8 +7,10 @@
 #step1 - cutadapt
 #step2 - print length data
 #step3 - size select
+#step3a - count reads up to blast step
 #step4 - cat files
 #step5 - blast
+#step5a - plot blast hits
 #step6 - filter blast results
 #step7 - bin blast results
 #step8 - make otutab
@@ -16,7 +18,7 @@
 #step10 - make contributor files
 #step11 - make krona plots
 
-stepstotake=c("step4","step5","step6","step7","step8","step9","step10","step11")
+stepstotake=c("step3a","step4","step5","step5a","step6","step7","step8","step9","step10","step11")
 
 #all dirs must have trailing /
 bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #bastools directory

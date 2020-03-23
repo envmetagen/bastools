@@ -102,8 +102,8 @@ if("step2" %in% stepstotake){
   print(lengthplot)
   print(lengthplot + facet_wrap("file",scales="free_y"))
   
-  plotfile1<-paste(gsub(", ",".",toString(unlist(subsetlist),)),"lengthplot.pdf",sep = ".")
-  plotfile2<-paste(gsub(", ",".",toString(unlist(subsetlist),)),"lengthplot.facet.pdf",sep = ".")
+  plotfile1<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lengthplot.pdf",sep = ".")
+  plotfile2<-paste(gsub(", ",".",toString(unlist(subsetlist))),"lengthplot.facet.pdf",sep = ".")
   
   ggsave(filename = plotfile1,plot = lengthplot,device = "pdf", width = 15,height = 10)
   ggsave(filename = plotfile2, plot = lengthplot + facet_wrap("file",scales="free_y") ,device = "pdf", width = 15,height = 10)
@@ -161,7 +161,70 @@ if("step3" %in% stepstotake){
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
   message("STEP3 COMPLETE in ", t3, " min")
 }
-
+  
+####################################################
+#step 3a plot step counts
+  
+if("step3a" %in% stepstotake){  
+    
+    t1<-Sys.time()
+    
+    message("STEP3a - calculate step counts")
+    
+    #count seqsin starting files
+    files<-paste0(ms_ss$barcode_name,".fastq.gz")
+    
+    datalist<-list()
+    for(i in 1:length(files)){
+      datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
+      datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
+    }
+    
+    starting.counts<-do.call(rbind,datalist)
+    starting.counts<-sum(starting.counts$num_seqs)  
+    
+    #count after cutadapt
+    files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
+    
+    datalist<-list()
+    for(i in 1:length(files)){
+      datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
+      datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
+    }
+    
+    after.cutadapt<-do.call(rbind,datalist)
+    after.cutadapt<-sum(after.cutadapt$num_seqs)  
+    
+    #after length filtering
+    files<-paste0(ms_ss$barcode_name,".lenFilt.trimmed.fasta")
+    
+    datalist<-list()
+    for(i in 1:length(files)){
+      datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
+      datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
+    }
+    
+    after.length.filt<-do.call(rbind,datalist)
+    after.length.filt<-sum(after.length.filt$num_seqs) 
+    
+    counts<-data.frame(step=c("Starting fastq files","After primer trimming", "After length filtering"),
+                       reads=c(starting.counts,after.cutadapt,after.length.filt))
+    
+    counts$step<-factor(counts$step,levels = counts$step)
+    
+    countplot<-ggplot(counts,aes(x = step,y=reads))+
+      theme(axis.text.x=element_text(size=8,angle=45, hjust=1))+
+      ggtitle(gsub(".fasta","",catted_file))+
+      geom_bar(stat = "identity")+ 
+      scale_y_continuous(labels = scales::comma)
+    
+    ggsave(filename = gsub(".fasta",".stepCounts.pdf",catted_file),plot = countplot,device = "pdf", width = 15,height = 10)
+    
+    t2<-Sys.time()
+    t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+    message("STEP3a COMPLETE in ", t3, " min")
+  }
+ 
 ####################################################
 #step 4 - cat files
 if("step4" %in% stepstotake){  
@@ -215,6 +278,28 @@ if("step5" %in% stepstotake){
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
   message("STEP5 COMPLETE in ", t3, " min")
+}
+  
+####################################################
+#step 5a plot hit pidents blast results 
+if("step5a" %in% stepstotake){  
+    
+ message("STEP5a - plot pidents blast results")
+    
+ t1<-Sys.time()
+ 
+ blastfile<-gsub(".fasta",".blast.txt",catted_file)
+ 
+ a<-blast.plot.maxmin(blastfile)
+  
+ ggsave(filename = gsub(".txt",".hits.pdf",blastfile),a,device = "pdf", width = 15,height = 10)
+ 
+ rm(a)
+ 
+ t2<-Sys.time()
+ t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+ message("STEP5a COMPLETE in ", t3, " min")
+ 
 }
   
 ####################################################
@@ -340,7 +425,7 @@ if("step11" %in% stepstotake){
   
   t1<-Sys.time()
   
-  message("STEP11 - make krona plots")
+  message("STEP11 - make krona and blast.hit plots")
 
   bas.krona.plot(gsub(".fasta",".taxatab.txt",catted_file),KronaPath)
 
@@ -350,8 +435,3 @@ if("step11" %in% stepstotake){
   
 }
 
-
-
-  
-
-  

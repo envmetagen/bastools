@@ -7,7 +7,6 @@ library(processx)
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
-obitaxoR<-ROBITaxonomy::read.taxonomy(dbname = obitaxo)
 setwd(outDir)
 #######################################################
 #check taxonlimit ok 
