@@ -43,9 +43,10 @@ bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #change to your bastools directory
 #can be multiple
 taxatabs<-c("/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/CRAYFISH/rebin/CRAY-HSJUN19BAS_COI.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.rebins.taxatable.tf.spliced.ALTEREDNAMES.txt")
 
-#datasheet url, not required if master_sheet_file is not NULL
-# url<-"https://docs.google.com/spreadsheets/d/1KZLoXHTgtkD0btSWjyAmFiGJ_cPcYITyfFSlzehisRI/edit#gid=1531090624"
-# email="gbuzzopereira@gmail.com"
+# get sheet first separately (better than including in pipe)
+# source(paste0(bastoolsDir,"master_functions.R"))
+# mastersheet<-google.overlord("https://docs.google.com/spreadsheets/d/1k1mAGogWq9rXcwBKDyxG9oZ0OrWreBRRcSEUw0RGwyk/edit?ts=5d776492#gid=1377121809",email="basegeter@gmail.com")
+# write.table(mastersheet,paste0(outDir,"mastersheet.txt"),append = F,quote = F,row.names = F,sep = "\t")
 
 #use pre-downloaded master sheet instead. Set to NULL if downloading from google. Tab - seperated
 master_sheet_file="/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/CRAYFISH/STATS/Stats_2020_Feb/master_sheet_all.tsv"
@@ -106,7 +107,10 @@ unwantedTaxa<-c("NothingToAdd")
 #Can be made separately,e.g. in excel, this is just example. Ensure the order is correct. put taxa.to.group=NULL to skip this
 taxa.to.group<-NULL
 #variables to use as groups for plots, set to NULL to skip making barplots (useful if running into memory problems)
-plotting.vars<-NULL
+plotting.vars<-NULL #note that 'geographic location (country and/or sea)' and 'geographic location (region and locality)'
+#should be entered as 'country' or 'locality' respectively
+
+
 #the taxonomic levels to use for plotting. Set to NULL to use the taxatable as is (which will be printed regardless)
 #Note that multiple values of this and plotting.vars will make a lot of barplots!
 plotting_levels<-c("class")
@@ -124,7 +128,7 @@ out_html<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/CRAYFISH/STATS/Stats_2020_
 #full path to taxatab out, put to NULL if not desired
 taxatab.out<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/CRAYFISH/STATS/Stats_2020_Feb/PRS3_COI_MAIN.txt"
 #make krona plot, put to F if not desired
-krona.out<-T
+krona.out=T
 
 #if your computer has trouble allocating memory set this to FALSE, it will exclude the inspection of negative prior to applying filters,
 # the memory issue is caused by trying to store too many plots in memory (which happend when there is lots of contamination)

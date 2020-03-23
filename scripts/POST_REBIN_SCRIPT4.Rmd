@@ -43,6 +43,7 @@ master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 ## import taxatabs
 ```{r import taxatabs, eval=TRUE,echo=F, results='hide'}
 #import taxtabs
+
 all.taxatabs<-bas.merge.taxatabs(taxatabs)
 
 #make new taxa table based on subsetted master sheet
@@ -368,47 +369,49 @@ if(aggregate.pre.grouping==F){
 
 if(!is.null(plotting.vars)){
   
-taxatabs.multilevels<-list()
-
-if(!is.null(plotting_levels)){
-  for(i in 1:length(plotting_levels)){
-    taxatabs.multilevels[[i]]<-aggregate.at.xLevel(all.taxatabs.ss,plotting_levels[i])
-  }
-  taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
+  taxatabs.multilevels<-list()
   
-  message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
-  
-} else taxatabs.multilevels[[1]]<-all.taxatabs.ss
-
-message("Making barplots")
-  
-plot.as.percent<-c(F,T)
-plot.as.dxns<-c(F,T)
-  
-  for(h in 1:length(plot.as.dxns)){
-    for(k in 1:length(plot.as.percent)){
-      for(j in 1:length(taxatabs.multilevels)){
-        for(i in 1:length(plotting.vars)){
-          print(suppressMessages(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],as.percent = plot.as.percent[k],
-                                as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby)))
-        }
-      }
+  if(!is.null(plotting_levels)){
+    for(i in 1:length(plotting_levels)){
+      taxatabs.multilevels[[i]]<-aggregate.at.xLevel(all.taxatabs.ss,plotting_levels[i])
     }
-  }
+    taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
+    
+    message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
+    
+  } else taxatabs.multilevels[[1]]<-all.taxatabs.ss
+
+  message("Making barplots")
+    
+  plot.as.percent<-c(F,T)
+  plot.as.dxns<-c(F,T)
   
-  if(!is.null(facetcol)){
+  if(is.null(facetcol)){
+    
     for(h in 1:length(plot.as.dxns)){
       for(k in 1:length(plot.as.percent)){
         for(j in 1:length(taxatabs.multilevels)){
           for(i in 1:length(plotting.vars)){
-            print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],as.percent = plot.as.percent[k],
-                                as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol))
+            print(suppressMessages(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],
+                                   as.percent = plot.as.percent[k],as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby)))
+                                  
+         }
+       }
+     }
+   }
+  } else {
+      for(h in 1:length(plot.as.dxns)){
+        for(k in 1:length(plot.as.percent)){
+          for(j in 1:length(taxatabs.multilevels)){
+            for(i in 1:length(plotting.vars)){
+              print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],as.percent = plot.as.percent[k],
+                                  as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol))
+            }
           }
         }
       }
     }
-  }
-    
+      
 } else message("plotting.vars=F...skipping barplots")
 ```
 
@@ -543,5 +546,5 @@ if(!is.null(taxatab.out)) write.table(all.taxatabs.ss,taxatab.out,quote = F, row
 
 ## make final krona plot
 ```{r write krona plot, eval=TRUE,echo=F}
-if(krona.out==T) bas.krona.plot(taxatab.out)
+if(!is.null(taxatab.out)) if(krona.out==T) bas.krona.plot(taxatab.out)
 ```

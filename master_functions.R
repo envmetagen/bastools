@@ -61,7 +61,11 @@ rm.0readOTUSam<-function(taxatab){
 }
 
 bas.merge.taxatabs<-function(taxatabs){
+  
+  if(TRUE %in% duplicated(taxatabs)) stop("taxatabs provided are not unique")
+  
   require(tidyverse)
+  
   
   taxatabs.list<-list()
   counts<-data.frame(file=taxatabs,reads=0,taxa=0,samples=0)
@@ -1205,17 +1209,18 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
       colnames(long)[5]<-facetcol
     }
     
-    long$variable<-long[,grep(column,colnames(long))]
+    long$variable<-long[,match(column,colnames(long))]
     
   } else message("No master_sheet or column specified, making default plot")
   
 
   if(as.dxns) long<-long[!duplicated(long),]
   
-  a<-ggplot2::ggplot(data=long , aes(y=value, x=variable, fill=taxon))+
+  a<-ggplot2::ggplot(data=long , aes(y=value, x=as.factor(variable), fill=taxon))+
     theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
-          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical")+
-    ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol))
+          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical",
+          title = element_text(size=6))+
+    ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol),subtitle = )
   
   if(length(unique(long$taxon))<29)  a<-a+scale_fill_manual(values = MyCols) 
   
@@ -1223,7 +1228,7 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   } else {a<-a+geom_bar(stat = "identity")
   }
   
-  if(!is.null(facetcol))  a<-a+facet_wrap(as.formula(paste0("~",facetcol)))
+  if(!is.null(facetcol))  a<-a+facet_wrap(vars(long[,match(facetcol,colnames(long))]),scales = "free_x")
   
   if(hidelegend) {
     message("Outputting as a list where first element is plot and second is legend")
