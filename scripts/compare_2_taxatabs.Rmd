@@ -1,0 +1,91 @@
+---
+title: "Comparing 2 taxatables"
+html_notebook: default
+subtitle: ''
+classoption: portrait
+output: html_document
+---
+
+## read and print settings
+```{r read and print settings, eval=TRUE,echo=F}
+
+```
+
+
+```{r load functions, eval=TRUE, results='hide',echo=F}
+source("/home/tutorial/TOOLS/bastools/master_functions.R")
+library(ggplot2)
+options(httr_oob_default = TRUE)
+all.stats<-list()
+stepcounter<-0
+```
+
+## import taxatabs
+```{r import taxatabs, eval=TRUE,echo=F, results='hide'}
+#import taxtabs
+taxatab1<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC1.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC1.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.UNIO.lenFilt.trimmed.ids.SC1.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.VENE.lenFilt.trimmed.ids.SC1.taxatab.txt"))
+
+name.taxatab1<-"raw_SC1"
+
+taxatab2<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.UNIO.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.VENE.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"))
+
+name.taxatab2<-"pol_SC1"
+
+#OPTIONAL - COMPARE BLAST HITS, just change compare.blast.hits=F to ignore
+compare.blast.hits=F
+
+blastfile1<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC1.pol.blast.txt"
+blastfile2<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC3.pol.blast.txt"
+
+name.blastfile1<-"Aug.VENE.SC1.pol"
+name.blastfile2<-"Aug.VENE.SC3.pol"
+
+cutoff=99
+
+pident_col="V5"
+qseqid_col="V1"
+
+```
+
+## reads / sample
+```{r reads per sample, eval=TRUE,echo=F}
+#general - no. samples, no. taxa
+#1. reads / sample
+sample.reads<-compare.sample.reads(taxatab1,taxatab2,rm.nohits = T,rm.NAs = T)
+print(sample.reads[[1]])
+print(sample.reads[[2]])
+print(sample.reads[[3]])
+
+```
+
+## number of reads attaining species level, genus level, family level
+```{r number of reads attaining level, eval=TRUE,echo=F}
+tax.levels<-chisq.taxatab.ranks(taxatab1,taxatab2,name.taxatab1,name.taxatab2)
+print(tax.levels[[1]])
+print(tax.levels[[2]])
+```
+
+## species accumulation curves 
+```{r species accumulation curve, eval=TRUE,echo=F}
+print(bas.plot.specaccum(taxatab = taxatab1))
+print(bas.plot.specaccum(taxatab = taxatab2))
+
+print(bas.plot.specrich(taxatab = taxatab1))
+print(bas.plot.specrich(taxatab = taxatab2))
+```
+
+## compare blast hits 
+```{r compare blast hits, eval=TRUE,echo=F}
+if(compare.blast.hits) {
+  blast.comparison<-blast.maxhits.2.files.compare(blastfile1,blastfile2,name.blastfile1,name.blastfile2,pident_col=pident_col,qseqid_col=qseqid_col,cutoff)
+  print(blast.comparison[[1]])
+  print(blast.comparison[[2]])
+  print(blast.comparison[[3]])
+}
+```

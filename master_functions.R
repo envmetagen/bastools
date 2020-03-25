@@ -5237,3 +5237,188 @@ blast.plot.maxmin<-function(blastfile,pident_col="V5",qseqid_col="V1"){
   
   return(a)
 }
+
+compare.sample.reads<-function(taxatab1,taxatab2,rm.nohits=T,rm.NAs=T){
+  # plot and compare reads / sample
+  
+  if(rm.nohits){
+    message("Removing no_hits")
+    a<-sum(taxatab1[,-1])
+    b<-sum(taxatab2[,-1])
+    taxatab1<-taxatab1[taxatab1$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+    taxatab2<-taxatab2[taxatab2$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+    message(a-sum(taxatab1[,-1]), " reads removed from taxatab1")
+    message(b-sum(taxatab2[,-1]), " reads removed from taxatab2")
+  }
+  
+  if(rm.NAs){
+    a<-sum(taxatab1[,-1])
+    b<-sum(taxatab2[,-1])
+    message("Removing NAs - sequences that had blast hits but were not assigned to any taxon")
+    taxatab1<-taxatab1[taxatab1$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+    taxatab1<-taxatab1[taxatab1$taxon!="unknown;unknown;unknown;unknown;NA;NA;NA",]
+    
+    taxatab2<-taxatab2[taxatab2$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+    taxatab2<-taxatab2[taxatab2$taxon!="unknown;unknown;unknown;unknown;NA;NA;NA",]
+    
+    message(a-sum(taxatab1[,-1]), " reads removed from taxatab1")
+    message(b-sum(taxatab2[,-1]), " reads removed from taxatab2")
+  }
+  
+  results<-data.frame(matrix(ncol = 3, nrow = 6))
+  colnames(results)<-c("stats",name.taxatab1,name.taxatab2)
+  results$stats<-c("min.sample.reads","max.sample.reads","mean.sample.reads","SD.sample.reads","n.samples","total.reads")
+  
+  reads1<-data.frame(reads=colSums(rm.0readtaxSam(taxatab1)[,-1]),taxatab=name.taxatab1)
+  reads2<-data.frame(reads=colSums(rm.0readtaxSam(taxatab2)[,-1]),taxatab=name.taxatab2)
+  
+  results[1,name.taxatab1]<-range(reads1$reads)[1]
+  results[2,name.taxatab1]<-range(reads1$reads)[2]
+  results[1,name.taxatab2]<-range(reads2$reads)[1]
+  results[2,name.taxatab2]<-range(reads2$reads)[2]
+  results[3,name.taxatab1]<-mean(reads1$reads)
+  results[3,name.taxatab2]<-mean(reads2$reads)
+  results[4,name.taxatab1]<-sd(reads1$reads)
+  results[4,name.taxatab2]<-sd(reads2$reads)
+  results[5,name.taxatab1]<-nrow(reads1)
+  results[5,name.taxatab2]<-nrow(reads2)
+  results[6,name.taxatab1]<-sum(reads1$reads)
+  results[6,name.taxatab2]<-sum(reads2$reads)
+  
+  reads1and2<-rbind(reads1,reads2)
+  
+  reads.plot<-ggplot(reads1and2,aes(x=taxatab,y=reads))+geom_boxplot() + scale_y_continuous(labels = scales::comma) + ylab("reads/sample") +
+    xlab("") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+  
+  m1<-lm(formula = reads~taxatab,data = reads1and2)
+  mout<-capture.output(interp.lm(m1))
+  
+  out<-list(results,reads.plot,mout)
+  
+  return(out)
+}
+
+chisq.taxatab.ranks<-function(taxatab1,taxatab2,name.taxatab1,name.taxatab2){
+  
+  message("Reminder: comparison includes levels below, e.g. genus means reads attaining genus or lower")
+  
+  ranks<-c("htf","family","genus" ,"species")
+  
+  rank.taxatab1<-stats.by.rank(taxatab1)
+  rank.taxatab1$taxatab<-name.taxatab1
+  rank.taxatab2<-stats.by.rank(taxatab2)
+  rank.taxatab2$taxatab<-name.taxatab2
+  
+  rank.taxatab1and2<-rbind(rank.taxatab1,rank.taxatab2)
+  rank.taxatab1and2$rank<-factor(rank.taxatab1and2$rank,levels = ranks)
+  
+  plot1<-ggplot(rank.taxatab1and2,aes(x=taxatab,y=reads,fill=rank))+geom_bar(stat="identity",position="fill")+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+    ylab("% reads") + xlab("") + scale_fill_grey()
+  
+  #compare proportions
+  totalx<-aggregate(rank.taxatab1and2$reads,by=list(rank.taxatab1and2$taxatab), FUN=sum)
+  
+  output<-data.frame(matrix(nrow = length(ranks),ncol=6))
+  colnames(output)<-c("rank",name.taxatab1,name.taxatab2,"p-value","chisq","df")
+  output$rank<-ranks
+  output$df=1
+  
+  for(i in 1:length(ranks)){
+    message(ranks[i])
+    temptable<-rank.taxatab1and2
+    if(ranks[i]=="species")  {
+      propx<-temptable[temptable$rank==ranks[i],c("reads","taxatab")]
+      colnames(propx)<-c("x","Group.1")
+    }
+    if(ranks[i]=="genus") {
+      temptable[temptable$rank=="species","rank"]<-"genus"
+      temptable<-temptable[temptable$rank=="genus",c("reads","taxatab")]
+      propx<-aggregate(temptable$reads,by=list(temptable$taxatab),FUN=sum)
+    }
+    if(ranks[i]=="family") {
+      temptable[temptable$rank=="species","rank"]<-"family"
+      temptable[temptable$rank=="genus","rank"]<-"family"
+      temptable<-temptable[temptable$rank=="family",c("reads","taxatab")]
+      propx<-aggregate(temptable$reads,by=list(temptable$taxatab),FUN=sum)
+    }
+    if(ranks[i]=="htf") {
+      temptable[temptable$rank=="species","rank"]<-"htf"
+      temptable[temptable$rank=="genus","rank"]<-"htf"
+      temptable[temptable$rank=="family","rank"]<-"htf"
+      temptable<-temptable[temptable$rank=="htf",c("reads","taxatab")]
+      propx<-aggregate(temptable$reads,by=list(temptable$taxatab),FUN=sum)
+    }
+    
+    merged<-merge(propx,totalx,by = "Group.1")
+    message("prop1=",merged[1,1],"; prop2=",merged[2,1])
+    a<-prop.test(merged[,2],merged[,3])
+    print(a)
+    
+    output[output$rank==ranks[i],"chisq"]<-a$statistic
+    output[output$rank==ranks[i],"p-value"]<-a$p.value
+    output[output$rank==ranks[i],name.taxatab2]<-round(a$estimate[1],digits=3)
+    output[output$rank==ranks[i],name.taxatab1]<-round(a$estimate[2],digits=3)
+    
+  }
+  output<-list(plot1,output)
+  return(output)
+}
+
+blast.maxhits.2.files.compare<-function(blastfile1,blastfile2,name.blastfile1,name.blastfile2,pident_col="V5",qseqid_col="V1",cutoff){
+  
+  message("Comparing proportion of hits above ", cutoff, "% identity")
+  
+  btab1<-data.table::fread(blastfile1,sep="\t",data.table = F)
+  btab2<-data.table::fread(blastfile2,sep="\t",data.table = F)
+  
+  tophits1<-aggregate(btab1[,pident_col],by=list(btab1[,qseqid_col]),FUN=max)
+  colnames(tophits1)<-c("qseqid","pident")
+  tophits1$blastfile<-name.blastfile1
+  tophits2<-aggregate(btab2[,pident_col],by=list(btab2[,qseqid_col]),FUN=max)
+  colnames(tophits2)<-c("qseqid","pident")
+  tophits2$blastfile<-name.blastfile2
+  
+  a1<-as.data.frame(as.factor(quantile(tophits1$pident, c(.01,.1, .2, .3, .4, .5, .6, .7, .8,.9, .95, .99, 1)))) 
+  a2<-as.data.frame(as.factor(quantile(tophits2$pident, c(.01,.1, .2, .3, .4, .5, .6, .7, .8,.9, .95, .99, 1)))) 
+  
+  colnames(a1)<-"top_hits"
+  a1$quantile<-rownames(a1)
+  a1$quantile <- factor(a1$quantile, levels = a1$quantile)
+  a1$top_hits<-round(as.numeric(as.character(a1$top_hits)),digits = 1)
+  a1$blastfile<-name.blastfile1
+  
+  colnames(a2)<-"top_hits"
+  a2$quantile<-rownames(a2)
+  a2$quantile <- factor(a2$quantile, levels = a2$quantile)
+  a2$top_hits<-round(as.numeric(as.character(a2$top_hits)),digits = 1)
+  a2$blastfile<-name.blastfile2
+  
+  a1anda2<-rbind(a1,a2)
+  
+  plot1<-ggplot(data = a1anda2,aes(x=quantile,y=top_hits,color=blastfile,group=blastfile)) + geom_line() +  
+    xlab("% of queries with top hit above y") + ylab("% identity") +
+    theme(axis.text.x=element_text(size=8,angle=45, hjust=1),legend.title = element_blank(),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+  
+  allhits<-rbind(tophits1,tophits2)
+  
+  totalx<-aggregate(allhits$pident,by=list(allhits$blastfile), FUN=sum)
+  
+  propx<-aggregate(allhits[allhits$pident>cutoff,]$pident,by=list(allhits[allhits$pident>cutoff,]$blastfile), FUN=sum)
+  
+  merged<-merge(propx,totalx,by = "Group.1")
+  message("prop1=",merged[1,1],"; prop2=",merged[2,1])
+  a<-prop.test(merged[,2],merged[,3])
+  
+  plot2<-ggplot(allhits,aes(x=blastfile,y=pident)) + geom_violin() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+    ylab("% identity of top hit") + xlab("")
+  
+  output<-list(plot1,plot2,a)
+}
