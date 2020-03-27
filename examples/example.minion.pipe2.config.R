@@ -2,23 +2,29 @@
 
 #assumes fastq.gz files as starting, named barcode01.fastq.gz, barcode02.fastq.gz ...
 
+#once settings are changed, to run, and record time properly, do the following in terminal:
+#cmd='Rscript example.minion.pipe2.config.R'
+#datetime=`date "+%F %R"`
+#/usr/bin/time -q  -a --format "%E\t%e\t%M\t$datetime\t$*\t%x\t%I\t%O\t%W" bash -c "$cmd" 2>example.minion.pipe2.log 1>&2 &
+
 #usually, one run, one primer
 
 #step1 - cutadapt
 #step2 - print length data
 #step3 - size select
-#step3a - count reads up to blast step
-#step4 - cat files
-#step5 - blast
-#step5a - plot blast hits
-#step6 - filter blast results
-#step7 - bin blast results
-#step8 - make otutab
-#step9 - merge with otutab
-#step10 - make contributor files
-#step11 - make krona plots
+#step4 - count reads up to blast step
+#step5 - cat files
+#step6 - blast
+#step7 - plot blast hits
+#step8 - filter blast results
+#step9 - bin blast results
+#step10 - make otutab
+#step11 - merge with otutab
+#step12 - apply taxon filter
+#step13 - make contributor files
+#step14 - make krona plots
 
-stepstotake=c("step3a","step4","step5","step5a","step6","step7","step8","step9","step10","step11")
+stepstotake=c("step1","step2","step3","step4","step5","step6","step7","step8","step9","step10","step11","step12","step13","step14")
 
 #all dirs must have trailing /
 bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #bastools directory
@@ -52,7 +58,7 @@ catted_suffix<-"SC3"
 
 ##set BLAST taxidlimit and taxidname if desired. 
 taxidlimit=NULL #set to NULL if not required
-taxidname=NULL
+taxidname=NULL #only required if taxidlimit is not NULL
 refdb="/home/tutorial/TOOLS/mussels/databases/16S_Bivalves_7_species/16S.s2.Bivalvia.7species"
 max_target_seqs = 50
 
@@ -69,5 +75,8 @@ fpident=70
 topF=30
 abspident=60 #arbitrary
 topAbs=30
+
+#taxonfilter 
+taxonpc=0.001
 
 source(paste0(bastoolsDir,"scripts/bas.minion.pipeline2.R"))

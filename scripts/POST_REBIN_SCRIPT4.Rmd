@@ -373,7 +373,9 @@ if(!is.null(plotting.vars)){
   
   if(!is.null(plotting_levels)){
     for(i in 1:length(plotting_levels)){
-      taxatabs.multilevels[[i]]<-aggregate.at.xLevel(all.taxatabs.ss,plotting_levels[i])
+      if(plotting_levels[i]=="species") {
+        taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = T)
+      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=T)
     }
     taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
     
@@ -392,8 +394,8 @@ if(!is.null(plotting.vars)){
       for(k in 1:length(plot.as.percent)){
         for(j in 1:length(taxatabs.multilevels)){
           for(i in 1:length(plotting.vars)){
-            print(suppressMessages(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],
-                                   as.percent = plot.as.percent[k],as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby)))
+            print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],
+                                   as.percent = plot.as.percent[k],as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby))
                                   
          }
        }
@@ -421,6 +423,21 @@ if(!is.null(plotting.vars)){
 #just an example, not interesting in this case
 if(!is.null(plotting.vars)){
   message("Plotting pca plot with lines")
+  
+  if(!is.null(plotting_levels)){
+    for(i in 1:length(plotting_levels)){
+      message("Plotting at ",plotting_levels[i]," level")
+      if(plotting_levels[i]=="species") {
+        taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = T)
+      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=T)
+    }
+    taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
+    
+    message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
+    
+  } else taxatabs.multilevels[[1]]<-all.taxatabs.ss
+  
+  
   for(j in 1:length(taxatabs.multilevels)){
     for(i in 1:length(plotting.vars)){
       print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,

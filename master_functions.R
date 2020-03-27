@@ -12,7 +12,7 @@ taxon.filter.solo<-function(files,filterpc=0.1){
     taxatables[[i]]<-taxatables[[i]][rowSums(taxatables[[i]])!=0,]
     taxatables[[i]]$taxon<-rownames(taxatables[[i]])
     taxatables[[i]]<-taxatables[[i]][,c(length(colnames(taxatables[[i]])),1:(length(colnames(taxatables[[i]]))-1))]
-    write.table(taxatables[[i]],gsub("taxatable.txt","taxatable.tf.txt",files[i]),row.names = F,quote = F,sep = "\t")
+    write.table(taxatables[[i]],gsub(".txt",".tf.txt",files[i]),row.names = F,quote = F,sep = "\t")
   }
 }
 
@@ -314,7 +314,7 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
 }
 
 #keep only xLevel assignments
-keep.below.xLevel.assigns<-function(taxatab,xLevel="species"){
+keep.below.xLevel.assigns<-function(taxatab,xLevel="species",rm.trailing.NA=F){
   if(!xLevel %in% c("species","genus","family","order")) stop("Only allowable at genus, family, order or species level")
   message("Reminder: this changes 'unknown' and 'collapsed' to 'NA'")
   
@@ -332,6 +332,7 @@ keep.below.xLevel.assigns<-function(taxatab,xLevel="species"){
   if(xLevel=="family" | xLevel=="genus" | xLevel=="species" )  {
     if(length(grep(";NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA$",taxatab$taxon),]
   }
+  
   if(xLevel=="genus" | xLevel=="species" ) {
     if(length(grep(";NA;NA$",taxatab$taxon))>0)  taxatab<-taxatab[-grep(";NA;NA$",taxatab$taxon),]
   }
@@ -342,10 +343,13 @@ keep.below.xLevel.assigns<-function(taxatab,xLevel="species"){
   
   taxatab<-rm.0readtaxSam(taxatab)
   
+  if(rm.trailing.NA) if(xLevel=="family") taxatab$taxon<-gsub(";NA;NA$","",taxatab$taxon)
+  if(rm.trailing.NA) if(xLevel=="genus") taxatab$taxon<-gsub(";NA$","",taxatab$taxon)
+  
   return(taxatab)
 }
 
-aggregate.at.xLevel<-function(taxatab,xLevel){
+aggregate.at.xLevel<-function(taxatab,xLevel,rm.above=F,rm.trailing.NA=F){
   
   if(!xLevel %in% c("genus","family","order","class","phylum")) stop("Only allowable at genus, family, order, class or phylum level")
   
@@ -382,6 +386,8 @@ aggregate.at.xLevel<-function(taxatab,xLevel){
   colnames(taxatab)[1]<-"taxon"
   
   taxatab[,1]<-paste(taxatab[,1],leftover,sep = "")
+  
+  if(rm.above) taxatab<-keep.below.xLevel.assigns(taxatab,xLevel,rm.trailing.NA = rm.trailing.NA)
   
   taxatab
   
@@ -1194,11 +1200,12 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
   if(as.dxns==T) taxatab<-binarise.taxatab(taxatab,t=T)
   
   long<-reshape2::melt(taxatab)
-  long<-long[long$value>0,]
+  #long<-long[long$value>0,]
   
   if(!is.null(master_sheet)) {
-    message("Note: think about which plots make sense. If sumrepsby is biomaterial, then plots using e.g. extraction method
+    message("Note: think about which plots make sense. If grouping is biomaterial, then plots using e.g. extraction method
             do not make sense, because there is more than one possibility for each biomaterial")
+    
     long[,4]<-ms_ss[match(long$variable,ms_ss[,grouping]),column]
     colnames(long)[4]<-column
     
@@ -1213,20 +1220,32 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
     
   } else message("No master_sheet or column specified, making default plot")
   
+  #number samples in each group
+  #aggregate(long$value,list(long$variable),function(x) length(x)/length(unique(long$taxon)))
 
-  if(as.dxns) long<-long[!duplicated(long),]
+  if(as.dxns) if(as.percent==F) long<-long[!duplicated(long),]
   
   a<-ggplot2::ggplot(data=long , aes(y=value, x=as.factor(variable), fill=taxon))+
-    theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
+    theme(legend.title = element_text(size=8), legend.text=element_text(size=8),
           axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical",
-          title = element_text(size=6))+
-    ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol),subtitle = )
+          title = element_text(size=6),axis.title = element_text(size=8),panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+    ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol),subtitle = )+
+    xlab("") + scale_y_continuous(labels = scales::comma) 
+    
+  
+  if(as.percent==T) if(as.dxns==F) a<-a+ylab("Proportion of reads")
+  if(as.percent==F) if(as.dxns==F) a<-a+ylab("Number of reads")
+  if(as.percent==T) if(as.dxns==T) a<-a+ylab(paste0("Number of ",grouping,"s with detections"))
+  if(as.percent==T) if(as.dxns==T) if(grouping=="ss_sample_id") a<-a+ylab(paste0("Number of PCRs with detections"))
+  if(as.percent==T) if(as.dxns==T) if(grouping=="biomaterial") a<-a+ylab(paste0("Number of field samples with detections"))
+  if(as.percent==F) if(as.dxns==T) a<-a+ylab("Detected")
   
   if(length(unique(long$taxon))<29)  a<-a+scale_fill_manual(values = MyCols) 
   
-  if(as.percent) {a<-a+geom_bar(position="fill", stat="identity")
-  } else {a<-a+geom_bar(stat = "identity")
-  }
+  if(as.dxns==F){
+   if(as.percent) a<-a+geom_bar(position="fill", stat="identity") else a<-a+geom_bar(stat = "identity")
+  } else a<-a+geom_bar(stat = "identity")
   
   if(!is.null(facetcol))  a<-a+facet_wrap(vars(long[,match(facetcol,colnames(long))]),scales = "free_x")
   
@@ -1545,7 +1564,7 @@ get_acc2tax_map<-function(path){
 
 #' Some colours I like to use for plots (n=28)
 #'@export
-MyCols <- c("dodgerblue2","#E31A1C", # red
+MyCols <- c("dodgerblue2","darkred", # red
             "green4",
             "#6A3D9A", # purple
             "#FF7F00", # orange
@@ -4840,8 +4859,6 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   if(is.null(out)) stop("out not specified")
   if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
 
-  require(treemap)
-  
   ###################################################
   
   btab<-data.table::fread(filtered_blastfile,sep="\t",data.table = F)
@@ -4855,6 +4872,8 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   
   #read and check disabled taxa file(s) 
   if(!is.null(disabledTaxaFiles)){
+    
+    require(treemap)
     
     disabledTaxaDf<-merge.and.check.disabled.taxa.files(disabledTaxaFiles,disabledTaxaOut,force = force,full.force = full.force)
     
@@ -5219,7 +5238,7 @@ add.unknown.lca<-function(lca.out){
   return(lca.out)
 }
 
-blast.plot.maxmin<-function(blastfile,pident_col="V5",qseqid_col="V1"){
+report.blast.maxmin<-function(blastfile,pident_col="V5",qseqid_col="V1"){
   
   btab<-data.table::fread(blastfile,sep="\t",data.table = F)
   
@@ -5233,9 +5252,7 @@ blast.plot.maxmin<-function(blastfile,pident_col="V5",qseqid_col="V1"){
   
   tophits<-rbind(tophits,minhits)
   
-  a<-ggplot(tophits,aes(x=minmax,y=pident)) + geom_violin() 
-  
-  return(a)
+  return(tophits)
 }
 
 compare.sample.reads<-function(taxatab1,taxatab2,rm.nohits=T,rm.NAs=T){
@@ -5314,11 +5331,6 @@ chisq.taxatab.ranks<-function(taxatab1,taxatab2,name.taxatab1,name.taxatab2){
   rank.taxatab1and2<-rbind(rank.taxatab1,rank.taxatab2)
   rank.taxatab1and2$rank<-factor(rank.taxatab1and2$rank,levels = ranks)
   
-  plot1<-ggplot(rank.taxatab1and2,aes(x=taxatab,y=reads,fill=rank))+geom_bar(stat="identity",position="fill")+
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"))+
-    ylab("% reads") + xlab("") + scale_fill_grey()
-  
   #compare proportions
   totalx<-aggregate(rank.taxatab1and2$reads,by=list(rank.taxatab1and2$taxatab), FUN=sum)
   
@@ -5364,7 +5376,6 @@ chisq.taxatab.ranks<-function(taxatab1,taxatab2,name.taxatab1,name.taxatab2){
     output[output$rank==ranks[i],name.taxatab1]<-round(a$estimate[2],digits=3)
     
   }
-  output<-list(plot1,output)
   return(output)
 }
 
@@ -5421,4 +5432,28 @@ blast.maxhits.2.files.compare<-function(blastfile1,blastfile2,name.blastfile1,na
     ylab("% identity of top hit") + xlab("")
   
   output<-list(plot1,plot2,a)
+}
+
+plot.taxatab.rank.props<-function(taxatab.list){
+  
+  taxatab.list2<-list()
+  for(i in 1:length(taxatab.list)){
+    taxatab.list2[[i]]<-stats.by.rank(taxatab.list[[i]])
+    taxatab.list2[[i]]$taxatab<-names(taxatab.list)[i]
+  }
+  
+  rank.taxatabs<-do.call(rbind,taxatab.list2)
+  
+  colnames(rank.taxatabs)<-gsub("rank","Rank",colnames(rank.taxatabs))
+  
+  rank.taxatabs$Rank<-gsub("htf","Above family",rank.taxatabs$Rank)
+  
+  rank.taxatabs$Rank<-factor(rank.taxatabs$Rank,levels = c("Above family","family","genus" ,"species"))
+  
+  ggplot(rank.taxatabs,aes(x=taxatab,y=reads,fill=Rank))+geom_bar(stat="identity",position="fill")+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          axis.text.x=element_text(size=8,angle=45, hjust=1))+
+    ylab("Proportion of reads") + xlab("") + scale_fill_grey()
+  
 }
