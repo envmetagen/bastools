@@ -197,13 +197,13 @@ if("step3" %in% stepstotake){
 }
   
 ####################################################
-#step 3a plot step counts
+#step 4 plot step counts
   
-if("step3a" %in% stepstotake){  
+if("step4" %in% stepstotake){  
   
     t1<-Sys.time()
     
-    message("STEP3a - calculate step counts")
+    message("STEP4 - calculate step counts")
     
     #count seqs in starting files
     files<-paste0(origfilesDir,ms_ss$barcode_name,".fastq.gz")
@@ -323,14 +323,14 @@ if("step3a" %in% stepstotake){
     
     t2<-Sys.time()
     t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-    message("STEP3a COMPLETE in ", t3, " min")
+    message("STEP4 COMPLETE in ", t3, " min")
   }
  
 ####################################################
-#step 4 - cat files
-if("step4" %in% stepstotake){  
+#step 5 - cat files
+if("step5" %in% stepstotake){  
   
-  message("STEP4 - cat files")
+  message("STEP5 - cat files")
   
   t1<-Sys.time()
   
@@ -352,14 +352,14 @@ if("step4" %in% stepstotake){
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP4 COMPLETE in ", t3, " min")
+  message("STEP5 COMPLETE in ", t3, " min")
 }
   
 ####################################################
-#step 5 blast
-if("step5" %in% stepstotake){
+#step 6 blast
+if("step6" %in% stepstotake){
   
-  message("STEP5 - blast")
+  message("STEP6 - blast")
   
   t1<-Sys.time()
   
@@ -378,14 +378,14 @@ if("step5" %in% stepstotake){
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP5 COMPLETE in ", t3, " min")
+  message("STEP6 COMPLETE in ", t3, " min")
 }
   
 ####################################################
-#step 5a plot hit pidents blast results 
-if("step5a" %in% stepstotake){  
+#step 7 plot hit pidents blast results 
+if("step7" %in% stepstotake){  
     
- message("STEP5a - plot pidents blast results")
+ message("STEP7 - plot pidents blast results")
     
  t1<-Sys.time()
  
@@ -403,15 +403,15 @@ if("step5a" %in% stepstotake){
  
  t2<-Sys.time()
  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
- message("STEP5a COMPLETE in ", t3, " min")
+ message("STEP7 COMPLETE in ", t3, " min")
  
 }
   
 ####################################################
-#step 6 filter blast results 
-if("step6" %in% stepstotake){  
+#step 8 filter blast results 
+if("step8" %in% stepstotake){  
   
-  message("STEP6 - filter blast results")
+  message("STEP8 - filter blast results")
   
   t1<-Sys.time()
   
@@ -422,14 +422,14 @@ if("step6" %in% stepstotake){
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP6 COMPLETE in ", t3, " min")
+  message("STEP8 COMPLETE in ", t3, " min")
 }
 
 ####################################################
-#step 7 BIN
-if("step7" %in% stepstotake){ 
+#step 9 BIN
+if("step9" %in% stepstotake){ 
   
-  message("STEP7 - Bin")
+  message("STEP9 - Bin")
   
   t1<-Sys.time()
   
@@ -442,20 +442,17 @@ if("step7" %in% stepstotake){
                out = binfile,spident = spident,gpident = gpident,
              fpident = fpident,abspident = abspident,topS=topS,topG=topG,topF=topF,topAbs=topAbs)
   
-  message("STEP7 complete")
-  
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP7 COMPLETE in ", t3, " min")
+  message("STEP9 COMPLETE in ", t3, " min")
   
 } 
 
 ####################################################
-#step 8 make otutab
-  
-if("step8" %in% stepstotake){  
+#step 10 make otutab
+if("step10" %in% stepstotake){  
     
-  message("STEP8 - Making otutab")
+  message("STEP10 - Making otutab")
   
   t1<-Sys.time()
   
@@ -481,15 +478,15 @@ if("step8" %in% stepstotake){
     
     t2<-Sys.time()
     t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-    message("STEP8 COMPLETE in ", t3, " min")
+    message("STEP10 COMPLETE in ", t3, " min")
 }
 
 ####################################################
-#step 9 merge with otutab
+#step 11 merge with otutab
   
-if("step9" %in% stepstotake){  
+if("step11" %in% stepstotake){  
   
-  message("STEP9 - Merging bins and otutab into taxatab")
+  message("STEP11 - Merging bins and otutab into taxatab")
   
   t1<-Sys.time()
     
@@ -507,15 +504,28 @@ if("step9" %in% stepstotake){
     
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP9 COMPLETE in ", t3, " min")
+  message("STEP11 COMPLETE in ", t3, " min")
 }    
   
 ####################################################
-#step10  make contributor files
-
-if("step10" %in% stepstotake){  
+#step 12 apply taxon filter
   
-  message("STEP10 - Contributor files")
+if("step12" %in% stepstotake){  
+    
+    message("STEP12 - taxon filter")
+
+    taxon.filter.solo(gsub(".fasta",".taxatab.txt",catted_file),taxonpc)
+    
+    message("STEP12 complete")
+    
+}
+  
+####################################################
+#step13  make contributor files
+
+if("step13" %in% stepstotake){  
+  
+  message("STEP13 - Contributor files")
   
   message(paste("making contributor file for",gsub(".fasta",".otutab.txt",catted_file)))
   
@@ -531,24 +541,24 @@ if("step10" %in% stepstotake){
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP10 COMPLETE in ", t3, " min")
+  message("STEP13 COMPLETE in ", t3, " min")
   
 }
 
 ####################################################
-#step 11 make krona plots
+#step 14 make krona plots
 
-if("step11" %in% stepstotake){  
+if("step14" %in% stepstotake){  
   
   t1<-Sys.time()
   
-  message("STEP11 - make krona and blast.hit plots")
+  message("STEP14 - make krona and blast.hit plots")
 
   bas.krona.plot(gsub(".fasta",".taxatab.txt",catted_file),KronaPath)
 
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  message("STEP11 COMPLETE in ", t3, " min")
+  message("STEP14 COMPLETE in ", t3, " min")
   
 }
 
