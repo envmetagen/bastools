@@ -185,7 +185,7 @@ if("step3" %in% stepstotake){
     a<-read.table(text = a,header = T)$num_seqs
     #count seqs after
     b<-system2("seqkit", args=c("stats","-T",gsub(".trimmed.fasta",".lenFilt.trimmed.fasta",file)),wait = T,stderr = T,stdout = T)
-    b<-read.table(text = b,header = T)$num_seqs
+    if(length(grep("DNA",b))>0) b<-read.table(text = b,header = T)$num_seqs else b<-0
     message(a-b," reads removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
   }
   
@@ -215,7 +215,7 @@ if("step3a" %in% stepstotake){
     starting.counts<-do.call(rbind,datalist)
     starting.counts<-sum(starting.counts$num_seqs)  
     
-    #count after cutadapt
+    #count after cutadapt/polishing
     files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
     datalist<-list()
     
@@ -228,10 +228,12 @@ if("step3a" %in% stepstotake){
       after.cutadapt<-sum(after.cutadapt$num_seqs) 
       } else {
           count.polished<-function(fastx.file){
-          counts<-system2("seqkit", args=c("fx2tab","-l","-i","-n",fastx.file),wait = T,stdout = T)
-          counts<-read.table(text = counts,header = T,sep = "\t")
-          counts$size<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(counts[,1],"size="))[,2],":"))[,1])
-          sum(counts$size)
+            counts<-system2("seqkit", args=c("fx2tab","-l","-i","-n",fastx.file),wait = T,stdout = T)
+            if(length(counts)>0) {
+              counts<-read.table(text = counts,header = F,sep = "\t")
+              counts$size<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(counts[,1],"size="))[,2],":"))[,1])
+            return(sum(counts$size))
+          } else return(0)
         }
         
         for(i in 1:length(files)){

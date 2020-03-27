@@ -37,7 +37,7 @@ origfilesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/tes
 # get sheet first separately (better than including in pipe)
 # source(paste0(bastoolsDir,"master_functions.R"))
 # mastersheet<-google.overlord("https://docs.google.com/spreadsheets/d/1k1mAGogWq9rXcwBKDyxG9oZ0OrWreBRRcSEUw0RGwyk/edit?ts=5d776492#gid=1377121809",email="basegeter@gmail.com")
-# write.table(mastersheet,paste0(outDir,"mastersheet.txt"),append = F,quote = F,row.names = F,sep = "\t")
+# write.table(mastersheet,paste0(filesDir,"mastersheet.txt"),append = F,quote = F,row.names = F,sep = "\t")
 mastersheet<-"MUSSELS_mastersheet.txt"
 #options for subsetting master sheet. This functions to select the samples you want to analyse.
 #Each item in list is a column heading in master sheet and each character within the item should be what you want to include 
