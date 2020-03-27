@@ -23,19 +23,39 @@ stepcounter<-0
 ## import taxatabs
 ```{r import taxatabs, eval=TRUE,echo=F, results='hide'}
 #import taxtabs
-taxatab1<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC1.taxatab.txt"
+taxatab1<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC3.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC3.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.UNIO.lenFilt.trimmed.ids.SC3.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.VENE.lenFilt.trimmed.ids.SC3.taxatab.txt"))
+
+name.taxatab1<-"Raw; 7 target species"
+
+taxatab2<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC3.pol.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC3.pol.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.UNIO.lenFilt.trimmed.ids.SC3.pol.taxatab.txt"
+                             ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.VENE.lenFilt.trimmed.ids.SC3.pol.taxatab.txt"))
+
+name.taxatab2<-"Polished; 7 target species"
+
+#import taxtabs
+taxatab3<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC1.taxatab.txt"
                              ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC1.taxatab.txt"
                              ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.UNIO.lenFilt.trimmed.ids.SC1.taxatab.txt"
                              ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.VENE.lenFilt.trimmed.ids.SC1.taxatab.txt"))
 
-name.taxatab1<-"raw_SC1"
+name.taxatab3<-"Raw; 16S Bivalves"
 
-taxatab2<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"
+taxatab4<-bas.merge.taxatabs(c("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.UNIO.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"
                              ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_August_002.VENE.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"
                              ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.UNIO.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"
                              ,"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/2019_September_001.VENE.lenFilt.trimmed.ids.SC1.pol.taxatab.txt"))
 
-name.taxatab2<-"pol_SC1"
+name.taxatab4<-"Polished; 16S Bivalves"
+
+#Plotting taxonomic levels attained
+taxatab.list<-list(taxatab1,taxatab2,taxatab3,taxatab4)
+names(taxatab.list)<-c(name.taxatab1,name.taxatab2,name.taxatab3,name.taxatab4)
+taxlevel_prop_out<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/prop_levels.png"
 
 #OPTIONAL - COMPARE BLAST HITS, just change compare.blast.hits=F to ignore
 compare.blast.hits=F
@@ -66,6 +86,12 @@ print(sample.reads[[3]])
 
 ## number of reads attaining species level, genus level, family level
 ```{r number of reads attaining level, eval=TRUE,echo=F}
+#plotting function takes a named list and can be any number of taxa tables
+a<-plot.taxatab.rank.props(taxatab.list)
+print(a)
+ggsave(filename = taxlevel_prop_out,plot = a,device = "png")
+
+#stats function can onyl take 2 taxatables, as data frames 
 tax.levels<-chisq.taxatab.ranks(taxatab1,taxatab2,name.taxatab1,name.taxatab2)
 print(tax.levels[[1]])
 print(tax.levels[[2]])
@@ -78,6 +104,54 @@ print(bas.plot.specaccum(taxatab = taxatab2))
 
 print(bas.plot.specrich(taxatab = taxatab1))
 print(bas.plot.specrich(taxatab = taxatab2))
+```
+
+## comapare detections
+```{r compare detections, eval=TRUE,echo=F}
+#ideas
+#highlight differences in binary
+binarytaxatab1<-binarise.taxatab(taxatab1,t = T)
+binarytaxatab2<-binarise.taxatab(taxatab2,t=T)
+
+compd1d2 <- dataCompareR::rCompare(binarytaxatab1, binarytaxatab2)
+summary(compd1d2)
+dataCompareR::generateMismatchData(compd1d2,binarytaxatab1,binarytaxatab2)
+
+#highlight differences in taxa in each sample...number of identical detections...number of non-identical detections
+binarytaxatab1<-binarise.taxatab(taxatab1)
+binarytaxatab2<-binarise.taxatab(taxatab2)
+
+binarytaxatab1<-keep.below.xLevel.assigns(binarytaxatab1)
+
+binarytaxatab2<-keep.below.xLevel.assigns(binarytaxatab2)
+
+for(i in 2:length(colnames(binarytaxatab1[,-1]))){
+  samplex<-binarytaxatab1[,c(1,i)]
+  message(colnames(samplex)[2])
+  samplexdxn<-samplex[samplex[,2]==1,]
+  
+  if(is.na(match(colnames(samplex)[2],colnames(binarytaxatab2)))) {
+    message("sample not in 2nd taxatable. taxa detected in 1st taxatable")
+    print(samplexdxn$taxon)
+    
+  } else {
+    sampley<-binarytaxatab2[,c(1,match(colnames(samplexdxn)[2],colnames(binarytaxatab2)))]
+    sampleydxn<-sampley[sampley[,2]==1,]
+    
+    message("taxa detected in ",colnames(samplexdxn)[2]," in table1, not in table 2:")
+    print(samplexdxn$taxon[!samplexdxn$taxon %in% sampleydxn$taxon])
+    
+    message("taxa detected in ",colnames(sampleydxn)[2]," in table2, not in table 1:")
+    print(sampleydxn$taxon[!sampleydxn$taxon %in% samplexdxn$taxon])
+  }
+}
+    
+    
+  sample1<-binarytaxatab1[,c(1,i)]
+binarytaxatab1[binarytaxatab1$taxon=="Eukaryota;Mollusca;Bivalvia;Unionida;Unionidae;Anodonta;Anodonta exulcerata",]
+
+
+
 ```
 
 ## compare blast hits 

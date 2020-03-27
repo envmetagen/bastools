@@ -42,14 +42,14 @@ if("step1" %in% stepstotake){
   
   t1<-Sys.time()
   
-  files<-paste0(ms_ss$barcode_name,".fastq.gz")
+  files<-paste0(origfilesDir,ms_ss$barcode_name,".fastq.gz")
   
   cutadaptlist<-list()
   
   for(i in 1:length(files)){
     file<-files[i]
     message("Running cutadapt on ",file)
-    if(!file %in% list.files(path = filesDir)) stop("File not found")
+    if(!file %in% gsub("//","/",list.files(path = origfilesDir,full.names = T))) stop("File not found")
     barcode<-ms_ss$barcode_name[i]
     Pf<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"Primer_F"]
     Pr<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"Primer_R"]
@@ -57,10 +57,12 @@ if("step1" %in% stepstotake){
     message("Pf=",Pf)
     message("Pr=",Pr)
     
-    cutadaptlist[[i]]<-system2(command = "cutadapt",args = c("-g", paste0("'Or1=",Pf,";max_error_rate=",ca.error.rate,"...",insect::rc(Pr),
+    out<-gsub(".fastq.gz",".trimmed.fastq",paste0("barcode",do.call(rbind,stringr::str_split(file,"barcode"))[,2]))
+    
+    cutadaptlist[[i]]<-system2(command = "cutadapt",args = c("--discard-untrimmed","-g", paste0("'Or1=",Pf,";max_error_rate=",ca.error.rate,"...",insect::rc(Pr),
                                                                           ";max_error_rate=",ca.error.rate,"'"), "-g",
                                           paste0("'Or2=",Pr,";max_error_rate=",ca.error.rate,"...",insect::rc(Pf),";max_error_rate=",ca.error.rate,"'")
-                                          ,"-o", gsub(".fastq.gz",".trimmed.fastq",file),file),wait = T,stderr = T,stdout = T)
+                                          ,"-o", out,file),wait = T,stderr = T,stdout = T)
     
     print(grep("Total reads processed",cutadaptlist[[i]],value = T))
     print(grep("Reads with adapters",cutadaptlist[[i]],value = T))
@@ -177,7 +179,7 @@ if("step3" %in% stepstotake){
     message("minlength=",minlength)
     message("maxlength=",maxlength)
     
-    xx<-system2("seqkit", args=c("seq","-M",maxlength,"-m",minlength,file),wait = T, stdout = gsub(".trimmed.fasta",".lenFilt.trimmed.fasta",file)
+    system2("seqkit", args=c("seq","-M",maxlength,"-m",minlength,file),wait = T, stdout = gsub(".trimmed.fasta",".lenFilt.trimmed.fasta",file)
                 ,stderr = F)
     
     #count seqs original
@@ -185,8 +187,8 @@ if("step3" %in% stepstotake){
     a<-read.table(text = a,header = T)$num_seqs
     #count seqs after
     b<-system2("seqkit", args=c("stats","-T",gsub(".trimmed.fasta",".lenFilt.trimmed.fasta",file)),wait = T,stderr = T,stdout = T)
-    b<-read.table(text = b,header = T)$num_seqs
-    message(a-b," reads removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
+    if(length(grep("DNA",b))>0) b<-read.table(text = b,header = T)$num_seqs else b=0
+    message(a-b," sequences removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
   }
   
   t2<-Sys.time()
@@ -206,6 +208,9 @@ if("step3a" %in% stepstotake){
     #count seqs in starting files
     files<-paste0(origfilesDir,ms_ss$barcode_name,".fastq.gz")
     
+    #table for storing counts
+    count.step.table<-data.frame(file=files)
+
     datalist<-list()
     for(i in 1:length(files)){
       datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
@@ -213,6 +218,10 @@ if("step3a" %in% stepstotake){
     }
     
     starting.counts<-do.call(rbind,datalist)
+    
+    count.step.table<-merge(count.step.table,starting.counts[,c("file","num_seqs")], by = "file",all.x = T)
+    colnames(count.step.table)[2]<-"starting.counts"
+    
     starting.counts<-sum(starting.counts$num_seqs)  
     
     #count after cutadapt
@@ -224,20 +233,37 @@ if("step3a" %in% stepstotake){
         datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
         datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
       }
+      
       after.cutadapt<-do.call(rbind,datalist)
+      
+      count.step.table$file_map<-gsub(".fastq.gz",".trimmed.fastq",paste0("barcode",do.call(rbind,stringr::str_split(count.step.table$file,"barcode"))[,2]))
+      count.step.table<-merge(count.step.table,after.cutadapt[,c("file","num_seqs")], by.x = "file_map",by.y="file",all.x = T)
+      colnames(count.step.table)<-gsub("num_seqs","after.cutadapt",colnames(count.step.table))
+      
       after.cutadapt<-sum(after.cutadapt$num_seqs) 
+      
       } else {
           count.polished<-function(fastx.file){
-          counts<-system2("seqkit", args=c("fx2tab","-l","-i","-n",fastx.file),wait = T,stdout = T)
-          counts<-read.table(text = counts,header = T,sep = "\t")
-          counts$size<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(counts[,1],"size="))[,2],":"))[,1])
-          sum(counts$size)
+            counts<-system2("seqkit", args=c("fx2tab","-l","-i","-n",fastx.file),wait = T,stdout = T)
+            if(length(counts)!=0) {
+              counts<-read.table(text = counts,header = F,sep = "\t")
+              counts$size<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(counts[,1],"size="))[,2],":"))[,1])
+              sum(counts$size)
+            } else 0
         }
         
         for(i in 1:length(files)){
-          datalist[[i]]<-count.polished(files[i])
+          datalist[[i]]<-as.data.frame(count.polished(files[i]))
+          datalist[[i]]$file<-files[i]
+          colnames(datalist[[i]])[1]<-"num_seqs"
         }
-          after.polishing<-sum(do.call(rbind,datalist))
+          after.polishing<-do.call(rbind,datalist)
+          
+          count.step.table$file_map<-gsub(".fastq.gz",".trimmed.fastq",paste0("barcode",do.call(rbind,stringr::str_split(count.step.table$file,"barcode"))[,2]))
+          count.step.table<-merge(count.step.table,after.polishing[,c("file","num_seqs")], by.x = "file_map",by.y="file",all.x = T)
+          colnames(count.step.table)<-gsub("num_seqs","after.polishing",colnames(count.step.table))
+          
+          after.polishing<-sum(after.polishing$num_seqs)
       }
    
     #after length filtering
@@ -248,14 +274,30 @@ if("step3a" %in% stepstotake){
       for(i in 1:length(files)){
           datalist[[i]]<-system2("seqkit", args=c("stats","-T",files[i]),wait = T,stdout = T)
           datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
-        } 
+      } 
+      
       after.length.filt<-do.call(rbind,datalist)
-      after.length.filt<-sum(after.cutadapt$num_seqs) 
+      
+      count.step.table$file_map<-gsub(".trimmed.fastq",".lenFilt.trimmed.fasta",count.step.table$file_map)
+      count.step.table<-merge(count.step.table,after.length.filt[,c("file","num_seqs")], by.x = "file_map",by.y="file",all.x = T)
+      colnames(count.step.table)<-gsub("num_seqs","after.length.filt",colnames(count.step.table))
+      
+      after.length.filt<-sum(after.length.filt$num_seqs) 
+      
     } else {
         for(i in 1:length(files)){
-          datalist[[i]]<-count.polished(files[i])
+          datalist[[i]]<-as.data.frame(count.polished(files[i]))
+          datalist[[i]]$file<-files[i]
+          colnames(datalist[[i]])[1]<-"num_seqs"
         }
-        after.length.filt<-sum(do.call(rbind,datalist))
+      
+        after.length.filt<-do.call(rbind,datalist)
+        
+        count.step.table$file_map<-gsub(".trimmed.fastq",".lenFilt.trimmed.fasta",count.step.table$file_map)
+        count.step.table<-merge(count.step.table,after.length.filt[,c("file","num_seqs")], by.x = "file_map",by.y="file",all.x = T)
+        colnames(count.step.table)<-gsub("num_seqs","after.length.filt",colnames(count.step.table))
+        
+        after.length.filt<-sum(after.length.filt$num_seqs)
       }
      
     if(polished){
@@ -275,6 +317,9 @@ if("step3a" %in% stepstotake){
       scale_y_continuous(labels = scales::comma)
     
     ggsave(filename = gsub(".fasta",".stepCounts.pdf",catted_file),plot = countplot,device = "pdf", width = 15,height = 10)
+    
+    count.step.table<-count.step.table[,-match("file_map",colnames(count.step.table))]
+    write.table(count.step.table,file = gsub(".fasta",".stepCounts.by.sample.txt",catted_file),append = F,row.names = F,quote = F,sep = "\t")
     
     t2<-Sys.time()
     t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
@@ -346,11 +391,15 @@ if("step5a" %in% stepstotake){
  
  blastfile<-gsub(".fasta",".blast.txt",catted_file)
  
- a<-blast.plot.maxmin(blastfile)
-  
- ggsave(filename = gsub(".txt",".hits.pdf",blastfile),a,device = "pdf", width = 15,height = 10)
+ a<-report.blast.maxmin(blastfile)
  
- rm(a)
+ write.table(a,file = gsub(".txt",".minmax.hits.txt",blastfile),append = F,quote = F,row.names = F,sep = "\t")
+ 
+ b<-ggplot(a,aes(x=minmax,y=pident)) + geom_violin() 
+  
+ ggsave(filename = gsub(".txt",".minmax.hits.pdf",blastfile),b,device = "pdf", width = 15,height = 10)
+ 
+ rm(b)
  
  t2<-Sys.time()
  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
@@ -450,6 +499,7 @@ if("step9" %in% stepstotake){
   merged.table<-merge(otutab,taxon_input[,c("qseqid","path")],by.x = "otu",by.y = "qseqid",all = TRUE)
   merged.table$otu<-NULL
   merged.table<-merged.table %>% select(path,everything())
+  merged.table$path[is.na(merged.table$path)]<-"no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits"
   taxatab<-aggregate(merged.table[,-1],by = list(merged.table$path),FUN=sum)
   colnames(taxatab)[1]<-"taxon"
   
