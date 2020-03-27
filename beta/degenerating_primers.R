@@ -1,0 +1,247 @@
+#' Read ecoPrimers output
+#' @title Read ecoPrimers output
+#' @param ecoPrimers The output from running the bash ecoPrimers command.
+#' @param out Accepted values: "all" (default), "primer_table", "metadata".
+#' @return Default: A list containing the following dataframes
+#' \itemize{
+#'     \item \code{primer_table}: A table with the following columns
+#'         \itemize{
+#'             \item \code{PID} Primer ID
+#'             \item \code{Pf} Forward primer sequence
+#'             \item \code{Pr} Reverse primer seqeunce
+#'             \item \code{TmPf} Melting temperature forward primer (without mismatches)
+#'             \item \code{MinTmPf} Minimum melting temperature forward primer
+#'             \item \code{TmPr} Melting temperature reverse primer (without mismatches)
+#'             \item \code{MinTmPr} Minimum melting temperature reverse primer
+#'             \item \code{CGPf} Number of Cs or Gs in forward primer
+#'             \item \code{CGPr} Number of Cs or Gs in reverse primer
+#'             \item \code{Specificity} GG (Good-Good) means that both primer are specific to the target dataset,
+#'                 GB or BG (Good-Bad or Bad-Good) means that only one of the two primers is specific to the target dataset
+#'             \item \code{Amp_Records} Number of records in the target dataset that are amplified
+#'             \item \code{P_Records} Proportion of records in the target dataset that are amplified
+#'             \item \code{Amp_taxa} Number of taxa in the target dataset that are amplified
+#'             \item \code{Amp_NT_taxa} Number of taxa in the non-target dataset that are amplified
+#'             \item \code{Taxa_unique} Number of taxa with unique amplicons
+#'             \item \code{P_taxa_unique} Proportion of taxa with unique amplicons
+#'             \item \code{Min_length} Minimum amplicon length (excluding primers)
+#'             \item \code{Max_length} Maximum amplicon length (excluding primers)
+#'             \item \code{Mean_length} Mean amplicon length (excluding primers)}
+#'     \item \code{metadata}: Parameters used during ecoPrimers command}
+#'     If the \code{out} option is set to something other than default, only the corresponding dataframe is returned.
+#'
+#' @note Specificty and Amp_NT_taxa have meaningless results unless a non-target dataset was specifiec during ecoPrimers command
+#´
+#' @examples
+#' read.ecoprimers(ecoPrimers_from_ALLVERTDB)
+#'
+#' @export
+read.ecoprimers<-function(ecoPrimers,out="all"){
+  ecoprimeroutput<-read.table(ecoPrimers)
+  colnames(ecoprimeroutput)<- c("PID","Pf","Pr","TmPf","MinTmPf","TmPr","MinTmPr","CGPf","CGPr","Specificity","Amp_Records","IGNORE","P_Records",
+                                "Amp_taxa","IGNORE2","Amp_NT_taxa","Taxa_unique","P_taxa_unique","Min_length","Max_length","Mean_length")
+  ecoprimeroutput<-ecoprimeroutput[,-grep("IGNORE",colnames(ecoprimeroutput))]
+
+  #get metadata
+  ecoprimeroutput_META<-read.csv(ecoPrimers,sep = "\t")
+  ecoprimeroutput_META<-as.data.frame(ecoprimeroutput_META[1:max(grep("#",ecoprimeroutput_META$X.)),])
+  ecoprimeroutput_META$METADATA<-ecoprimeroutput_META$`ecoprimeroutput_META[1:max(grep("#", ecoprimeroutput_META$X.)), ]`
+  ecoprimeroutput_META$`ecoprimeroutput_META[1:max(grep("#", ecoprimeroutput_META$X.)), ]`=NULL
+
+  output_list <- list(ecoprimeroutput_META, ecoprimeroutput)
+  names(output_list)<-c("metadata","primer_table")
+
+  if (out=="primer_table") return(ecoprimeroutput)
+  if (out=="metadata") return(ecoprimeroutput_META)
+  if (out=="all") return(output_list) # returns all tables as a list
+}
+
+#' Write primers to a csv file
+#' @title Read ecoPrimers output
+#' @param input Any dataframe with columns of primer ID, forward sequence and reverse sequence labelled "PID, "Pf" and "Pr" respectively
+#'     Usually a \code{primer_table} created by \code{read.ecoprimers}.
+#' @param file A filename to write to.
+#' @return A csv file with two columns, the first being "name" and the second being "seqeunce", and a primer on each row
+#'
+#' @note Useful to import to other programs e.g. Geneious
+#´
+#' @examples
+#' write.ecoprimers(my_ecoPCR_table,"ecoPCR.primers.csv")
+#'
+#' @export
+write.ecoprimers<-function(input,file){
+  a<-input[,c("PID","Pf","Pr")]
+  a$PIDf<-a$PID
+  a$PIDr<-a$PID
+  a$PIDf<-sub("$","-F",a$PIDf)
+  a$PIDr<-sub("$","-R",a$PIDr)
+  a$PID=NULL
+  b<-data.frame(sequence=c(as.matrix(a[,c("Pf","Pr")])))
+  b$name<-c(as.matrix(a[,c("PIDf","PIDr")]))
+  b<-b[,2:1]
+  write.csv(b,file=file,row.names = F,quote = F)
+}
+
+#' Make table of base matches for a specified forward primer across all amplified taxa from ecoPCR results
+#' @title Make table of forward primer matches
+#' @param ecopcroutput_clean Any dataframe with a column named "forward_match", where each row is the primer binding
+#'    sequence for a given primer.
+#'    Usually a clean version of ecoPCR output with duplicate species removed, ideally generated by \code{\link[bastools]{ecopcr.hit.table}}.
+#' @param out Accepted values: "BT_PC" (default), "BT".
+#' @param primer Optional. If primer sequence (5'->3') is supplied, then columns are labelled by primer bases
+#' @return A dataframe with primer positions as columns, and number (if out = "BT") or percentage (if out="BT_PC", default)
+#'     of sequences (usually one for each species) with corresponding base.
+#' @examples ecopcrTidyAll<-ecopcr.hit.table("C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/45F-63R_4Mis_ALLVERTS_REFSEQ.ecopcroutput",
+#'    "C:/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ecoPCRoutput/USING 16S/taxdump/taxdump",
+#'    "C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/ALL_VERTS_REFSEQ_MTDNA_1Kbp-COX1-1Kbp.taxids.ecopcrdb.tab",obitaxdbisinR=F)
+#'
+#'    base_table_45F<-base.table.forward(ecopcrTidyAll$ecopcroutput_clean,primer="TAGTTAACAGCTAAACGC")
+#'    base_table_63R<-base.table.reverse(ecopcrTidyAll$ecopcroutput_clean,primer="TTCGATTCCTTCCTTTCT")
+#'
+#'
+#'@export
+base.table.forward<-function(ecopcroutput_clean,out="BT_PC",primer=NULL){
+  match<-ecopcroutput_clean$forward_match
+  match<-as.character(match)
+  sst <- as.data.frame(t(as.data.frame(strsplit(match, ""))))
+
+  result<-list()
+  for(i in 1:length(colnames(sst))){
+    bases<-table(sst[,i])
+    result[[i]]<-bases
+  }
+  base.counts<-as.data.frame(t(do.call("bind_rows",result)))
+  base.counts[is.na(base.counts)]<-0
+
+  if (!is.null(primer)) {
+    a<-t(as.data.frame(strsplit(primer, "")))
+    colnames(base.counts)<-a
+  }
+
+  base.counts.pc<-as.data.frame(round(sweep(as.matrix(base.counts),2,colSums(base.counts,na.rm = T),`/`)*100,digits = 3))
+  base.counts.pc[is.na(base.counts)]<-0
+
+  if (out=="BT_PC") {return(base.counts.pc)} # returns the base.table in percentage sequences with this base
+  if (out=="BT") {return(base.counts)} # returns the base.table in count of sequences with this base
+}
+
+#' Make table of base matches for a specified reverse primer across all amplified taxa from ecoPCR results
+#' @title Make table of reverse primer matches
+#' @param ecopcroutput_clean Any dataframe with a column named "reverse_match", where each row is the primer binding
+#'    sequence for a given primer.
+#'    Usually a clean version of ecoPCR output with duplicate species removed, ideally generated by \code{\link[bastools]{ecopcr.hit.table}}.
+#' @param out Accepted values: "BT_PC" (default), "BT".
+#' @param primer Optional. If primer sequence (5'->3') is supplied, then columns are labelled by primer bases.
+#' @return A dataframe with primer positions as columns, and number (if out = "BT") or percentage (if out="BT_PC", default)
+#'     of sequences (usually one for each species) with corresponding base.
+#' @examples ecopcrTidyAll<-ecopcr.hit.table("C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/45F-63R_4Mis_ALLVERTS_REFSEQ.ecopcroutput",
+#'    "C:/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ecoPCRoutput/USING 16S/taxdump/taxdump",
+#'    "C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/ALL_VERTS_REFSEQ_MTDNA_1Kbp-COX1-1Kbp.taxids.ecopcrdb.tab",obitaxdbisinR=F)
+#'
+#'    base_table_45F<-base.table.forward(ecopcrTidyAll$ecopcroutput_clean,primer="TAGTTAACAGCTAAACGC")
+#'    base_table_63R<-base.table.reverse(ecopcrTidyAll$ecopcroutput_clean,primer="TTCGATTCCTTCCTTTCT")
+#'
+#'@export
+base.table.reverse<-function(ecopcroutput_clean,out="BT_PC",primer=NULL){
+  match<-ecopcroutput_clean$reverse_match
+  match<-as.character(match)
+  sst <- as.data.frame(t(as.data.frame(strsplit(match, ""))))
+
+  result<-list()
+  for(i in 1:length(colnames(sst))){
+    bases<-table(sst[,i])
+    result[[i]]<-bases
+  }
+  base.counts<-as.data.frame(t(do.call("bind_rows",result)))
+  base.counts[is.na(base.counts)]<-0
+
+  if (!is.null(primer)) {
+    a<-t(as.data.frame(strsplit(primer, "")))
+    colnames(base.counts)<-a
+  }
+
+  base.counts.pc<-as.data.frame(round(sweep(as.matrix(base.counts),2,colSums(base.counts,na.rm = T),`/`)*100,digits = 3))
+  base.counts.pc[is.na(base.counts)]<-0
+
+  if (out=="BT_PC") return(base.counts.pc) # returns the base.table in percentage sequences with this base
+  if (out=="BT") return(base.counts) # returns the base.table in count of sequences with this base
+}
+
+#' Make degenerate primer from table of primer matches
+#' @title Make degenerate primer from table of primer matches
+#' @param base.table Any dataframe with base positions as columns, bases as rows and percentage of sequences with corresponding base as values.
+#'    Often the output of \code{\link[bastools]{base.table.forward}} or \code{\link[bastools]{base.table.reverse}}.
+#' @param p The percentage (0-100) of sequences required in order to incorporate base into the degeneracy for that position,
+#'     e.g. if p is set to 1 and a base position in base.table has A=80.0, C=15.2, G=0.5, T=4.3, the output base will be H.
+#' @return A primer which has degenerate bases for positions where more than one base had a value > p.
+#' @note The output is a primer that matches the conditions specified, but does not take into account melting temperature, hairpins, primer dimer
+#'     with corresponding primer or other factors.
+#'     \tabular{cc}{
+#'     \strong{IUPAC code}\tab \strong{Base}\cr
+#'     A\tab Adenine\cr
+#'     C\tab Cytosine\cr
+#'     G\tab Guanine\cr
+#'     T\tab Thymine\cr
+#'     R\tab	A or G\cr
+#'     Y\tab	C or T\cr
+#'     S\tab	G or C\cr
+#'     W\tab	A or T\cr
+#'     K\tab	G or T\cr
+#'     M\tab	A or C\cr
+#'     B\tab	C or G or T\cr
+#'     D\tab	A or G or T\cr
+#'     H\tab	A or C or T\cr
+#'     V\tab	A or C or G\cr
+#'     N\tab	any base
+#'     }
+#' @examples ecopcrTidyAll<-ecopcr.hit.table("C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/45F-63R_4Mis_ALLVERTS_REFSEQ.ecopcroutput",
+#'   "C:/Users/basti/Documents/WORK/CIBIO/STATS_AND_CODE/OBITOOLS/ecoPCRoutput/USING 16S/taxdump/taxdump",
+#'   "C:/Users/basti/Documents/WORK/CIBIO/AA_PROJECTS/MINION/ALL_VERTS_REFSEQ_MTDNA_1Kbp-COX1-1Kbp.taxids.ecopcrdb.tab",obitaxdbisinR=F)
+#'
+#'    base_table_45F<-base.table.forward(ecopcrTidyAll$ecopcroutput_clean,primer="TAGTTAACAGCTAAACGC")
+#'    base_table_63R<-base.table.reverse(ecopcrTidyAll$ecopcroutput_clean,primer="TTCGATTCCTTCCTTTCT")
+#'
+#'    45F_degen<-degenerise(base_table_45F,p=1)
+#'    63R_degen<-degenerise(base_table_63R,p=1)
+#'
+#'
+#'@export
+degenerise<-function(base.table,p){
+  comparison<-data.frame(
+    A=c(T,F,F,F),
+    C=c(F,T,F,F),
+    G=c(F,F,T,F),
+    T=c(F,F,F,T),
+    R=c(T,F,T,F),
+    Y=c(F,T,F,T),
+    S=c(F,T,T,F),
+    W=c(T,F,F,T),
+    K=c(F,F,T,T),
+    M=c(T,T,F,F),
+    B=c(F,T,T,T),
+    D=c(T,F,T,T),
+    H=c(T,T,F,T),
+    V=c(T,T,T,F),
+    N=c(T,T,T,T), row.names = c("A","C","G","T")
+  )
+
+  #true/false for > p
+  a<-as.data.frame(base.table>p)
+  #reorder to match "comparison"
+  b<-a[c("A","C","G","T"),]
+
+  #compare each column in "b" with every column in "comparison"
+  new_primer<-matrix(NA,length(colnames(comparison)),length(colnames(b)))
+  for (i in 1:length(colnames(b))){
+    for (j in 1:length(colnames(comparison))){
+      new_primer[j,i]<-if(identical(b[,i],comparison[,j])) paste(colnames(comparison)[j]) else paste("XX")
+    }
+  }
+  new_primer[new_primer=="XX"]<-NA
+  A<-!is.na(new_primer)
+  new_primer2<-new_primer[A]
+  new_primer3<-as.character(new_primer2,na.rm=T)
+  new_primer4<-gsub(" ","",paste(new_primer3,collapse = " "))
+  return(new_primer4)
+}
+
+
