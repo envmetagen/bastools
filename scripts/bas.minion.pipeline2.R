@@ -187,8 +187,11 @@ if("step3" %in% stepstotake){
     a<-read.table(text = a,header = T)$num_seqs
     #count seqs after
     b<-system2("seqkit", args=c("stats","-T",gsub(".trimmed.fasta",".lenFilt.trimmed.fasta",file)),wait = T,stderr = T,stdout = T)
+    if(length(grep("DNA",b))>0) b<-read.table(text = b,header = T)$num_seqs else b<-0
+    message(a-b," reads removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
     if(length(grep("DNA",b))>0) b<-read.table(text = b,header = T)$num_seqs else b=0
     message(a-b," sequences removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
+
   }
   
   t2<-Sys.time()
@@ -224,7 +227,7 @@ if("step4" %in% stepstotake){
     
     starting.counts<-sum(starting.counts$num_seqs)  
     
-    #count after cutadapt
+    #count after cutadapt/polishing
     files<-paste0(ms_ss$barcode_name,".trimmed.fastq")
     datalist<-list()
     
