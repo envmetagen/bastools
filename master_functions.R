@@ -646,8 +646,8 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     for(i in 1:length(h)){
       h[[i]]$wait()
       message(paste(infastas[i],"blast pid",h[[i]]$get_pid()))
-      message(readLines(paste0("blast.error.temp.processx.file",i)))
-      unlink(paste0("blast.error.temp.processx.file",i))
+      #message(readLines(paste0("blast.error.temp.processx.file",i)))
+      #unlink(paste0("blast.error.temp.processx.file",i))
     }
   }
   
