@@ -3,7 +3,7 @@
 #assumes fastq.gz files as starting, named barcode01.fastq.gz, barcode02.fastq.gz ...
 
 #once settings are changed, to run, and record time properly, do the following in terminal:
-#cmd='Rscript example.minion.pipe2.config.R'
+#cmd='nohup Rscript example.minion.pipe2.config.R'
 #datetime=`date "+%F %R"`
 #/usr/bin/time -q  -a --format "%E\t%e\t%M\t$datetime\t$*\t%x\t%I\t%O\t%W" bash -c "$cmd" 2>example.minion.pipe2.log 1>&2 &
 
@@ -28,17 +28,20 @@ stepstotake=c("step1","step2","step3","step4","step5","step6","step7","step8","s
 
 #all dirs must have trailing /
 bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #bastools directory
-filesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/test_polishing/"
 blast_exec<-"/home/tutorial/TOOLS/ncbi-blast-2.9.0+/bin/blastn"
 ncbiTaxDir="/home/tutorial/TOOLS/DBS/ncbi_taxonomy/taxdump/"
 KronaPath<-"/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
+
+filesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/test_polishing/"
+#specifiy location of unpolished raw reads, must be separate folder
+origfilesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/test_polishing/raw/"
+
 
 preffered_rlibsfolder="~/MBC/Rlibs/" #had to add this for emg1
 
 #used polishing script (then start at step 2)
 polished=T
-#if using polishing, then specifiy location of unpolished raw reads, must be separate folder
-origfilesDir<-"/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/MUSSELS/March_2020/test_polishing/raw/"
+
 
 # get sheet first separately (better than including in pipe)
 # source(paste0(bastoolsDir,"master_functions.R"))
@@ -76,7 +79,7 @@ topF=30
 abspident=60 #arbitrary
 topAbs=30
 
-#taxonfilter 
+#taxonfilter
 taxonpc=0.001
 
 source(paste0(bastoolsDir,"scripts/bas.minion.pipeline2.R"))

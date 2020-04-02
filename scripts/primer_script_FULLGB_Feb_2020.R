@@ -9,7 +9,6 @@ message("settings:
 print(ls.str())
 
 source(paste0(bastoolsDir,"master_functions.R"))
-source(paste0(bastoolsDir,"bin.blast.R"))
 library(processx)
 library(dplyr)
 obitaxoR<-ROBITaxonomy::read.taxonomy(dbname = obitaxo)

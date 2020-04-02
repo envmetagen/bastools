@@ -38,6 +38,12 @@ ms_ss<-subset_mastersheet(master_sheet, subsetlist)
 #check again to see the subset made sense
 master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 
+#show included/excluded
+message("Samples in final dataset")
+colnames(all.taxatabs.ss[,-1])
+message("Samples excluded from final dataset")
+colnames(all.taxatabs[,-1])[!colnames(all.taxatabs[,-1]) %in% colnames(all.taxatabs.ss[,-1])]
+
 ```
 
 ## import taxatabs
@@ -365,7 +371,7 @@ if(aggregate.pre.grouping==F){
 ```
 
 ## some barplots
-```{r barplots, eval=TRUE,echo=F}
+```{r barplots, eval=TRUE,echo=F,fig.height=7,fig.width=20}
 
 if(!is.null(plotting.vars)){
   
@@ -408,18 +414,19 @@ if(!is.null(plotting.vars)){
             for(i in 1:length(plotting.vars)){
               print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],as.percent = plot.as.percent[k],
                                   as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol))
-            }
+            
           }
         }
       }
     }
+  }
       
 } else message("plotting.vars=F...skipping barplots")
 ```
 
 
 ## heatmaps 
-```{r heatmaps, eval=TRUE,echo=F,fig.height=20,fig.width=20}
+```{r heatmaps, eval=TRUE,echo=F,fig.height=7,fig.width=20}
 if(!is.null(plotting.vars)){
   
   taxatabs.multilevels<-list()
@@ -432,8 +439,7 @@ if(!is.null(plotting.vars)){
     }
     taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
     
-    message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
-    
+
   } else taxatabs.multilevels[[1]]<-all.taxatabs.ss
 
   message("Making heatmaps")
@@ -444,8 +450,9 @@ if(!is.null(plotting.vars)){
     for(h in 1:length(values.to.plot)){
       for(j in 1:length(taxatabs.multilevels)){
         for(i in 1:length(plotting.vars)){
-          print(taxatab.heatmap(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,group.by=plotting.vars[i],
-                    current.grouping = sumrepsby,values=values.to.plot[h],colour.bar=facetcol))
+          print(taxatab.heatmap(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,group.by=plotting.vars[[i]],
+                values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,
+                current.grouping = sumrepsby) )
         }
       }
     }
