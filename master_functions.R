@@ -5241,7 +5241,7 @@ add.unknown.lca<-function(lca.out){
   return(lca.out)
 }
 
-report.blast.maxmin<-function(blastfile,pident_col="V5",qseqid_col="V1"){
+report.blast.maxmin<-function(blastfile,pident_col="V4",qseqid_col="V1"){
   
   btab<-data.table::fread(blastfile,sep="\t",data.table = F)
   
