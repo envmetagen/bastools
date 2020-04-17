@@ -101,7 +101,7 @@ if("step2" %in% stepstotake){
   for(i in 1:length(files)){
     message(files[i])
     datalist[[i]]<-system2("seqkit", args=c("fx2tab","-l","-i","-n",files[i]),wait = T,stdout = T)
-    datalist[[i]]<-read.table(text = datalist[[i]],header = T,sep = "\t")
+    datalist[[i]]<-read.table(text = datalist[[i]],header = F,sep = "\t")
     datalist[[i]][,5]<-files[i]
     
     if(polished){
@@ -114,12 +114,22 @@ if("step2" %in% stepstotake){
       for(j in 1:nrow(datalist[[i]])){
         expanded_lengths[[j]]<-rep.row(datalist[[i]][j,4],n = datalist[[i]][j,6])
       }
+
+      expanded_reads<-list()
+      for(j in 1:nrow(datalist[[i]])){
+        expanded_reads[[j]]<-rep.row(datalist[[i]][j,1],n = datalist[[i]][j,6])
+      }
+
       expanded_lengthsdf<-as.data.frame(unlist(expanded_lengths))
+      expanded_readsdf<-as.data.frame(unlist(expanded_reads))
+      
+      expanded_lengthsdf<-cbind(expanded_readsdf,expanded_lengthsdf)
+
       expanded_lengthsdf$file<-files[i]
       datalist[[i]]<-expanded_lengthsdf
-    } else datalist[[i]]<-datalist[[i]][,c(4:5)]
+    } else datalist[[i]]<-datalist[[i]][,c(1,4,5)]
     
-    colnames(datalist[[i]])<-c("length","file")
+    colnames(datalist[[i]])<-c("read","length","file")
   }
 
   datalistdf<-as.data.frame(do.call(rbind,datalist))
@@ -128,6 +138,9 @@ if("step2" %in% stepstotake){
   maxlength<-ms_ss[match(ms_ss$barcode_name[i],ms_ss$barcode_name),"max_length"]
   
   datalistdf$InsideRange<-!(datalistdf$length<minlength | datalistdf$length>maxlength)
+  
+  write.table(datalistdf,file = paste(gsub(", ",".",toString(unlist(subsetlist))),"lengthdata.txt",sep = "."),append = F
+              ,quote = F,row.names = F,sep = "\t")
   
   lengthplot<-ggplot(datalistdf,mapping = aes(x = length,fill=InsideRange))+geom_histogram(binwidth = 10) +
     theme(axis.text.x=element_text(size=8,angle=45, hjust=1)) +
@@ -187,11 +200,8 @@ if("step3" %in% stepstotake){
     a<-read.table(text = a,header = T)$num_seqs
     #count seqs after
     b<-system2("seqkit", args=c("stats","-T",gsub(".trimmed.fasta",".lenFilt.trimmed.fasta",file)),wait = T,stderr = T,stdout = T)
-    if(length(grep("DNA",b))>0) b<-read.table(text = b,header = T)$num_seqs else b<-0
-    message(a-b," reads removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
     if(length(grep("DNA",b))>0) b<-read.table(text = b,header = T)$num_seqs else b=0
     message(a-b," sequences removed, from ",a, " (",round((a-b)/a*100,digits = 2)," %)")
-
   }
   
   t2<-Sys.time()
