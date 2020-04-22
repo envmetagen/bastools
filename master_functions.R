@@ -4728,7 +4728,7 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,
     stop("Family was disabled for this contributor, but genus was not")
   }
   
-  write.table(disabledTaxaDF,disabledTaxaOut,col.names = T,row.names = F,quote = F,sep = "\t")
+  if(!is.null(disabledTaxaOut)) write.table(disabledTaxaDF,disabledTaxaOut,col.names = T,row.names = F,quote = F,sep = "\t")
   
   return(disabledTaxaDF)
 }
