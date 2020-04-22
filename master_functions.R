@@ -913,6 +913,8 @@ make.blastdb.bas<-function(infasta,makeblastdb_exec="makeblastdb",addtaxidsfasta
 #' @export
 obiconvert.Bas<-function(infile,in_type,taxo,out_type,out,add2existing=F){
   
+  require(processx)
+  
   if(in_type!="fasta" & out_type=="--ecopcrdb-output") stop("Only fasta files can be converted into an ecopcrdb")
   
   cb <- function(line, proc) {cat(line, "\n")}
@@ -1428,6 +1430,8 @@ ecoPrimers.Bas<-function(ecopcrdb,max_error,min_length,max_length,strict_match_p
 #' @export
 ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length=NULL,out,buffer=NULL){
   #cb <- function(line, proc) {cat(line, "\n")}
+  
+  require(processx)
   
   if(length(grep("I",Pf))>0)(Pf<-gsub("I","N",Pf))
   if(length(grep("I",Pr))>0)(Pr<-gsub("I","N",Pr))
@@ -2354,7 +2358,7 @@ calc.stat.ecopcroutput<-function(ecopcroutput,variable,appliedstat="mean"){
 }
 
 
-clean.ecopcroutput<-function(ecopcrfile,min_length=NULL,max_length=NULL,rm.buffer.insert=F,buffer.used=T){
+clean.ecopcroutput<-function(ecopcrfile,Pf,Pr,min_length=NULL,max_length=NULL,rm.buffer.insert=F,buffer.used=T){
   #GENERAL CLEANING 
   
   b<-data.table::fread(file = ecopcrfile,data.table = F,

@@ -33,7 +33,7 @@ if("step1" %in% stepstotake){
 }
 
 #######################################################
-#RUN ECOPCRDB
+#RUN ECOPCR
 if("step2" %in% stepstotake){
   
   message("STEP2 - run ecoPCR")

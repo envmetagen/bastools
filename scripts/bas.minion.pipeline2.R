@@ -92,6 +92,8 @@ if("step2" %in% stepstotake){
       system2("seqkit", args=c("grep","-r","-n","-p",ms_ss$barcode_name[i],"results.fasta.temp.gz"),wait = T,
               stdout = paste0(ms_ss$barcode_name[i],".trimmed.fastq"))
     }
+    
+    unlink("results.fasta.temp.gz")
   }
 
   
@@ -453,7 +455,7 @@ if("step9" %in% stepstotake){
   
   bin.blast3(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
                out = binfile,spident = spident,gpident = gpident,
-             fpident = fpident,abspident = abspident,topS=topS,topG=topG,topF=topF,topAbs=topAbs)
+             fpident = fpident,abspident = abspident,topS=topS,topG=topG,topF=topF,topAbs=topAbs,disabledTaxaFiles = disabledTaxaFiles)
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)

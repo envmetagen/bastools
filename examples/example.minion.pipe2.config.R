@@ -79,6 +79,8 @@ topF=30
 abspident=60 #arbitrary
 topAbs=30
 
+disabledTaxaFiles=NULL #otherwise full path to file
+
 #taxonfilter
 taxonpc=0.001
 
