@@ -5864,8 +5864,23 @@ tidy.taxon<-function(taxatab,rm.trailing.NA=T,rm.preceeding.above="family"){
   return(taxatab)
   
 }
-
-blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NULL,inverse=F,taxidname=NULL,ncbiTaxDir=NULL,overWrite=F,out=NULL,
+#' Perform BLAST 
+#' @param infasta Name of fasta file to BLAST. Must be in current directory.
+#' @param refdb The BLAST database to query.
+#' @param blast_exec Path to blastn executable, if not using the blastn in current environment.
+#' @param wait logical indicating whether R should wait for BLASTs to finish. Default=T. Recommended.
+#' @param taxidlimit A vector of NCBI taxids to restrict the BLAST to. 
+#' @param inverse logical to indicate whether the search should be restricted to the inverse of taxidlimit. Only required if using taxidlimit.
+#' @param ncbiTaxDir Path to the folder containing the NCBI taxonomy dump files (see getNCBITaxonomyDump). Only required if using taxidlimit.
+#' @param overWrite logical indicating whether to overwrite any existing BLAST files of the same name, if they exist.
+#' @param out Name of the file for the BLAST results, Default = paste0(gsub(".fasta", ".blast.txt",infasta))
+#' @param options A vector with flags (including dashes) and a single item for each
+#'   Default=c("-outfmt", "6 qseqid evalue staxid pident qcovs","-num_threads", "64", "-max_target_seqs", 100, 
+#'   "-max_hsps","1""-word_size", 6, "-perc_identity", 50, "-qcov_hsp_perc", 90,
+#'   "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)
+#' @return 
+#' @examples
+blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NULL,inverse=F,ncbiTaxDir=NULL,overWrite=F,out=NULL,
                          opts=c("-task","blastn","-outfmt", "6 qseqid evalue staxid pident qcovs","-num_threads", 64, 
                                 "-max_target_seqs", 100, "-max_hsps",1,"-word_size", 6, "-perc_identity", 50, 
                                 "-qcov_hsp_perc", 90, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)){
@@ -5878,7 +5893,10 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   if(!is.null(taxidlimit)) if(is.null(taxidname)) stop("to use taxidlimit, taxidname must be supplied")
   if(!is.null(taxidlimit)) message("Make sure infastas,taxidlimit & taxidname are in correct order")
   if(is.null(out)) out<-paste0(gsub(".fasta", ".blast.txt",infasta))
-  if(overWrite==F) if(out %in% list.files()) stop("The following file already exists ", out)
+  
+  outdircheck<-
+  
+  if(overWrite==F) if(file.exists(out)) stop("The following file already exists ", out)
   
   if(!is.null(taxidlimit)){
     
