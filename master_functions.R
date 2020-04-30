@@ -1478,7 +1478,7 @@ ecoPCR.Bas<-function(Pf,Pr,ecopcrdb,max_error,min_length,max_length=NULL,out,buf
 #modelling taxtabs
 binarise.taxatab<-function(taxatab,t=F){
   #transpose to have species as columns
-  taxatab2<-as.data.frame(t(taxatab[,-1]))
+  taxatab2<-as.data.frame(t(taxatab[,-1,drop=F]))
   colnames(taxatab2)<-taxatab[,1]
   #make binary
   taxatab2[taxatab2>0]<-1
@@ -1500,23 +1500,38 @@ taxatab2bray<-function(binarised.taxatab){
 
 #' Download NCBI taxonomy
 #' @title Download NCBI taxonomy.
-#' @param path Full path to download NCBI taxonomy to. If using current directory use \code{path="here"}
+#' @param path.to.save.to Full or relative path to download NCBI taxonomy to.
 #' @return An unpacked NCBI taxonomy
 #' @note Any previous versions of the taxonomy located the same directory are overwritten
 #' @examples
-#' getNCBItaxonomy("here")
+#' getNCBItaxonomyDump(".")
 #' @export
-getNCBItaxonomy<-function(path){
-  if(path!="here"){setwd(path)}
-  list.files()
-  file.remove("taxdump.tar.gz")
+getNCBItaxonomyDump<-function(path.to.save.to){
+  
+  require(processx)
+  
+  current.path<-getwd()
+  
+  if(dir.exists(path.to.save.to)==F) {
+    message("directory ", path.to.save.to, " does not exist. Creating directory")
+    dir.create(path.to.save.to) 
+  }
+  
+  setwd(path.to.save.to)
+  
+  if("taxdump.tar.gz" %in% list.files()) file.remove("taxdump.tar.gz")
+  
   cb <- function(line, proc) {cat(line, "\n")}
   processx::run(command = "wget",
                 args=c('ftp://ftp.ncbi.nlm.nih.gov://pub/taxonomy/taxdump.tar.gz'),echo=F,stderr_line_callback = cb)
-  taxdump<-"taxdump.tar.gz"
   processx::run(command = "tar",
-                args=c("-xzf",taxdump),echo=F,stderr_line_callback = cb)
-  b<-"SUCCESS!"
+                args=c("-xvzf","taxdump.tar.gz"),echo=F,stderr_line_callback = cb)
+  
+  file.remove("taxdump.tar.gz")
+  
+  setwd(current.path)
+  
+  message("SUCCESS! Point to ", path.to.save.to, " to use this taxonomy dump with other programs")
 }
 
 #' Convert NCBI taxonomy to obitools taxonomy
@@ -3438,19 +3453,62 @@ plot.negs.vs.real<-function(taxatab,ms_ss,real){
   plotlist
 }
 
-qplot.taxatab<-function(taxatab){
+qplot.taxatab<-function(taxatab,rm.nohits=T,rm.NA=F,specReadCount=NULL,qs=c(0.01,0.05,0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,0.99)){
+  
+  require(dplyr)
+  
+  if(!is.null(specReadCount)) if(specReadCount==0) {
+    message("Ignoring specReadCount as it was set to zero") 
+    specReadCount=NULL
+  }
+  
+  
+  if(rm.nohits) {
+    message("Not counting no_hit detections")
+    taxatab<-taxatab[taxatab$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+  }
+  if(rm.NA) {
+    message("Not counting NA detections")
+    taxatab<-taxatab[taxatab$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  }
+  
   long<-reshape2::melt(taxatab)
-  long<-long[long$value>0,,drop=F]
-  long$taxon<-as.character(long$taxon)
+  long<-long[long$value!=0,]
+  colnames(long)<-c("taxon","sample","reads")
   
-  a<-as.data.frame(as.factor(quantile(long$value, c(0.001,.01,.1, .2, .3, .4, .5, .6, .7, .8,.9, .95, 1)))) 
-  colnames(a)<-"reads"
-  a$quantile<-rownames(a)
-  a$quantile <- factor(a$quantile, levels = a$quantile)
-  a$reads<-round(as.numeric(as.character(a$reads)),digits = 0)
+  quants<-data.frame(quants=as.factor(qs*100),qdata=0,qcount=0)
   
-  ggplot(data = a,aes(y=quantile,x=reads,label=reads)) + geom_point() +geom_text(hjust=1.1, vjust=0) +  ylab("% of detections that have x reads")
+  for(i in 1:length(qs)) {
+    quants$qdata[i]<-round(quantile(long$reads,qs[i]),digits = 0)
+    quants$qcount[i]<-nrow(long[long$reads<=quants$qdata[i],])
+  }
+  
+  quants$label<-paste(quants$quants,quants$qdata,quants$qcount,sep = "_")
+  
+  a<-ggplot(data = long,aes(x=reads))+geom_histogram(bins = 100)+scale_x_log10()+xlab("reads/detection")+ylab("No. of detections")+
+    geom_vline(data = quants,aes(xintercept = qdata),colour = "red", linetype = "dashed")
+  
+  b<-a+geom_line(data = quants,aes(x = qdata,y = (qcount/nrow(long))*max(ggplot_build(a)$data[[1]]$ymax)),colour="green")
+    
+  b<-b+geom_text(data=quants, mapping=aes(x=qdata, y=max(ggplot_build(a)$data[[1]]$ymax), label=label), size=4, angle=90, vjust=-0.6, hjust=1,colour="red")+
+    ggtitle("Histogram of number of reads vs detections",subtitle = "Labels indicate %Dxns_readCount_NDxns. Green line = cumulative %Dxns (scale is 0-100%)")
+  
+  if(!is.null(specReadCount)) {
+    specN<-data.frame(quants=0)
+    specN$qcount<-nrow(long[long$reads<=specReadCount,])
+    specN$quants<-round(specN$qcount/nrow(long)*100,digits=0)
+    specN$qdata<-specReadCount
+    specN$label<-paste(specN$quants,specN$qdata,specN$qcount,sep = "_")
+    
+    b<-b+geom_vline(data = specN,aes(xintercept = qdata),colour = "blue", linetype = "dashed")+
+     geom_text(data=specN, mapping=aes(x=qdata, y=max(ggplot_build(a)$data[[1]]$ymax), label=label), size=4, angle=90, vjust=-0.6, hjust=1,colour="blue")
+  }
+  
+  return(b)
+  
 }
+
+
 
 
 #plot taxa occurring in both negatives and positives for each negative
@@ -3900,6 +3958,11 @@ bas.get.ranks<-function(taxatab){
 
 bas.plot.specaccum<-function(taxatab,xlabel){
   require(vegan)
+  
+  message("removing no_hits and NAs")
+  taxatab<-taxatab[taxatab$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+  taxatab<-taxatab[taxatab$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  
   #transpose
   ttaxatab<-taxatab
   rownames(ttaxatab)<-ttaxatab$taxon  
@@ -4822,15 +4885,15 @@ filter.blast2<-function(blastfile,headers="qseqid evalue staxid pident qcovs",nc
   colnames(btab)<-strsplit(headers,split = " ")[[1]]
   
   message("applying global min_qcovs threshold")
-  start<-length(unique(btab$qseqid))
+  start<-nrow(btab)
   btab<-btab[btab$qcovs>min_qcovs,]
-  after_min_qcovs<-length(unique(btab$qseqid))
-  message(start-after_min_qcovs, " queries removed")
+  after_min_qcovs<-nrow(btab)
+  message(start-after_min_qcovs, " hits removed")
   
   message("applying global max_evalue threshold")
   btab<-btab[btab$evalue<max_evalue,]
-  after_max_eval<-length(unique(btab$qseqid))
-  message(after_min_qcovs-after_max_eval, " queries removed")
+  after_max_eval<-nrow(btab)
+  message(after_min_qcovs-after_max_eval, " hits removed")
   
   #add lineage to results
   message("adding taxonomic lineages")
@@ -5441,8 +5504,11 @@ blast.maxhits.2.files.compare<-function(blastfile1,blastfile2,name.blastfile1,na
 plot.taxatab.rank.props<-function(taxatab.list){
   message("Reminder: must be a named list, see split.taxatab.by.facets")
   
+  message("Not including no_hits")
+  
   taxatab.list2<-list()
   for(i in 1:length(taxatab.list)){
+    taxatab.list2[[i]]<-taxatab.list[[i]][taxatab.list[[i]]$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
     taxatab.list2[[i]]<-stats.by.rank(taxatab.list[[i]])
     taxatab.list2[[i]]$taxatab<-names(taxatab.list)[i]
   }

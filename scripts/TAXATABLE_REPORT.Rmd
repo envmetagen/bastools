@@ -66,6 +66,12 @@ all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = 
 print(stats.by.rank(taxatab = all.taxatabs.ss))
 ```
 
+# qplots
+```{r first qplot, eval=TRUE,echo=F}
+  plot1<-qplot.taxatab(all.taxatabs.ss,rm.nohits = T,rm.NA = T,specReadCount = filter_dxn)
+  print(plot1)
+```
+
 ## remove problem taxa - usually human, predator, NAs and no_hits
 ```{r remove problem taxa, eval=TRUE,echo=F}
 message("Removing no_hits")
@@ -141,7 +147,7 @@ if(taxonpc>0 && samplepc>0) {
     full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
     
     #rank stats
-  print(stats.by.rank(taxatab = all.taxatabs.ss))
+    print(stats.by.rank(taxatab = all.taxatabs.ss))
   
 }else message("taxonpc and samplepc set to 0...skipping taxon and sample filters")
 ```
@@ -170,6 +176,7 @@ if (rep.rm.first==T){
 ```{r apply detection filter, eval=TRUE,echo=F}
 #check with removing detections
 if(filter_dxn>0){
+
   message("Applying detection filter")
   all.taxatabs.ss<-filter.dxns(taxatab = all.taxatabs.ss,filter_dxn = filter_dxn)
   
@@ -180,6 +187,11 @@ if(filter_dxn>0){
   
   #rank stats
   print(stats.by.rank(taxatab = all.taxatabs.ss))
+  
+  # qplots
+  message("qplot after detection filter")
+  plot1<-qplot.taxatab(all.taxatabs.ss,rm.nohits = T,rm.NA = T,specReadCount = filter_dxn)
+  print(plot1)
   
 } else message("filter_dxn=0...skipping detection filter")
 
@@ -520,9 +532,8 @@ print(all.taxatabs.ss$taxon)
 ## qplot of % of detections that have x reads
 ```{r qplot final table, eval=TRUE,echo=F}
 # qplots
-plot1<-qplot.taxatab(all.taxatabs.ss)
-title<-paste0("n_dxns=",sum(all.taxatabs.ss[,-1]>0), "; n_samples=",length(colnames(all.taxatabs.ss))-1)
-print(plot1 + ggtitle(label = title))
+plot1<-qplot.taxatab(all.taxatabs.ss,rm.nohits = T,rm.NA = T,specReadCount = filter_dxn)
+print(plot1)
 ```
 
 ## combine counts and taxalists
