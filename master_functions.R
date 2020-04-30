@@ -5890,7 +5890,6 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   require(processx)
   
   if(!is.null(taxidlimit)) if(is.null(ncbiTaxDir)) stop("to use taxidlimit, ncbiTaxDir must be supplied")
-  if(!is.null(taxidlimit)) if(is.null(taxidname)) stop("to use taxidlimit, taxidname must be supplied")
   if(!is.null(taxidlimit)) message("Make sure infastas,taxidlimit & taxidname are in correct order")
   if(is.null(out)) out<-paste0(gsub(".fasta", ".blast.txt",infasta))
   
