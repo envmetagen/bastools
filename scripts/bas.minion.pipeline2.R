@@ -396,7 +396,7 @@ if("step7" %in% stepstotake | "all" %in% stepstotake){
  
  blastfile<-gsub(".fasta",".blast.txt",catted_file)
  
- a<-report.blast.maxmin(blastfile)
+ a<-report.blast.maxmin(blastfile,pident_col = "pident",qseqid_col = "qseqid")
  
  write.table(a,file = gsub(".txt",".minmax.hits.txt",blastfile),append = F,quote = F,row.names = F,sep = "\t")
  
