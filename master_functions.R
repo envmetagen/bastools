@@ -5917,8 +5917,11 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   }
   
   #run BLAST  
+  
+  error.log.file<-paste0("blast.error.temp.processx.file",as.numeric(Sys.time()),".txt")
+  
   h<-process$new(command = blast_exec, args=c("-query", infasta, "-db",refdb,opts, "-out", out),echo_cmd = T,
-                 stderr = "blast.error.temp.processx.file")
+                 stderr = error.log.file)
   
   Sys.sleep(time = 2)
   
@@ -5932,16 +5935,16 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     message("************
              There was a problem with ", infasta[match(1,exits)], ", aborting blast
              ************")
-    print(grep("Error",readLines("blast.error.temp.processx.file"),value = T))
+    print(grep("Error",readLines(error.log.file),value = T))
     
     h$kill()
   }
   
   if(wait==T){
     h$wait()
-    message(readLines("blast.error.temp.processx.file"))
+    message(readLines(error.log.file))
     message("exit_status=",exits)
-    file.remove("blast.error.temp.processx.file")
+    file.remove(error.log.file)
     if(!is.null(taxidlimit)) file.remove(taxids_fileA)
   }
   
