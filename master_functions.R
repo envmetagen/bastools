@@ -5899,17 +5899,19 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     
     #generate children of taxids and store in file
     taxid.list<-list()
+    
+    taxids_fileA<-paste0("taxids",as.numeric(Sys.time()),".txt")
+    
     for(i in 1:length(taxidlimit)){
-      if(file.exists("_taxidlimit.temp.txt")) file.remove("_taxidlimit.temp.txt")
       system2(command = "taxonkit",args = c("list", "--ids", taxidlimit[i], "--indent", '""',"--data-dir",ncbiTaxDir)
-              ,wait=T,stdout = "_taxidlimit.temp.txt")
-      taxid.list[i]<-read.table("_taxidlimit.temp.txt")
+              ,wait=T,stdout = taxids_fileA)
+      taxid.list[i]<-read.table(taxids_fileA)
     }
     
-    write.table(unlist(taxid.list),"_taxidlimit.temp.txt",row.names = F,quote = F,col.names = F,)
+    write.table(unlist(taxid.list),taxids_fileA,row.names = F,quote = F,col.names = F,)
     
     #change options to include taxidlimit
-    opts<-c(opts,"-taxidlist","_taxidlimit.temp.txt")
+    opts<-c(opts,"-taxidlist",taxids_fileA)
     
     if(inverse) opts<-gsub("-taxidlimit","-negative_taxids",opts)
   }
@@ -5940,6 +5942,7 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     message(readLines("blast.error.temp.processx.file"))
     message("exit_status=",exits)
     file.remove("blast.error.temp.processx.file")
+    if(!is.null(taxidlimit)) file.remove(taxids_fileA)
   }
   
   headers<-paste0(paste("'1i",paste(unlist(strsplit(opts[match("-outfmt",opts)+1]," "))[-1],collapse = "\t"),collapse = "\t"),"'")
