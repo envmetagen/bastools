@@ -59,17 +59,15 @@ ca.error.rate=0.3
 #add a suffix to the final fasta, useful for running different pipelines from step4 onwards. put as NULL to ignore
 catted_suffix<-"SC3"
 
-##set BLAST taxidlimit and taxidname if desired. 
+##BLAST settings 
 taxidlimit=NULL #set to NULL if not required
 taxidname=NULL #only required if taxidlimit is not NULL
 refdb="/home/tutorial/TOOLS/mussels/databases/16S_Bivalves_7_species/16S.s2.Bivalvia.7species"
-max_target_seqs = 50
+opts=c("-task","blastn","-outfmt", "6 qseqid pident qcovs saccver staxid ssciname","-num_threads", 64,
+       "-max_target_seqs", 100, "-max_hsps",1,"-word_size", 11, "-perc_identity", 50,
+       "-qcov_hsp_perc", 98, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)
 
-#filtering/binning options #based on results, scenario3
-#https://docs.google.com/presentation/d/1NnE9yQJzuRChQaj0GnSuZWq1QmZQO95SBb9oKluD1vI/edit#slide=id.g71516c64c3_0_190
-min_qcovs=90
-max_evalue = 10
-
+#filtering/binning options
 spident=97
 topS=30
 gpident=90

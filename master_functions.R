@@ -421,12 +421,13 @@ adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratu
   
 }
 
-add.lineage.df<-function(df,ncbiTaxDir,as.taxids=F){
-  if(is.null(df$taxids)) {stop("No column called taxids")}
-  df$taxids<-as.integer(as.character(df$taxids)) 
+add.lineage.df<-function(dframe,ncbiTaxDir,taxCol="taxids",as.taxids=F){
+  
+  if(!taxCol %in% colnames(dframe)) {stop("No column called taxids")}
+
   #write taxids to file
   taxids_fileA<-paste0("taxids",as.numeric(Sys.time()),".txt")
-  write.table(unique(df$taxids),file = taxids_fileA,row.names = F,col.names = F,quote = F)
+  write.table(unique(dframe[,taxCol]),file = taxids_fileA,row.names = F,col.names = F,quote = F)
   
   #get taxonomy from taxids and format in 7 levels
   taxids_fileB<-paste0("taxids",as.numeric(Sys.time()),".txt")
@@ -451,30 +452,30 @@ add.lineage.df<-function(df,ncbiTaxDir,as.taxids=F){
 
   #merge with df
   #message("replacing taxids with updated taxids. Saving old taxids in old_taxids.")
-  df<-merge(df,lineage[,c("taxids","new_taxids","path")],by = "taxids")
-  df$old_taxids<-df$taxids
-  df$taxids<-df$new_taxids
-  df$new_taxids=NULL
-  df<-cbind(df,do.call(rbind, stringr::str_split(df$path,";")))
-  colnames(df)[(length(df)-6):length(df)]<-c("K","P","C","O","F","G","S")
+  dframe<-merge(dframe,lineage[,c("taxids","new_taxids","path")],by.x = taxCol,by.y = "taxids")
+  dframe$old_taxids<-dframe[,taxCol]
+  dframe$taxids<-dframe$new_taxids
+  dframe$new_taxids=NULL
+  dframe<-cbind(dframe,do.call(rbind, stringr::str_split(dframe$path,";")))
+  colnames(dframe)[(length(dframe)-6):length(dframe)]<-c("K","P","C","O","F","G","S")
   if(as.taxids==F){
-    df$K<-as.character(df$K)
-    df$P<-as.character(df$P)
-    df$C<-as.character(df$C)
-    df$O<-as.character(df$O)
-    df$F<-as.character(df$F)
-    df$G<-as.character(df$G)
-    df$S<-as.character(df$S)
+    dframe$K<-as.character(dframe$K)
+    dframe$P<-as.character(dframe$P)
+    dframe$C<-as.character(dframe$C)
+    dframe$O<-as.character(dframe$O)
+    dframe$F<-as.character(dframe$F)
+    dframe$G<-as.character(dframe$G)
+    dframe$S<-as.character(dframe$S)
   
   #change empty cells to "unknown"
-  df[,(length(df)-6):length(df)][df[,(length(df)-6):length(df)]==""]<- "unknown"
+  dframe[,(length(dframe)-6):length(dframe)][dframe[,(length(dframe)-6):length(dframe)]==""]<- "unknown"
   }
   
-  df$path=NULL
+  dframe$path=NULL
   unlink(taxids_fileA)
   unlink(taxids_fileB)
   unlink(taxids_fileC)
-  return(df)
+  return(dframe)
 }
 
 get.children.taxonkit<-function(df,column){
@@ -5881,16 +5882,15 @@ tidy.taxon<-function(taxatab,rm.trailing.NA=T,rm.preceeding.above="family"){
 #' @return 
 #' @examples
 blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NULL,inverse=F,ncbiTaxDir=NULL,overWrite=F,out=NULL,
-                         opts=c("-task","blastn","-outfmt", "6 qseqid evalue staxid pident qcovs","-num_threads", 64, 
-                                "-max_target_seqs", 100, "-max_hsps",1,"-word_size", 6, "-perc_identity", 50, 
-                                "-qcov_hsp_perc", 90, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)){
+                         opts=c("-task","blastn","-outfmt", "6 qseqid evalue pident qcovs saccver staxid ssciname sseq","-num_threads", 64,
+                                "-max_target_seqs", 100, "-max_hsps",1,"-word_size", 11, "-perc_identity", 50,
+                                "-qcov_hsp_perc", 98, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)){
   
   t1<-Sys.time()
   
   require(processx)
   
   if(!is.null(taxidlimit)) if(is.null(ncbiTaxDir)) stop("to use taxidlimit, ncbiTaxDir must be supplied")
-  if(!is.null(taxidlimit)) message("Make sure infastas,taxidlimit & taxidname are in correct order")
   if(is.null(out)) out<-paste0(gsub(".fasta", ".blast.txt",infasta))
   
   outdircheck<-
@@ -5904,12 +5904,13 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
     #generate children of taxids and store in file
     taxid.list<-list()
     for(i in 1:length(taxidlimit)){
+      if(file.exists("_taxidlimit.temp.txt")) file.remove("_taxidlimit.temp.txt")
       system2(command = "taxonkit",args = c("list", "--ids", taxidlimit[i], "--indent", '""',"--data-dir",ncbiTaxDir)
               ,wait=T,stdout = "_taxidlimit.temp.txt")
       taxid.list[i]<-read.table("_taxidlimit.temp.txt")
     }
     
-    write.table(unlist(taxid.list),"_taxidlimit.temp.txt",row.names = F,quote = F,col.names = F)
+    write.table(unlist(taxid.list),"_taxidlimit.temp.txt",row.names = F,quote = F,col.names = F,)
     
     #change options to include taxidlimit
     opts<-c(opts,"-taxidlist","_taxidlimit.temp.txt")
@@ -5922,6 +5923,9 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
                  stderr = "blast.error.temp.processx.file")
   
   Sys.sleep(time = 2)
+  
+  #report PID
+  message(paste(infasta," PID:",h$get_pid()))
   
   #check immediate exit status
   exits<-h$get_exit_status()
@@ -5937,10 +5941,14 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   
   if(wait==T){
     h$wait()
-    message(paste(infasta," pid:",h$get_pid()))
     message(readLines("blast.error.temp.processx.file"))
+    message("exit_status=",exits)
     file.remove("blast.error.temp.processx.file")
   }
+  
+  headers<-paste0(paste("'1i",paste(unlist(strsplit(opts[match("-outfmt",opts)+1]," "))[-1],collapse = "\t"),collapse = "\t"),"'")
+  
+  system2("sed",c("-i", headers, out),wait = T)
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
@@ -5948,4 +5956,38 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   message(c("All blasts complete in ",t3," mins."))
   
   return(h)
+}
+
+filter.blast3<-function(blastfile,ncbiTaxDir,out,rm.unclassified=T){
+  
+  message("Reminder, filter.blast3 does not include 'top' threshold")
+  
+  if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
+  if(is.null(out)) stop("out not specified")
+  
+  message("reading blast results")
+  btab<-data.table::fread(file = blastfile,sep = "\t",header = T,data.table = F)
+  
+  if(!"staxid" %in% colnames(btab)) stop("No column called staxid")
+
+  #add lineage to results
+  message("adding taxonomic lineages")
+  btab$taxids<-btab$staxid #add.lineage.df requires this colname
+  btab<-add.lineage.df(btab,ncbiTaxDir)
+  
+  #remove crappy hits 
+  if(rm.unclassified==T){
+    #1. btab$S contains uncultured
+    message("Removing species containing the terms: uncultured, environmental, 
+            unidentified,fungal, eukaryote or unclassified")
+    if(length(grep("uncultured",btab$S,ignore.case = T))>0) btab<-btab[-grep("uncultured",btab$S,ignore.case = T),]
+    if(length(grep("environmental",btab$S,ignore.case = T))>0) btab<-btab[-grep("environmental",btab$S,ignore.case = T),]
+    if(length(grep("unclassified",btab$S,ignore.case = T))>0) btab<-btab[-grep("unclassified",btab$S,ignore.case = T),]
+    if(length(grep("unidentified",btab$S,ignore.case = T))>0) btab<-btab[-grep("unidentified",btab$S,ignore.case = T),]
+    if(length(grep("fungal ",btab$S,ignore.case = T))>0) btab<-btab[-grep("fungal ",btab$S,ignore.case = T),]
+    if(length(grep("eukaryote",btab$S,ignore.case = T))>0) btab<-btab[-grep("eukaryote",btab$S,ignore.case = T),]
+  }
+  
+  write.table(x = btab,file = out,sep="\t",quote = F,row.names = F)
+  
 }

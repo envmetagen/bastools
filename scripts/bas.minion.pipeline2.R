@@ -374,20 +374,12 @@ if("step5" %in% stepstotake){
 #step 6 blast
 if("step6" %in% stepstotake){
   
-  message("STEP6 - blast")
+  message("STEP6 - BLAST")
   
   t1<-Sys.time()
   
-  options=c("-word_size", 6, "-perc_identity", 50, "-qcov_hsp_perc", min_qcovs, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)
-  
-  message("Using blastn for Minion data. Defaulting to ", options)
-  
-  if(!is.null(taxidlimit)){
-     blast.status<-blast.min.bas(infastas = catted_file,refdb = refdb,blast_exec = blast_exec,
-                                wait = T,taxidlimit = taxidlimit,taxidname = taxidname, ncbiTaxDir = ncbiTaxDir,task="blastn",
-                                max_target_seqs = max_target_seqs,more = options)
-    } else blast.status<-blast.min.bas(infastas = catted_file,refdb = refdb,blast_exec = blast_exec, wait = T, ncbiTaxDir = ncbiTaxDir,
-                                       task="blastn",overWrite = T,max_target_seqs = max_target_seqs,more = options)
+  blast.status<-blast.min.bas2(infasta = catted_file,refdb = refdb,blast_exec = blast_exec, wait = T,
+                               taxidlimit = taxidlimit, ncbiTaxDir = ncbiTaxDir,task="blastn", opts = opts)
   
   check.blasts(infastas = catted_file,h = blast.status)
   
@@ -433,7 +425,7 @@ if("step8" %in% stepstotake){
   blastfile<-gsub(".fasta",".blast.txt",catted_file)
   message(paste("filtering blast results for",blastfile))
   out<-gsub(".blast.txt",".blast.filt.txt",blastfile)
-  filter.blast2(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, min_qcovs = min_qcovs,max_evalue = max_evalue)
+  filter.blast3(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out,rm.unclassified = F)
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
