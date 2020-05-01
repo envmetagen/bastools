@@ -5127,9 +5127,6 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   btabf<-btab[!(btab$F=="unknown" & btab$G=="unknown" & btab$S=="unknown"),]  ####line changed 
   btabf<-btabf[!(btabf$F=="unknown" & btabf$G=="unknown"),] ####line changed 
   
-  #this is ok, but when ncbi taxonomy does not have family-level assignment, we only get to order, stupid, or rather we do get to 
-  #family or subfamily as lca, but final report puts it to "unknown"
-  
   message("applying family top threshold of ",topF)
   topdf<-aggregate(x = btabf[,"pident"],by=list(btabf$qseqid),FUN = max)
   colnames(topdf)<-c("qseqid","pident")
@@ -5222,10 +5219,9 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
   
   message(c("Complete. ",total_hits, " hits from ", total_queries," queries processed in ",t3," mins."))
   
-  message("Note: if all hits for a particular OTU are removed due to filters, 
-        the results will be NA for all taxon levels.
-        If the lca for a particular OTU is above kingdom, e.g. cellular organisms or root, 
-        the results will be unknown for all taxon levels.")
+  message("Note: If none of the hits for a BLAST query pass the binning thesholds, the results will be NA for all levels.
+                 If the LCA for a query is above kingdom, e.g. cellular organisms or root, the results will be 'unknown' for all levels.
+                 Queries that had no BLAST hits, or did not pass the filter.blast step will not appear in results.  ")
 }
 
 # =========================================================
@@ -5895,7 +5891,7 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   
   outdircheck<-
   
-  if(overWrite==F) if(file.exists(out)) stop("The following file already exists ", out)
+  if(overWrite==F) if(file.exists(out)) stop("The following file already exists ", out, "Use overWrite=T to overwrite")
   
   if(!is.null(taxidlimit)){
     
@@ -5925,7 +5921,7 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   Sys.sleep(time = 2)
   
   #report PID
-  message(paste(infasta," PID:",h$get_pid()))
+  message(paste("PID:",h$get_pid()))
   
   #check immediate exit status
   exits<-h$get_exit_status()
