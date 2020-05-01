@@ -379,7 +379,7 @@ if("step6" %in% stepstotake | "all" %in% stepstotake){
   t1<-Sys.time()
   
   blast.status<-blast.min.bas2(infasta = catted_file,refdb = refdb,blast_exec = blast_exec, wait = T,
-                               taxidlimit = taxidlimit, ncbiTaxDir = ncbiTaxDir,opts = opts)
+                               taxidlimit = taxidlimit, ncbiTaxDir = ncbiTaxDir,opts = opts,overWrite = T)
   
   t2<-Sys.time()
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
