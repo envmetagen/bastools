@@ -107,7 +107,7 @@ if("step2" %in% stepstotake | "all" %in% stepstotake){
     datalist[[i]][,5]<-files[i]
     
     if(polished){
-      datalist[[i]][,6]<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(datalist[[i]][,1],"size="))[,2],":"))[,1])
+      datalist[[i]][,6]<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(datalist[[i]][,1],"size="))[,3],":"))[,1])
       
       rep.row<-function(x,n){
         matrix(rep(x,each=n),nrow=n)
@@ -262,7 +262,7 @@ if("step4" %in% stepstotake | "all" %in% stepstotake){
             counts<-system2("seqkit", args=c("fx2tab","-l","-i","-n",fastx.file),wait = T,stdout = T)
             if(length(counts)!=0) {
               counts<-read.table(text = counts,header = F,sep = "\t")
-              counts$size<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(counts[,1],"size="))[,2],":"))[,1])
+              counts$size<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(counts[,1],"size="))[,3],":"))[,1])
               sum(counts$size)
             } else 0
         }
@@ -476,7 +476,7 @@ if("step10" %in% stepstotake | "all" %in% stepstotake){
       otutab$otu<-gsub(">","",otutab$otu)
       otutab$ss_sample_id<-do.call(rbind,stringr::str_split(otutab$otu,"ss_sample_id="))[,2]
       
-      otutab$count<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(otutab[,2],"size="))[,2],":"))[,1])
+      otutab$count<-as.numeric(do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(otutab[,2],"size="))[,3],":"))[,1])
       otutab<-as.data.frame(tidyr::pivot_wider(otutab[,c(-1,-2)],names_from = ss_sample_id,values_from=count,values_fill = list(count = 0)))
   }
   
