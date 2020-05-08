@@ -1699,12 +1699,19 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
     
     #add disabled taxa columns
     if(!is.null(disabledTaxaFile)){
-      disabledTaxaDf<-data.table::fread(disabledTaxaFile, data.table = T,sep = "\t")
+      disabledTaxaDf<-data.table::fread(disabledTaxaFile, data.table = F,sep = "\t")
       if(!"taxids" %in% colnames(disabledTaxaDf)) stop("No column called 'taxids'")
       if(!"disable_species" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_species'")
       if(!"disable_genus" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_genus'")
       if(!"disable_family" %in% colnames(disabledTaxaDf)) stop("No column called 'disable_family'")
       
+      #convert to logical
+      disabled.cols<-c("disable_species","disable_genus","disable_family")
+      for(i in 1:3){
+        disabledTaxaDf[,disabled.cols[i]]<-as.logical(disabledTaxaDf[,disabled.cols[i]])
+        disabledTaxaDf[,disabled.cols[i]][is.na(disabledTaxaDf[,disabled.cols[i]])]<-"FALSE"
+      }
+
       disabledSpecies<-disabledTaxaDf[disabledTaxaDf$disable_species==T,"taxids"]
       disabledSpecies<-disabledSpecies[!is.na(disabledSpecies)]
       
@@ -1718,9 +1725,10 @@ check.low.res.df<-function(filtered.taxatab,filtered_blastfile, binfile,disabled
       contributordf$genus_disabled<-contributordf$taxids %in% disabledGenus
       contributordf$family_disabled<-contributordf$taxids %in% disabledFamily
       
-    } else {contributordf$species_disabled<-"FALSE"
-    contributordf$genus_disabled<-"FALSE"
-    contributordf$family_disabled<-"FALSE"
+    } else {
+      contributordf$species_disabled<-"FALSE"
+      contributordf$genus_disabled<-"FALSE"
+      contributordf$family_disabled<-"FALSE"
     }
     
     #add rank
@@ -3727,7 +3735,7 @@ google.read.master.url<-function(sheeturl,out=NULL,ws="Master_Samplesheet"){
     ss_data<-ss_data[3:length(ss_data$sample_alias),]
     ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
   } else{
-    if(ws == "ENA_library_data") { 
+    if(ws == "ENA_library_data" | ws == "ENA_library_data_Single_End") { 
       ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
       ss_data<-as.data.frame(ss_data[!is.na(ss_data$sample_alias),])
     } else{
@@ -4688,11 +4696,12 @@ merge.and.check.disabled.taxa.files<-function(disabledTaxaFiles,disabledTaxaOut,
   
   disabledTaxaDF<-do.call(rbind,disabledTaxaDFList)
   
-  #make empty cells FALSE
-  disabledTaxaDF$disable_species<-as.logical(disabledTaxaDF$disable_species)
-  disabledTaxaDF$disable_genus<-as.logical(disabledTaxaDF$disable_genus)
-  disabledTaxaDF$disable_family<-as.logical(disabledTaxaDF$disable_family)
-  disabledTaxaDF[,c(-1,-2)][is.na(disabledTaxaDF[,c(-1,-2)])]<-FALSE
+  #convert to logical
+  disabled.cols<-c("disable_species","disable_genus","disable_family")
+  for(i in 1:3){
+    disabledTaxaDf[,disabled.cols[i]]<-as.logical(disabledTaxaDf[,disabled.cols[i]])
+    disabledTaxaDf[,disabled.cols[i]][is.na(disabledTaxaDf[,disabled.cols[i]])]<-"FALSE"
+  }
   
   disabledTaxaDF<-add.lineage.df(disabledTaxaDF,ncbiTaxDir,as.taxids = T)
   
