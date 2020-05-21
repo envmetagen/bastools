@@ -39,10 +39,11 @@ ms_ss<-subset_mastersheet(master_sheet, subsetlist)
 master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 
 #show included/excluded
-message("Samples in final dataset")
-colnames(all.taxatabs.ss[,-1])
-message("Samples excluded from final dataset")
-colnames(all.taxatabs[,-1])[!colnames(all.taxatabs[,-1]) %in% colnames(all.taxatabs.ss[,-1])]
+message("fix this")
+# message("Samples in final dataset")
+# colnames(all.taxatabs.ss[,-1])
+# message("Samples excluded from final dataset")
+# colnames(all.taxatabs[,-1])[!colnames(all.taxatabs[,-1]) %in% colnames(all.taxatabs.ss[,-1])]
 
 ```
 
@@ -385,7 +386,7 @@ if(aggregate.pre.grouping==F){
 ## some barplots
 ```{r barplots, eval=TRUE,echo=F,fig.height=7,fig.width=20}
 
-if(!is.null(plotting.vars)){
+if(plot.bars) if(!is.null(plotting.vars)){
   
   taxatabs.multilevels<-list()
   
@@ -439,43 +440,29 @@ if(!is.null(plotting.vars)){
 
 ## heatmaps 
 ```{r heatmaps, eval=TRUE,echo=F,fig.height=7,fig.width=20}
-if(!is.null(plotting.vars)){
+if(plot.heatmaps) if(!is.null(plotting.vars)){
   
-  taxatabs.multilevels<-list()
-  
-  if(!is.null(plotting_levels)){
-    for(i in 1:length(plotting_levels)){
-      if(plotting_levels[i]=="species") {
-        taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = T)
-      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=T)
-    }
-    taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
-    
-
-  } else taxatabs.multilevels[[1]]<-all.taxatabs.ss
-
   message("Making heatmaps")
   message("Note: Heatmaps will be larger in this html than if plotted alone")
     
   values.to.plot<-c("nreads","ndxns","dxn")
     
-    for(h in 1:length(values.to.plot)){
-      for(j in 1:length(taxatabs.multilevels)){
-        for(i in 1:length(plotting.vars)){
-          print(taxatab.heatmap(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,group.by=plotting.vars[[i]],
-                values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,
-                current.grouping = sumrepsby) )
+      for(i in 1:length(plotting.vars)){
+          for(h in 1:length(values.to.plot)){
+            taxatab.heatmap(taxatab = all.taxatabs.ss,master_sheet = ms_ss,group.by=plotting.vars[i],
+                values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,inc.values = T,current.grouping = "ss_sample_id")
         }
       }
-    }
 }
+
+
 ```
 
 
 ## pca plot 
 ```{r pca plots, eval=TRUE,echo=F}
 #just an example, not interesting in this case
-if(!is.null(plotting.vars)){
+if(plot.pca) if(!is.null(plotting.vars)){
   message("Plotting pca plot with lines")
   
   if(!is.null(plotting_levels)){
@@ -494,19 +481,12 @@ if(!is.null(plotting.vars)){
   
   for(j in 1:length(taxatabs.multilevels)){
     for(i in 1:length(plotting.vars)){
-      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,lines = T,longnames = F,shortnames = T,ellipse = T,
-                            factor1 = plotting.vars[i]))
+      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,lines = show.pca.lines,longnames = F,
+                                 shortnames = T,ellipse = T,factors = plotting.vars[i],hidelegend = hidelegend.pca))
     }
   }
   
-  message("Plotting pca plot without lines")
-  for(j in 1:length(taxatabs.multilevels)){
-    for(i in 1:length(plotting.vars)){
-      message("")
-      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,lines = F,longnames = F,shortnames = T,ellipse = T,
-                            factor1 = plotting.vars[i]))
-    }
-  }
+ 
 } else message("plotting.vars=F...skipping pca plots")
 ```
 

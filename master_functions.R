@@ -1281,7 +1281,7 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
 }
 
 #Plotting bray distance matrix PCA
-taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lines=F,longnames=F,shortnames=F,ellipse=T,facetcol=NULL){
+taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lines=F,longnames=F,shortnames=F,ellipse=T,hidelegend=F){
   message("Assuming grouping has already been done")
   
   taxatab2<-taxatab
@@ -1300,7 +1300,9 @@ taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lin
   cmdspoints[,grouping]<-rownames(cmdspoints)
   cmdspoints<-merge(cmdspoints,ms_ss,by=grouping,all.x = T)
 
-  cmdspoints$factorx<-do.call(paste,c(cmdspoints[,factors],sep="."))
+  if(length(factors)>1) {
+    cmdspoints$factorx<-do.call(paste,c(cmdspoints[,factors],sep="."))
+  } else cmdspoints$factorx<-cmdspoints[,factors]
   
   #plot
   p<-ggplot(cmdspoints,aes(x=V1,y=V2))+
@@ -1318,7 +1320,7 @@ taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lin
   # if(!is.null(facetcol))  if(length(facetcol)==1) p<-p+facet_wrap(vars(cmdspoints[,match(facetcol[1],colnames(cmdspoints))]),scales = "fixed")
   # if(!is.null(facetcol))  if(length(facetcol)>1) p<-p+facet_wrap(facetcol,scales = "fixed")
   
-  message("Principal Component Analysis plot of community simmilarity using Bray-Curtis distances")
+  message("Principal Coordinate Analysis plot of community simmilarity using Bray-Curtis distances")
   
   if(ellipse){
     message("Note: Ellipses will not be calculated if there are groups with too few data points")
@@ -1348,7 +1350,15 @@ taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lin
     }
   }
   
-  p
+  plotlist<-list()
+  
+  if(hidelegend) {
+    plotlist[[1]]<-p+theme(legend.position = "none")
+    plotlist[[2]]<-ggpubr::as_ggplot(cowplot::get_legend(p))
+  } else plotlist[[1]]<-p
+  
+  return(plotlist)
+  
 }
 
 read.ecopcrdb<-function(ecopcr.db,ecopcr.tab,obitaxoR){
@@ -4654,6 +4664,13 @@ filter.blast<-function(blastfile,headers="qseqid evalue staxid pident qcovs",ncb
   btab$taxids<-btab$staxid #add.lineage.df requires this colname
   btab<-add.lineage.df(btab,ncbiTaxDir)
   
+  btab$K<-gsub(" ","_",btab$K)
+  btab$P<-gsub(" ","_",btab$P)
+  btab$C<-gsub(" ","_",btab$C)
+  btab$O<-gsub(" ","_",btab$O)
+  btab$F<-gsub(" ","_",btab$F)
+  btab$G<-gsub(" ","_",btab$G)
+  
   #remove crappy hits 
   if(rm.unclassified==T){
     #1. btab$S contains uncultured
@@ -4924,6 +4941,13 @@ filter.blast2<-function(blastfile,headers="qseqid evalue staxid pident qcovs",nc
   message("adding taxonomic lineages")
   btab$taxids<-btab$staxid #add.lineage.df requires this colname
   btab<-add.lineage.df(btab,ncbiTaxDir)
+  
+  btab$K<-gsub(" ","_",btab$K)
+  btab$P<-gsub(" ","_",btab$P)
+  btab$C<-gsub(" ","_",btab$C)
+  btab$O<-gsub(" ","_",btab$O)
+  btab$F<-gsub(" ","_",btab$F)
+  btab$G<-gsub(" ","_",btab$G)
   
   #remove crappy hits 
   if(rm.unclassified==T){
@@ -5571,11 +5595,15 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     
     ms.split<-split(master_sheet,split.list)
     
-    #then split taxatab
+    #then split taxatab, removing any that have no samples for that facet
     taxatab.list<-list()
     for(i in 1:length(ms.split)){
-      taxatab.list[[i]]<-cbind(taxon=taxatab2$taxon,taxatab2[colnames(taxatab2) %in% ms.split[[i]][,current.grouping]])
+      taxatabtemp<-cbind(taxon=taxatab2$taxon,taxatab2[colnames(taxatab2) %in% ms.split[[i]][,current.grouping]])
+      if(ncol(taxatabtemp)>1) taxatab.list[[i]]<-taxatabtemp else taxatab.list[[i]]<-NULL
     }
+    
+    taxatab.list<-taxatab.list[-which(sapply(taxatab.list, is.null))]
+    
   } else {
     taxatab.list<-list()
     taxatab.list[[1]]<-taxatab2
@@ -5640,9 +5668,17 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   #colour bar
   if(!is.null(colour.bar)) {
     
-    MyColsx<-MyCols[c(1:6,15,17,20)]
-    
     colour.bar.groups<-master_sheet[match(colnames(taxatab.list[[1]][,-1,drop=F]),master_sheet[,group.by]),colour.bar]
+    
+    if(sum(is.na(colour.bar.groups))>0) {
+      message("some colour bar groups were NA, changing to unknown")
+      colour.bar.groups[is.na(colour.bar.groups)]<-"unknown"
+    }
+    
+    if(length(unique(colour.bar.groups))<10) { 
+      MyColsx<-MyCols[c(1:6,15,17,20)]
+    } else MyColsx<-palette(rainbow(length(unique(colour.bar.groups))))
+    
     colours.list<-MyColsx[as.numeric(as.factor(colour.bar.groups))]
     names(colours.list)<-as.factor(colour.bar.groups)
     colours.list<-list(colours.list)
@@ -5662,7 +5698,7 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     if(!is.null(tidy.taxon.names)) taxatab.list2[[i]]<-tidy.taxon(taxatab=taxatab.list2[[i]],rm.trailing.NA=T,rm.preceeding.above=tidy.taxon.names)
     
     #convert to matrix
-    rownames(taxatab.list2[[i]])<-taxatab.list2[[i]]$taxon
+    rownames(taxatab.list2[[i]])<-make.unique(taxatab.list2[[i]]$taxon)
     taxatab.list2[[i]]$taxon=NULL
     taxatab.list2[[i]]<-as.matrix(taxatab.list2[[i]])
   }
@@ -5984,6 +6020,13 @@ filter.blast3<-function(blastfile,ncbiTaxDir,out,rm.unclassified=T){
   message("adding taxonomic lineages")
   btab$taxids<-btab$staxid #add.lineage.df requires this colname
   btab<-add.lineage.df(btab,ncbiTaxDir)
+  
+  btab$K<-gsub(" ","_",btab$K)
+  btab$P<-gsub(" ","_",btab$P)
+  btab$C<-gsub(" ","_",btab$C)
+  btab$O<-gsub(" ","_",btab$O)
+  btab$F<-gsub(" ","_",btab$F)
+  btab$G<-gsub(" ","_",btab$G)
   
   #remove crappy hits 
   if(rm.unclassified==T){
