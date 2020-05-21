@@ -4351,8 +4351,7 @@ bin.blast2<-function(filtered_blastfile,ncbiTaxDir,
   
   if(is.null(out)) stop("out not specified")
   if(is.null(ncbiTaxDir)) stop("ncbiTaxDir not specified")
-  if(is.null(obitaxdb)) stop("obitaxdb not specified")
-  
+
   require(treemap)
   
   ###################################################

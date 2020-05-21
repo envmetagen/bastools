@@ -69,7 +69,16 @@ if("step2" %in% stepstotake){
 if("step3" %in% stepstotake){
   
   message("STEP3 - loop blast")
-  a<-data.table::fread(paste0(gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),".clean"),sep = "\t",data.table = F)
+  
+  if(primers_already_removed) {
+    a<-phylotools::read.fasta(starting_fasta)
+    a$taxids<-do.call(rbind,stringr::str_split(do.call(rbind,stringr::str_split(a$seq.name,pattern = "taxid="))[,2],pattern = ";"))[,1]
+    a<-add.lineage.df(a,ncbiTaxDir)
+    a$AC<-do.call(rbind,stringr::str_split(a$seq.name,pattern = " "))[,1]
+    a$sequence<-a$seq.text
+    a$sequence<-gsub("-","",a$sequence)
+    a$path<-paste(a$K,a$P,a$C,a$O,a$F,a$G,a$S,sep = ";")
+  } else a<-data.table::fread(paste0(gsub(".fasta",paste0(".",primer_set_name,".ecopcrResults.txt"),starting_fasta),".clean"),sep = "\t",data.table = F)
   
   #subset by taxonlimit
   message("ecoPCR table length:",nrow(a))
