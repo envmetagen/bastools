@@ -39,7 +39,7 @@ if("step8" %in% stepstotake){
     message(paste("filtering blast results for",files[i]))
     blastfile = files[i]
     out<-gsub(".blast.txt",".blast.filt.txt",files[i])
-    filter.blast3(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out, top = top)
+    filter.blast3(blastfile = blastfile,ncbiTaxDir = ncbiTaxDir,out = out)
   }
   message("STEP8 complete")
   
