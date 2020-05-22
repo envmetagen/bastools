@@ -5602,14 +5602,21 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
       if(ncol(taxatabtemp)>1) taxatab.list[[i]]<-taxatabtemp else taxatab.list[[i]]<-NULL
     }
     
-    taxatab.list<-taxatab.list[-which(sapply(taxatab.list, is.null))]
+    #remove taxatables and split.list if NULL (accountign that taxtable.list may be shorter than ms.list)
+    ms.split<-ms.split[c(1:length(taxatab.list))]
+    if(length(which(sapply(taxatab.list, is.null)))>0) {
+        ms.split<-ms.split[-which(sapply(taxatab.list, is.null))]
+        taxatab.list<-taxatab.list[-which(sapply(taxatab.list, is.null))]
+    }
     
-  } else {
+    } else {
     taxatab.list<-list()
     taxatab.list[[1]]<-taxatab2
     ms.split<-list()
     ms.split[[1]]<-master_sheet
   }
+  
+  
   
   #then group by group.by
   for(i in 1:length(taxatab.list)){
