@@ -14,11 +14,13 @@
 # -qcov_hsp_perc 98 -gapopen 0 -gapextend 2 -reward 1 -penalty -1 -dust no \
 # -out 2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt
 
-outDir<-"/home/tutorial/TOOLS/bastools/beta/PB_classifier/"
-input<-"2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt" #example
+outDir<-"/home/tutorial/SCRIPTS/PB_tests/"
+input<-"/home/tutorial/TOOLS/bastools/beta/PB_classifier/2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt" #example
 bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #needed only for add.lineage.df
 ncbiTaxDir<-"/home/tutorial/TOOLS/metabinkit.install/exe/../db/"
 TaxlevelTest=c("S","G","F")
+plot.at.level<-"F"
+limit.plot.to.taxon<-c("Veneroida","O")
 
 source(paste0(bastoolsDir,"master_functions.R"))
 library(ggplot2)
@@ -190,7 +192,6 @@ bin.resultsF<-bin.results[[3]]
 #######################################################
 
 #LOOP BINNING 
-files<-c("tempBLASTDB.S.tsv","tempBLASTDB.G.tsv","tempBLASTDB.F.tsv")
 tops<-c(0.1,1,10,100)
 pidents.list<-list(Spident=c(100,98,95,93),Gpident=c(99,97,95,93),Fpident=c(99,90,80,70))
 outfiles<-"outfiles"
@@ -387,8 +388,7 @@ count.plot
 #############################################  
 #plot by taxon, optional filter by taxa  
 
-plot.at.level<-"F"
-limit.plot.to.taxon<-c("Veneroida","O")
+
 out.plot.list<-list()
 
 final.table.list<-split(final.table,final.table$level)
