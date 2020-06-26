@@ -164,7 +164,7 @@ if (rep.rm.first==T){
   stepcounter<-stepcounter+1
   all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "repfilter1")
 
-  full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
+  #full.negative.inspection(taxatab=all.taxatabs.ss,ms_ss=ms_ss,real=real)
   
   #rank stats
   print(stats.by.rank(taxatab = all.taxatabs.ss))
@@ -450,7 +450,7 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
       for(i in 1:length(plotting.vars)){
           for(h in 1:length(values.to.plot)){
             taxatab.heatmap(taxatab = all.taxatabs.ss,master_sheet = ms_ss,group.by=plotting.vars[i],
-                values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,inc.values = T,current.grouping = "ss_sample_id")
+                values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,inc.values = T,current.grouping = sumrepsby)
         }
       }
 }

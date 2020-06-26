@@ -10,17 +10,25 @@ a<-barcode_gap_analysis(simMat = simMat,threshold = threshold,fill_NA = 100,ncbi
 a[[1]]
 a2<-cowplot::plot_grid(plotlist = a[[2]],labels = "AUTO") #list("species level","genus level","family level")
 cowplot::save_plot("12SV51.cowplot.png",a2,base_width = 15,base_height = 10)
-barcode_gap_analysis<-function(simMat,threshold=NULL,fill_NA=NULL,ncbiTaxDir){
+
+barcode_gap_analysis<-function(simMat,threshold=NULL,fill_NA=NULL,ncbiTaxDir=NULL,custom_lineage=NULL){
+  
+  require(ggplot2)
 
 #simMat is a dataframe matrix of identities (i.e. from an alignment), with the first column being taxids
+  #transform blast results into this?
 #simMat<-data.table::fread("/media/sf_Documents/WORK/CIBIO/AA_PROJECTS/FILTURB/SARA_MSc/Alignments/North_Paper_DB_similarity_matrix.csv",header = T,data.table = F)
 #fill_NA is used to fill Nas with any value
   #threshold=c(98,95,92)
   
 colnames(simMat)[1]<-"taxids"
 simMat[is.na(simMat)]<-fill_NA
-taxids<-simMat[,"taxids",drop=F]
-lineage<-add.lineage.df(taxids,ncbiTaxDir = ncbiTaxDir)
+
+if(is.null(custom_lineage)){
+  if(is.null(ncbiTaxDir)) stop("No custom lineage or ncbiTaxDir provided")
+  taxids<-simMat[,"taxids",drop=F]
+  lineage<-add.lineage.df(taxids,ncbiTaxDir = ncbiTaxDir)
+} else lineage<-data.table::fread(custom_lineage,data.table = F, header=T)
 
 taxlevel<-c("species","genus","family")
 newtab.list<-list()
@@ -49,8 +57,13 @@ for(j in 1:3){
     newtab$taxon[i]=taxoni
     newtab$max_within[i]=max(longtemp[longtemp$variable==taxoni,"value"])
     newtab$min_within[i]=min(longtemp[longtemp$variable==taxoni,"value"])
-    newtab$max_among[i]=max(longtemp[longtemp$variable!=taxoni,"value"])
-    newtab$min_among[i]=min(longtemp[longtemp$variable!=taxoni,"value"])
+    if(nrow(longtemp[longtemp$variable!=taxoni,])>0){
+      newtab$max_among[i]=max(longtemp[longtemp$variable!=taxoni,"value"])
+      newtab$min_among[i]=min(longtemp[longtemp$variable!=taxoni,"value"])
+    } else {
+      newtab$max_among[i]=0
+      newtab$min_among[i]=0
+    }
   }
 
   newtab.list[[j]]<-newtab

@@ -102,8 +102,9 @@ hidelegend=T
 hidelegend.pca=T
 #split plots by facet, set to NULL if not required, usually for "below" plotting.vars (not implemeted for pca plots yet)
 facetcol=NULL
-#add a colour bar to heatmap plots (only makes sense if "above" plotting.vars). can be NULL
-colour.bar="predator_species"
+#add a colour bar to heatmap plots (only makes sense if "above" plotting.vars). 
+#can be NULL, can be up to three - samples will be ordered according to the last one
+colour.bar=c("predator_species")
 #make krona plot of final taxatab, put to F if not desired
 krona.out<-F
 

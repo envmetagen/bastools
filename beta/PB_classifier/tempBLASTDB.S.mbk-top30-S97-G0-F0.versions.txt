@@ -1,0 +1,25 @@
+R version 3.6.0 (2019-04-26)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 18.10
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.8.0
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.8.0
+
+locale:
+ [1] LC_CTYPE=pt_PT.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=pt_PT.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=pt_PT.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=pt_PT.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=pt_PT.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] data.table_1.12.8 optparse_1.6.6   
+
+loaded via a namespace (and not attached):
+[1] compiler_3.6.0 magrittr_1.5   tools_3.6.0    getopt_1.20.3  stringi_1.4.6 
+[6] stringr_1.4.0 

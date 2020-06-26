@@ -206,7 +206,7 @@ negs.stats<-function(taxatab,ms_ss,real,ex_hominidae=T,printnegs=T){
 #remove contaminant taxa from samples, based on occurrences in negatives
 remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,printcontaminations=T,remove.entire.dataset=T,rm.only.less.than=T){
   
-  if(rm.only.less.than==T)  message("Only removing detections which had a read count less than the negtive")
+  if(rm.only.less.than==T)  message("Only removing detections which had a read count less than the negative")
   
     taxatabX<-taxatab
   
@@ -245,7 +245,7 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
           
           #put taxon counts to 0
           contaminations<-cbind(taxon=taxatabX$taxon[taxatabX$taxon %in% negtaxa],
-                                              taxatabX[taxatabX$taxon %in% negtaxa,colnames(taxatabX) %in% group.samples])
+                                              taxatabX[taxatabX$taxon %in% negtaxa,colnames(taxatabX) %in% group.samples,drop=F])
           contaminations<-cbind(taxon=contaminations[,1],contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
           
             if(rm.only.less.than==T){
@@ -1320,7 +1320,7 @@ taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lin
   # if(!is.null(facetcol))  if(length(facetcol)==1) p<-p+facet_wrap(vars(cmdspoints[,match(facetcol[1],colnames(cmdspoints))]),scales = "fixed")
   # if(!is.null(facetcol))  if(length(facetcol)>1) p<-p+facet_wrap(facetcol,scales = "fixed")
   
-  message("Principal Coordinate Analysis plot of community simmilarity using Bray-Curtis distances")
+  message("Principal Coordinates Analysis plot of community simmilarity using Bray-Curtis distances")
   
   if(ellipse){
     message("Note: Ellipses will not be calculated if there are groups with too few data points")
@@ -1911,13 +1911,16 @@ stats.by.rank<-function(taxatab){
   return(f)
 }
 
-sumreps<-function(taxatab,ms_ss,grouping="Sample_Name",discard=T){
+sumreps<-function(taxatab,ms_ss,grouping="Sample_Name",discard=T,current.grouping="ss_sample_id"){
+  
+  require(tidyverse)
+  
   if(discard) { 
     message("If only one rep, will discard the rep completely")
   } else { message("If only one rep, will keep that rep") }
   
   #get group ids
-  mapping<-ms_ss[match(colnames(taxatab[,-1]),ms_ss$ss_sample_id),grouping]
+  mapping<-ms_ss[match(colnames(taxatab[,-1]),ms_ss[,current.grouping]),grouping]
   
   clean<-list()
   for(i in 1:length(unique(mapping))){
@@ -3372,7 +3375,9 @@ rm.single.rep.dxn<-function(taxatab,ms_ss,grouping="Sample_Name",negatives=NULL)
   }
   
   if(!is.null(negatives)){
-    out<-cbind(taxatab.exempt,do.call(cbind,clean))
+    if(ncol(taxatab.exempt)>0) {
+      out<-cbind(taxatab.exempt,do.call(cbind,clean))
+    } else {out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))}
   } else {out<-cbind(taxon=taxatab$taxon,do.call(cbind,clean))}
   
   out<-rm.0readtaxSam(taxatab = out)
@@ -3738,7 +3743,7 @@ fix.google.colnames<-function(master_sheet){
 google.read.master.url<-function(sheeturl,out=NULL,ws="Master_Samplesheet"){
   url2<-stringr::str_split(sheeturl,"/d/")[[1]][2]
   url2<-stringr::str_split(url2,"/")[[1]][1]
-  ss_info<-googlesheets4::sheets_get(ss = url2)
+  ss_info<-googlesheets4::gs4_get(ss = url2)
   if(ws == "ENA_sample_data") {
     ss_data<-googlesheets4::read_sheet(ss = url2,sheet = ws,col_types = "c") 
     colnames(ss_data)<-ss_data[2,]
@@ -5562,9 +5567,9 @@ plot.taxatab.rank.props<-function(taxatab.list){
   
   colnames(rank.taxatabs)<-gsub("rank","Rank",colnames(rank.taxatabs))
   
-  rank.taxatabs$Rank<-gsub("htf","Above family",rank.taxatabs$Rank)
+  rank.taxatabs$Rank<-gsub("htf","above family",rank.taxatabs$Rank)
   
-  rank.taxatabs$Rank<-factor(rank.taxatabs$Rank,levels = c("Above family","family","genus" ,"species"))
+  rank.taxatabs$Rank<-factor(rank.taxatabs$Rank,levels = c("above family","family","genus" ,"species"))
   
   ggplot(rank.taxatabs,aes(x=taxatab,y=reads,fill=Rank))+geom_bar(stat="identity",position="fill")+
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -5620,7 +5625,7 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   
   #then group by group.by
   for(i in 1:length(taxatab.list)){
-    taxatab.list[[i]]<-sumreps(taxatab = taxatab.list[[i]],ms_ss = ms.split[[i]],grouping = group.by,discard = F)
+    taxatab.list[[i]]<-sumreps(taxatab = taxatab.list[[i]],ms_ss = ms.split[[i]],grouping = group.by,discard = F,current.grouping = current.grouping)
   }
   
   #then make all taxa present in all taxatables, in same order
@@ -5643,18 +5648,6 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     ranks<-factor(bas.get.ranks(taxatab.list[[i]]),levels = c("species","genus","family","htf"))
   }
   
-  # #column splitting/ordering here. make a vector of splits based on split.by.columns
-  # if(!is.null(split.by.columns)){
-  #   split.list<-list()
-  #   for(i in 1:length(split.by.columns)){
-  #     split.list[[i]]<-as.data.frame(as.factor(master_sheet[,split.by.columns[i]]))
-  #   }
-  # 
-  #   master_sheet$newfacets<-do.call(paste, c(do.call(cbind,split.list), sep="."))
-  #   #sort facets by taxatab
-  #   newfacets2<-master_sheet$newfacets[match(colnames(taxatab2[,-1,drop=F]),master_sheet[,current.grouping])]
-  # } else comb.facetcol=NULL
-  
   #ditto for samples
   all.samples<-unique(unlist(lapply(taxatab.list,function(x) colnames(x[,-1]))))
   for(i in 1:length(taxatab.list)){
@@ -5675,24 +5668,84 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   #colour bar
   if(!is.null(colour.bar)) {
     
-    colour.bar.groups<-master_sheet[match(colnames(taxatab.list[[1]][,-1,drop=F]),master_sheet[,group.by]),colour.bar]
+    if(length(colour.bar)>3) stop("More than 3 colour.bars requested, limit is 3")
     
-    if(sum(is.na(colour.bar.groups))>0) {
-      message("some colour bar groups were NA, changing to unknown")
-      colour.bar.groups[is.na(colour.bar.groups)]<-"unknown"
+    outgroups<-list()
+    outcols<-list()
+    
+    for(i in 1:length(colour.bar)){
+    
+      colour.bar.groups<-master_sheet[match(colnames(taxatab.list[[1]][,-1,drop=F]),master_sheet[,group.by]),colour.bar[i]]
+      
+      if(sum(is.na(colour.bar.groups))>0) {
+        message("some colour bar groups were NA, changing to unknown")
+        colour.bar.groups[is.na(colour.bar.groups)]<-"unknown"
+      }
+      
+      if(i==1){
+        if(length(unique(colour.bar.groups))<29) { 
+          MyColsx<-MyCols
+        } else MyColsx<-rainbow(length(unique(colour.bar.groups)))
+        colnum1<-length(unique(colour.bar.groups))
+      }
+      
+      if(i==2){
+        if(length(unique(colour.bar.groups))+colnum1<29) { 
+          MyColsx<-MyCols
+          MyColsx<-MyColsx[(colnum1+1):length(MyColsx)]
+        } else {
+          MyColsx<-rainbow(colnum1+length(unique(colour.bar.groups)))
+          MyColsx<-MyColsx[(colnum1+1):length(MyColsx)]
+        }
+        colnum2<-length(unique(colour.bar.groups))
+      }
+      
+      if(i==3){
+        if(length(unique(colour.bar.groups))+colnum1+colnum2<29) { 
+          MyColsx<-MyCols
+          MyColsx<-MyColsx[(colnum1+colnum2+1):length(MyColsx)]
+        } else {
+          MyColsx<-rainbow(colnum1+colnum2+length(unique(colour.bar.groups)))
+          MyColsx<-MyColsx[(colnum1+colnum2+1):length(MyColsx)]
+        }
+      }
+      
+      colours.list<-MyColsx[as.numeric(as.factor(colour.bar.groups))]
+      names(colours.list)<-as.factor(colour.bar.groups)
+      colours.list<-list(colours.list)
+      
+      if(i==1) names(colours.list)<-"bar"
+      if(i==2) names(colours.list)<-"foo"
+      if(i==3) names(colours.list)<-"tang"
+      
+      outgroups[[i]]<-colour.bar.groups
+      outcols[[i]]<-colours.list
     }
     
-    if(length(unique(colour.bar.groups))<10) { 
-      MyColsx<-MyCols[c(1:6,15,17,20)]
-    } else MyColsx<-palette(rainbow(length(unique(colour.bar.groups))))
+    if(length(colour.bar)==1) {
     
-    colours.list<-MyColsx[as.numeric(as.factor(colour.bar.groups))]
-    names(colours.list)<-as.factor(colour.bar.groups)
-    colours.list<-list(colours.list)
-    names(colours.list)<-"bar"
-    
-    ha = ComplexHeatmap::HeatmapAnnotation(bar=colour.bar.groups,show_annotation_name = F,col = colours.list,
+      ha = ComplexHeatmap::HeatmapAnnotation(bar=colour.bar.groups,show_annotation_name = F,col = colours.list,
                                            annotation_legend_param = list(bar = list(title = colour.bar)))
+                                           }
+    
+    if(length(colour.bar)==2) {
+      
+      ha = ComplexHeatmap::HeatmapAnnotation(bar=outgroups[[1]],foo=outgroups[[2]],show_annotation_name = F,
+                                             col = c(outcols[[1]],outcols[[2]]),
+                                             annotation_legend_param = list(bar = list(title = colour.bar[1])
+                                             ,foo=list(title=colour.bar[2])))
+    }
+    
+    if(length(colour.bar)==3) {
+      
+      ha = ComplexHeatmap::HeatmapAnnotation(bar=outgroups[[1]],foo=outgroups[[2]],tang=outgroups[[3]],show_annotation_name = F,
+                                             col = c(outcols[[1]],outcols[[2]],outcols[[3]]),
+                                             annotation_legend_param = list(bar = list(title = colour.bar[1])
+                                                                            ,foo=list(title=colour.bar[2])
+                                                                            ,tang=list(title=colour.bar[3])))
+    }
+    
+    
   } else ha=NULL
   
   
@@ -5702,7 +5755,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     
     if(values=="dxn") taxatab.list2[[i]]<-binarise.taxatab(taxatab.list[[i]],t=T) else taxatab.list2[[i]]<-taxatab.list[[i]]
     
-    if(!is.null(tidy.taxon.names)) taxatab.list2[[i]]<-tidy.taxon(taxatab=taxatab.list2[[i]],rm.trailing.NA=T,rm.preceeding.above=tidy.taxon.names)
+    if(!is.null(tidy.taxon.names)) taxatab.list2[[i]]<-tidy.taxon(taxatab=taxatab.list2[[i]],rm.trailing.NA=T,
+                                                                  rm.preceeding.above=tidy.taxon.names)
     
     #convert to matrix
     rownames(taxatab.list2[[i]])<-make.unique(taxatab.list2[[i]]$taxon)
@@ -5831,7 +5885,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
       
       hm.list[[i]]<-ComplexHeatmap::Heatmap(taxatab.list2[[i]],
                                             bottom_annotation=ha, 
-                                            col=circlize::colorRamp2(c(0, max(unlist(lapply(taxatab.list2,FUN=max)))), c("grey90", "red")),
+                                            col=circlize::colorRamp2(c(0, max(unlist(lapply(taxatab.list2,FUN=max)))), 
+                                                                     c("grey90", "red")),
                                             name = "Reads (log10)",
                                             #column_title = plot_title,
                                             rect_gp = grid::gpar(col = "white", lwd = 2),
@@ -5840,7 +5895,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
                                             cluster_columns = FALSE,
                                             column_names_rot = 45,
                                             row_names_side = "left",
-                                            row_names_max_width = max_text_width(rownames(taxatab.list2[[i]]), gp = grid::gpar(fontsize = 12)),
+                                            row_names_max_width = max_text_width(rownames(taxatab.list2[[i]]), 
+                                                                                 gp = grid::gpar(fontsize = 12)),
                                             row_names_gp = gpar(fontsize = 10),
                                             column_names_gp = gpar(fontsize = 10),
                                             column_order = ordercols,
@@ -5858,7 +5914,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     if(i>1) hm.out<-hm.out + hm.list[[i]]
   }
   
-  plot_title<-paste("x axis=",group.by,"; values=",values,";colour.bar=",colour.bar,"; facetcol=",paste(facetcol,collapse = ","))
+  plot_title<-paste("x axis=",group.by,"; values=",values,";colour.bar=",paste(colour.bar,collapse=","),"; facetcol=",
+                    paste(facetcol,collapse = ","))
   
   draw(hm.out,column_title=plot_title)
   
