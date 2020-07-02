@@ -14,10 +14,10 @@
 # -qcov_hsp_perc 98 -gapopen 0 -gapextend 2 -reward 1 -penalty -1 -dust no \
 # -out 2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt
 
-outDir<-"/home/tutorial/SCRIPTS/PB_tests/"
-input<-"/home/tutorial/TOOLS/bastools/beta/PB_classifier/2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt" #example
-bastoolsDir<-"/home/tutorial/TOOLS/bastools/" #needed only for add.lineage.df
-ncbiTaxDir<-"/home/tutorial/TOOLS/metabinkit.install/exe/../db/"
+outDir<-"/home/bastian.egeter/PB_tests/"
+input<-"/home/bastian.egeter/git_bastools/bastools/beta/PB_classifier/2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt" #example
+bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #needed only for add.lineage.df
+ncbiTaxDir<-"/home/bastian.egeter/metabinkit.install/db/"
 TaxlevelTest=c("S","G","F")
 plot.at.level<-"F"
 limit.plot.to.taxon<-c("Veneroida","O")
@@ -105,7 +105,7 @@ for(j in 1:length(TaxlevelTest)){
       
       system2(command = "blastn",
               args=c("-query", paste0("tempBLASTDB.",TaxlevelTest[j],".fasta"), "-db",paste0("tempBLASTDB.",TaxlevelTest[j]),"-outfmt",
-                     "'6 qseqid saccver ssciname evalue staxid pident qcovs'","-evalue",1,"-num_threads", 2, "-max_target_seqs", 
+                     "'6 qseqid saccver ssciname evalue staxid pident qcovs'","-evalue",1,"-num_threads", 16, "-max_target_seqs", 
                      100, "-max_hsps",1,"-word_size", 11,"-perc_identity", 50,"-qcov_hsp_perc",98,
                      "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", out), wait = T)
       #hard coded for now, note the "taxids" rather than "staxid", which metabin does not accept
@@ -148,7 +148,7 @@ for(j in 1:length(TaxlevelTest)){
         
         system2(command = "blastn",
                 args=c("-query", "temp.seq.fasta", "-db",paste0("tempBLASTDB.",TaxlevelTest[j]),"-outfmt",
-                       "'6 qseqid saccver ssciname evalue staxid pident qcovs'","-evalue",1,"-num_threads", 2, "-max_target_seqs", 
+                       "'6 qseqid saccver ssciname evalue staxid pident qcovs'","-evalue",1,"-num_threads", 16, "-max_target_seqs", 
                        100, "-max_hsps",1,"-word_size", 11,"-perc_identity", 50,"-qcov_hsp_perc",98,
                        "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", 
                        "-negative_seqidlist", "ex.seqids.out.txt", 
