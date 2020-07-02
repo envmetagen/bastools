@@ -6055,6 +6055,7 @@ blast.min.bas2<-function(infasta,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   
   if(wait==T){
     h$wait()
+    exits<-h$get_exit_status()
     message(readLines(error.log.file))
     message("exit_status=",exits)
     file.remove(error.log.file)
