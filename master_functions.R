@@ -1176,9 +1176,10 @@ splice.taxatables<-function(files){
 }
 
 #taxatable to krona format
-bas.krona.plot<-function(taxatable,KronaPath=NULL){
-  
-  a<-read.table(taxatable,header = T,sep = "\t")
+bas.krona.plot<-function(taxatable,KronaPath=NULL,out=NULL){
+  if(is.data.frame(taxatable)) {
+    a<-taxatable
+  } else a<-read.table(taxatable,header = T,sep = "\t")
   
   b<-as.data.frame(do.call(rbind, stringr::str_split(a[,1],";")))
   colnames(b)<-c("K","P","C","O","F","G","S")
@@ -1198,12 +1199,16 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL){
   }
   
   if(!is.null(KronaPath)){
-    command<-KronaPath} else {command<- "ktImportText"}
+    command<-KronaPath
+    } else {command<- "ktImportText"}
   
-  system2(command = command,args = c(list.files(pattern = "*krona.txt"),"-o", paste0(gsub(".txt",".krona.html",taxatable)))
-          ,stdout = F,stderr = "",wait = T)
+  if(is.data.frame(taxatable)){
+    outfile<-out
+  } else {outfile<-paste0(gsub(".txt",".krona.html",taxatable))}
   
-  unlink(list.files(pattern = "*krona.txt"))
+  system2(command = command,args = c(paste0(d[i],".krona.txt"),"-o",outfile) ,stdout = F,stderr = "",wait = T)
+  
+  file.remove(paste0(d[i],".krona.txt"))
 }
 
 taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F,grouping="ss_sample_id",
