@@ -13,8 +13,6 @@ if("step7" %in% stepstotake){
   
   message("STEP7-BLAST")
   
-  message("Note to self, consider using different blastn options")
-  
   #BLASTING NT
   if(class(startingfastas)=="data.frame") {
     stop ("not written this way for pipe3")

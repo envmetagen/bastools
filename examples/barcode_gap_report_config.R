@@ -18,24 +18,26 @@
 #however, using metabin, neither should give wrong results
 
 bastoolsDir<-"/home/tutorial/TOOLS/bastools/"
-input<-"/home/tutorial/TOOLS/bastools/beta/PB_classifier/2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt" #example
+input<-"/home/tutorial/SCRIPTS/PB_tests/2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt" #example
 ncbiTaxDir<-"/home/tutorial/TOOLS/metabinkit.install/db/"
 #outDir<-"/home/tutorial/SCRIPTS/PB_tests/"
-steps<-c("selfblast", "find_db_errors", "calc_bar_gap") #options: "selfblast", "find_db_errors", "calc_bar_gap"
-plot.limit.taxon<-"Bivalvia" # this is a grep, can be NULL #step3
+steps<-c("selfblast") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin"
+plot.limit.taxon<-"Bivalvia" # this is a grep, can be NULL #(step3)
 metabin_S<-98
 metabin_G<-95
 metabin_F<-85
-use_flagged_accessions=T #use this file for metabinkit?
-  
+use_flagged_accessions=T #use this file for metabinkit? (step4)
+
 #outfiles
-krona_html_db="/home/tutorial/SCRIPTS/PB_tests/database.html" #(step1)
-selfblastout="/home/tutorial/SCRIPTS/PB_tests/tempBLASTDB.tsv" #(step1)
-flagged_accessions="/home/tutorial/SCRIPTS/PB_tests/VENE_flagged.tsv" #(step2)
-flagged_error_detailed_table="/home/tutorial/SCRIPTS/PB_tests/VENE_flagged_details.tsv" #(step2)
-corrected_db="/home/tutorial/SCRIPTS/PB_tests/VENE_correct_database" #(step2, needed for plotting in step 3)
-out_html="/home/tutorial/SCRIPTS/PB_tests/VENE_barcode_gap_report.html"
-metabin_out="/home/tutorial/SCRIPTS/PB_tests/VENE_metabin" # .tsv will be added to this root
+outDir="/home/tutorial/SCRIPTS/PB_tests/"
+
+krona_html_db="database.html" #(step1)
+selfblastout="tempBLASTDB.tsv" #(step1)
+flagged_accessions="VENE_flagged.tsv" #(step2)
+flagged_error_detailed_table="VENE_flagged_details.tsv" #(step2)
+corrected_db="VENE_correct_database" #(step2, needed for plotting in step 3)
+out_html="VENE_barcode_gap_report.html"
+metabin_out="VENE_metabin" # .tsv will be added to this root
 
 #knit
 rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = out_html)
