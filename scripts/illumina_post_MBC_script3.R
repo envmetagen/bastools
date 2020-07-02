@@ -18,8 +18,11 @@ if("step7" %in% stepstotake){
   #BLASTING NT
   if(class(startingfastas)=="data.frame") {
     stop ("not written this way for pipe3")
-  } else{blast.status<-blast.min.bas2(infasta = startingfastas,refdb = refdb,blast_exec = blast_exec, wait = T,
+  } else{
+    for(i in 1:length(startingfastas)){
+    blast.status<-blast.min.bas2(infasta = startingfastas[i],refdb = refdb,blast_exec = blast_exec, wait = T,
                                taxidlimit = taxidlimit, ncbiTaxDir = ncbiTaxDir,opts = opts,overWrite = T)
+    }
   }
   
   message("STEP7 complete")
@@ -32,8 +35,13 @@ if("step8" %in% stepstotake){
   
   message("STEP8-filter blast")
   
+  #startingfastas<-c("12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.fasta"
+   #                 ,"16S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.fasta")
+  #outDir="/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/2018_07/"
+  
+  
   #FILTER BLASTS
-  files<-list.files(pattern = ".blast.txt$")
+  files<-gsub(".fasta$",".blast.txt",startingfastas)
   
   for(i in 1:length(files)){
     message(paste("filtering blast results for",files[i]))
@@ -51,7 +59,7 @@ if("step9" %in% stepstotake){
   
   message("STEP9 - bin")
   
-  files<-list.files(pattern = ".blast.filt.txt")
+  files<-gsub(".fasta$",".blast.filt.txt",startingfastas)
   
   for(i in 1:length(files)){
     message(paste("binning filtered blast results for",files[i]))
@@ -72,7 +80,7 @@ if("step10" %in% stepstotake){
   
   message("STEP10 - merge with otutab")
   
-  files<-list.files(pattern = ".otutab.tsv$")
+  files<-gsub(".fasta$",".otutab.tsv",startingfastas)
   
   for(i in 1:length(files)){
     otutabfile<-files[i]
@@ -93,7 +101,7 @@ if("step11" %in% stepstotake){
   message("STEP11 - taxon filter")
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
-  files<-list.files(pattern = ".taxatable.txt$")
+  files<-gsub(".fasta$",".taxatable.txt",startingfastas)
   
   taxon.filter.solo(files,filterpc)
   
@@ -109,7 +117,8 @@ if("step12" %in% stepstotake){
   message("STEP12 - splice tables")
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
-  files<-list.files(pattern = ".taxatable.tf.txt$")
+  files<-gsub(".fasta$",".taxatable.tf.txt",startingfastas)
+  
   splice.taxatables(files)
   
   message("STEP12 complete")
@@ -124,6 +133,8 @@ if("step13" %in% stepstotake){
   message("STEP13 - make contributor files")
   
   message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
+  
+  #files<-gsub(".fasta$",".taxatable.tf.spliced.txt",startingfastas)
   
   files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   
