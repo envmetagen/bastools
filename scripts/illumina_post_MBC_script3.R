@@ -50,6 +50,40 @@ if("step8" %in% stepstotake){
   message("STEP8 complete")
   
 }
+####################################################
+
+#step 8a find errors 
+if("step8" %in% stepstotake){  
+  
+  message("STEP8a-finding database errors")
+  
+  steps<-c("selfblast", "find_db_errors","calc_bar_gap") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin"
+  
+  files<-gsub(".fasta$",".blast.filt.txt",startingfastas)
+  
+  for(i in 1:length(files)){
+    message(paste("finding errors for ",files[i]))
+  
+    #outfiles
+    krona_html_db=gsub(".blast.filt.txt",".blast.filt.database.html",files[i])
+    selfblastout=gsub(".blast.filt.txt",".blast.filt.tempBLASTDB.tsv",files[i])
+    flagged_accessions=gsub(".blast.filt.txt",".blast.filt.flagged.tsv",files[i])
+    flagged_error_detailed_table=gsub(".blast.filt.txt",".blast.filt.flagged.details.tsv",files[i])
+    further_potential_errors=gsub(".blast.filt.txt",".blast.filt.non-flagged.potential.errors.tsv",files[i])
+    out_html=gsub(".blast.filt.txt",".blast.filt.barcode.gap.report.html",files[i])
+    
+    use_flagged_accessions_bcg=T
+    plot.limit.taxon=NULL
+    #knit
+    rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = paste0(outDir,out_html))
+    
+    ##TODO what to do with flagged accessions? Make a master file that I will use for everything? No, I think just save and can add 
+    #to google sheet manually if desired
+  }
+  message("STEP8a complete")
+  
+}
+
 
 ####################################################
 #step 9 BIN
@@ -59,13 +93,68 @@ if("step9" %in% stepstotake){
   
   files<-gsub(".fasta$",".blast.filt.txt",startingfastas)
   
-  for(i in 1:length(files)){
-    message(paste("binning filtered blast results for",files[i]))
-    filtered_blastfile<-files[i]
-    binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
-    bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
-               out = binfile,spident = spident,gpident = gpident,
-               fpident = fpident,abspident = abspident)
+  if(use.metabin){
+    
+    for(i in 1:length(files)){
+      message(paste("binning filtered blast results for",files[i]))
+      filtered_blastfile<-files[i]
+      binfile<-gsub(".blast.filt.txt",".bins",files[i])
+      
+      #make FilterFile
+      if(use_flagged_accessions_mbk){
+        if(file.exists(gsub(".blast.filt.txt",".blast.filt.flagged.tsv",files[i]))) {
+          flagged_accessions<-gsub(".blast.filt.txt",".blast.filt.flagged.tsv",files[i])
+          flags_step8a<-data.table::fread(flagged_accessions,data.table = F,header = F)
+        }
+        
+        if(!is.null(known_flags)) flags_pre_defined<-data.table::fread(known_flags,data.table = F,header = F)
+        
+        if(exists(x = "flags_step8a")) if(exists("flags_pre_defined")) {
+          message("Combining pre-defined flags and flags found in step8a")
+          all_flags<-rbind(flags_pre_defined,flags_step8a)
+          }
+        if(exists(x = "flags_step8a")) if(!exists("flags_pre_defined")) {
+          message("Using only flags found in step8a")
+          all_flags<-flags_step8a 
+        }
+        if(!exists(x = "flags_step8a")) if(exists("flags_pre_defined")) {
+          message("Using pre-defined flags only")
+          all_flags<-flags_pre_defined
+        }
+        
+        FilterFile<-gsub(".blast.filt.txt",".blast.filt.flagged_plus_known.tsv",files[i])
+        write.table(all_flags,FilterFile,quote = F,row.names = F,col.names = F)
+        
+      } else {
+        FilterFile<-NULL
+        message("Not applying any accession filters")
+      }
+      
+      if(!is.null(FilterFile)){
+      system2("metabin",c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
+                          ,"-F", fpident,"-A", abspident, "--TopSpecies", top,"--TopGenus",
+                          top,"--TopFamily", top
+                          ,"--TopAF", top,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"),
+              wait=T)
+      } else {
+        system2("metabin",c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
+                            ,"-F", fpident,"-A", abspident, "--TopSpecies", top,"--TopGenus",
+                            top,"--TopFamily", top
+                            ,"--TopAF", top,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"
+                            ,"--FilterFile",FilterFile),
+                wait=T)
+      }
+    }
+    } else {
+  
+    for(i in 1:length(files)){
+      message(paste("binning filtered blast results for",files[i]))
+      filtered_blastfile<-files[i]
+      binfile<-gsub(".blast.filt.txt",".bins.txt",files[i])
+      bin.blast2(filtered_blastfile = filtered_blastfile,ncbiTaxDir = ncbiTaxDir,
+                 out = binfile,spident = spident,gpident = gpident,
+                 fpident = fpident,abspident = abspident)
+    }
   }
   message("STEP9 complete")
   
@@ -82,7 +171,11 @@ if("step10" %in% stepstotake){
   
   for(i in 1:length(files)){
     otutabfile<-files[i]
-    binfile<-gsub(".otutab.tsv",".bins.txt",files[i])
+    if(use.metabin) {
+      binfile<-gsub(".blast.filt.txt",".bins.tsv",files[i])
+    } else {
+      binfile<-gsub(".otutab.tsv",".bins.txt",files[i])
+    }
     out<-gsub(".otutab.tsv",".taxatable.txt",files[i])
     
     MBC_otu_bin_blast_merge(MBC_otutab = otutabfile,bin_blast_results = binfile,out = out)
@@ -151,9 +244,15 @@ if("step13" %in% stepstotake){
                                                            collapse = "-")))
     }
     
+    if(use.metabin) {
+      binfile<-list.files(pattern = gsub("blast.filt.txt","bins.tsv",filtered_blastfile))
+    } else {
+      binfile<-list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile))
+    }
+    
     check.low.res.df(
       filtered.taxatab = files[i],filtered_blastfile = filtered_blastfile,
-      binfile = list.files(pattern = gsub("blast.filt.txt","bins.txt",filtered_blastfile))
+      binfile = binfile
       ,disabledTaxaFile = NULL,spident = spident,gpident = gpident,fpident = fpident,abspident = abspident)
   }
   message("STEP13 complete")

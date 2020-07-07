@@ -1031,8 +1031,8 @@ MBC_otu_bin_blast_merge<-function(MBC_otutab, bin_blast_results,out){
   
   bins$OTU_name<-do.call(rbind,stringr::str_split(bins$qseqid,";"))[,1]
   
-  otutab.bins<-as.data.frame(merge(x = otutab,y = bins[,2:9], by = "OTU_name"))
-  otutab.bins.all<-as.data.frame(merge(x = otutab,y = bins[,2:9], by = "OTU_name",all.x=T))
+  otutab.bins<-as.data.frame(merge(x = otutab,y = bins[,c("K","P","C","O","F","G","S","OTU_name")], by = "OTU_name"))
+  otutab.bins.all<-as.data.frame(merge(x = otutab,y = bins[,c("K","P","C","O","F","G","S","OTU_name")], by = "OTU_name",all.x=T))
   no.hit.otutab<-otutab.bins.all[!otutab.bins.all$OTU_name %in% otutab.bins$OTU_name,]
   if(length(no.hit.otutab$OTU_name)!=0){
     no.hit.otutab[,c((length(colnames(otutab.bins))-6):length(colnames(otutab.bins)))]<-"no_hits"}
@@ -1894,12 +1894,12 @@ taxatab.pieplot<-function(taxatab,hidelegend=F){
 }
 
 
-stats.by.rank<-function(taxatab){
+stats.by.rank<-function(taxatab,grouphtf=T){
   a<-summary.dxns.by.taxon(taxatab)
   a<-a[a$taxon!="NA;NA;NA;NA;NA;NA;NA",]
   a<-a[a$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
   
-  a$rank<-bas.get.ranks(a)
+  a$rank<-bas.get.ranks(taxatab = a,grouphtf = grouphtf)
   
   d<-aggregate(a$n.samples,by=list(a$rank),FUN=sum)
   
@@ -3976,10 +3976,14 @@ plot.ecopcroutput.bubble<-function(ecopcrdf,level="F",parent="C",parent2=NULL,pl
   return(parrange3)
 }
 
-bas.get.ranks<-function(taxatab){
+bas.get.ranks<-function(taxatab,grouphtf=T){
   
   taxa<-taxatab[,1,drop=F]  
   
+  taxa$kin.res<-TRUE
+  taxa$phy.res<-TRUE
+  taxa$cla.res<-TRUE
+  taxa$ord.res<-TRUE
   taxa$fam.res<-TRUE
   taxa$gen.res<-TRUE
   taxa$sp.res<-TRUE
@@ -3987,7 +3991,9 @@ bas.get.ranks<-function(taxatab){
   #change NA and collapsed to unknown
   taxa$taxon<-gsub("NA","unknown",taxa$taxon)
   taxa$taxon<-gsub("collapsed","unknown",taxa$taxon)
-  
+
+  if(grouphtf){
+    
   if(length(grep(";unknown;unknown;unknown$",taxa$taxon))>0) taxa$fam.res<-!taxa$taxon %in% taxa$taxon[grep(";unknown;unknown;unknown$",taxa$taxon)]
   if(length(grep(";unknown;unknown$",taxa$taxon))>0) taxa$gen.res<- !taxa$taxon %in% taxa$taxon[grep(";unknown;unknown$",taxa$taxon)]
   if(length(grep(";unknown$",taxa$taxon))>0) taxa$sp.res<- !taxa$taxon %in% taxa$taxon[grep(";unknown$",taxa$taxon)]
@@ -3996,6 +4002,29 @@ bas.get.ranks<-function(taxatab){
   taxa$res[taxa$fam.res==T]<-"family"
   taxa$res[taxa$gen.res==T]<-"genus"
   taxa$res[taxa$sp.res==T]<-"species"
+  } else{
+    if(length(grep("unknown;unknown;unknown;unknown;unknown;unknown;unknown$",taxa$taxon))>0) {
+      taxa$kin.res<-!taxa$taxon %in% taxa$taxon[grep("unknown;unknown;unknown;unknown;unknown;unknown;unknown$",taxa$taxon)]}
+    if(length(grep(";unknown;unknown;unknown;unknown;unknown;unknown$",taxa$taxon))>0) {
+      taxa$phy.res<-!taxa$taxon %in% taxa$taxon[grep(";unknown;unknown;unknown;unknown;unknown;unknown$",taxa$taxon)]}
+    if(length(grep(";unknown;unknown;unknown;unknown;unknown$",taxa$taxon))>0) {
+      taxa$cla.res<-!taxa$taxon %in% taxa$taxon[grep(";unknown;unknown;unknown;unknown;unknown$",taxa$taxon)]}
+    if(length(grep(";unknown;unknown;unknown;unknown$",taxa$taxon))>0) {
+      taxa$ord.res<-!taxa$taxon %in% taxa$taxon[grep(";unknown;unknown;unknown;unknown$",taxa$taxon)]}
+    
+    if(length(grep(";unknown;unknown;unknown$",taxa$taxon))>0) taxa$fam.res<-!taxa$taxon %in% taxa$taxon[grep(";unknown;unknown;unknown$",taxa$taxon)]
+    if(length(grep(";unknown;unknown$",taxa$taxon))>0) taxa$gen.res<- !taxa$taxon %in% taxa$taxon[grep(";unknown;unknown$",taxa$taxon)]
+    if(length(grep(";unknown$",taxa$taxon))>0) taxa$sp.res<- !taxa$taxon %in% taxa$taxon[grep(";unknown$",taxa$taxon)]
+    
+    taxa$res<-"above_kingdom" #higher than family
+    taxa$res[taxa$kin.res==T]<-"kingdom"
+    taxa$res[taxa$phy.res==T]<-"phylum"
+    taxa$res[taxa$cla.res==T]<-"class"
+    taxa$res[taxa$ord.res==T]<-"order"
+    taxa$res[taxa$fam.res==T]<-"family"
+    taxa$res[taxa$gen.res==T]<-"genus"
+    taxa$res[taxa$sp.res==T]<-"species"
+  }
   
   return(taxa$res)
   
@@ -5556,7 +5585,10 @@ blast.maxhits.2.files.compare<-function(blastfile1,blastfile2,name.blastfile1,na
   output<-list(plot1,plot2,a)
 }
 
-plot.taxatab.rank.props<-function(taxatab.list){
+plot.taxatab.rank.props<-function(taxatab.list,y="reads",grayscale=F){
+  
+  #y can be "reads, "dxns"
+  
   message("Reminder: must be a named list, see split.taxatab.by.facets")
   
   message("Not including no_hits")
@@ -5564,7 +5596,7 @@ plot.taxatab.rank.props<-function(taxatab.list){
   taxatab.list2<-list()
   for(i in 1:length(taxatab.list)){
     taxatab.list2[[i]]<-taxatab.list[[i]][taxatab.list[[i]]$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
-    taxatab.list2[[i]]<-stats.by.rank(taxatab.list[[i]])
+    taxatab.list2[[i]]<-stats.by.rank(taxatab.list[[i]],grouphtf = F)
     taxatab.list2[[i]]$taxatab<-names(taxatab.list)[i]
   }
   
@@ -5572,20 +5604,35 @@ plot.taxatab.rank.props<-function(taxatab.list){
   
   colnames(rank.taxatabs)<-gsub("rank","Rank",colnames(rank.taxatabs))
   
-  rank.taxatabs$Rank<-gsub("htf","above family",rank.taxatabs$Rank)
+  #rank.taxatabs$Rank<-gsub("htf","above family",rank.taxatabs$Rank)
   
-  rank.taxatabs$Rank<-factor(rank.taxatabs$Rank,levels = c("above family","family","genus" ,"species"))
+  rank.taxatabs$Rank<-factor(rank.taxatabs$Rank,levels = c("above_kingdom","kingdom","phylum", "class","order","family","genus","species" ))
   
-  ggplot(rank.taxatabs,aes(x=taxatab,y=reads,fill=Rank))+geom_bar(stat="identity",position="fill")+
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          axis.text.x=element_text(size=8,angle=45, hjust=1))+
-    ylab("Proportion of reads") + xlab("") + scale_fill_grey()
+  if(y=="reads"){
+    a<-ggplot(rank.taxatabs,aes(x=taxatab,y=reads,fill=Rank))+geom_bar(stat="identity",position="fill")+
+        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"),
+            axis.text.x=element_text(size=8,angle=45, hjust=1))+
+      ylab("Proportion of reads") + xlab("") + scale_fill_manual(values = MyCols)
+  }
+  
+  if(y=="dxns"){
+    a<-ggplot(rank.taxatabs,aes(x=taxatab,y=dxns,fill=Rank))+geom_bar(stat="identity",position="fill")+
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"),
+            axis.text.x=element_text(size=8,angle=45, hjust=1))+
+      ylab("Proportion of detections") + xlab("") + scale_fill_manual(values = MyCols)
+  }
+  if(grayscale==T) a<-a+ scale_fill_grey()
+  
+  a
   
 }
 
 taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="nreads",current.grouping = "ss_sample_id",colour.bar=NULL,
-                          facetcol=NULL,inc.values=T,tidy.taxon.names="order"){
+                          facetcol=NULL,inc.values=T,tidy.taxon.names="order",taxafontsize=10,colfontsize=10){
+  
+  if(!is.data.frame(master_sheet)) stop("master_sheet should be a data frame")
   
   if(values!="ndxns" & values!="nreads" & values!="dxn") stop("values must be one of nreads, ndxns, dxn")
   
@@ -5809,8 +5856,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
                                             column_names_rot = 45,
                                             row_names_side = "left",
                                             row_names_max_width = max_text_width(rownames(taxatab.list2[[i]]), gp = grid::gpar(fontsize = 12)),
-                                            row_names_gp = gpar(fontsize = 10),
-                                            column_names_gp = gpar(fontsize = 10),
+                                            row_names_gp = gpar(fontsize = taxafontsize),
+                                            column_names_gp = gpar(fontsize = colfontsize),
                                             column_order = ordercols,
                                             heatmap_legend_param = list(at=levels,labels = labels),
                                             column_title = names(ms.split)[i],
@@ -5850,8 +5897,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
                                             column_names_rot = 45,
                                             row_names_side = "left",
                                             row_names_max_width = max_text_width(rownames(taxatab.list2[[i]]), gp = grid::gpar(fontsize = 12)),
-                                            row_names_gp = gpar(fontsize = 10),
-                                            column_names_gp = gpar(fontsize = 10),
+                                            row_names_gp = gpar(fontsize = taxafontsize),
+                                            column_names_gp = gpar(fontsize = colfontsize),
                                             column_order = ordercols,
                                             column_title = names(ms.split)[i],
                                             column_title_gp = gpar(fontsize = 10),
@@ -5902,8 +5949,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
                                             row_names_side = "left",
                                             row_names_max_width = max_text_width(rownames(taxatab.list2[[i]]), 
                                                                                  gp = grid::gpar(fontsize = 12)),
-                                            row_names_gp = gpar(fontsize = 10),
-                                            column_names_gp = gpar(fontsize = 10),
+                                            row_names_gp = gpar(fontsize = taxafontsize),
+                                            column_names_gp = gpar(fontsize = colfontsize),
                                             column_order = ordercols,
                                             column_title = names(ms.split)[i],
                                             column_title_gp = gpar(fontsize = 10),

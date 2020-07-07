@@ -20,17 +20,6 @@ options(httr_oob_default = TRUE)
 all.stats<-list()
 TaxlevelTestall<-c("F","G","S")
 
-
-krona_html_db=paste0(outDir,krona_html_db) #(step1)
-selfblastout=paste0(outDir,selfblastout) #(step1)
-flagged_accessions=paste0(outDir,flagged_accessions) #(step2)
-flagged_error_detailed_table=paste0(outDir,flagged_error_detailed_table) #(step2)
-corrected_db=paste0(outDir,corrected_db) #(step2, needed for plotting in step 3)
-out_html=paste0(outDir,out_html)
-metabin_out=paste0(outDir,metabin_out) # .tsv will be added to this root
-
-read.and.format.full.blast<-function(input){
-=======
 read.and.format.full.blast<-function(input,minpident=80){
   
   output<-list()
@@ -174,347 +163,14 @@ if("selfblast" %in% steps) {
 ```{r find_db_errors, eval=TRUE,echo=F}
 if("find_db_errors" %in% steps) {
   
-  t1<-Sys.time()
-  
-  #setwd(outDir)
-  
-  #overall should do this at family, genus and species and combine results
-  #why. they identify different IDs
-  # outcome_f	outcome_g	outcome_s
-  # AC167967.6 failed_A	AC167967.6 failed_A	CP011269.1 failed_A
-  # AF517590.1 failed_A	AF037177.1 failed_A	CP023696.1 failed_A
-  # CP006776.1 failed_A	AF173599.1 failed_A	CP028288.1 failed_A
-  # CP020026.1 failed_A	CP006776.1 failed_A	CP032266.1 failed_A
-  # CP025422.1 failed_A	CP020563.1 failed_A	CP041230.1 failed_A
-  # CP034120.1 failed_A	CP042305.1 failed_A	DQ499016.1 failed_A
-  # CP053707.1 failed_A	CP053707.1 failed_A	KF908854.1 failed_A
-  # EU477711.1 failed_A	DQ499016.1 failed_A	LK022891.2 failed_A
-  # GQ406290.1 failed_A	EF662118.1 failed_A	LR129750.1 failed_A
-  # HM124686.1 failed_A	GQ406258.1 failed_A	LR134345.1 failed_A
-  # KC429304.1 failed_A	GQ406261.1 failed_A	MK102803.1 failed_A
-  # KF369715.1 failed_A	HM124686.1 failed_A	MT217036.1 failed - possible human
-  # KF908854.1 failed_A	KF369715.1 failed_A	MT539994.1 failed - possible human
-  # KR153533.1 failed_A	KF908854.1 failed_A	CP018627.1 failed_B
-  # KX373635.1 failed_A	LR134345.1 failed_A	LR129713.1 failed_B
-  # MF490166.1 failed_A	MK685331.1 failed - possible human	LR215065.1 failed_B
-  # MF490206.1 failed_A	MT217036.1 failed - possible human	
-  # MG665357.1 failed_A	MT434973.1 failed - possible human	
-  # MK078120.1 failed_A	MT539994.1 failed - possible human	
-  # MK685331.1 failed - possible human	NC_037015.1 failed_A	
-  # MT217036.1 failed - possible human	CP031192.1 failed_B	
-  # MT434973.1 failed - possible human	KF499262.1 failed_B	
-  # MT512617.1 failed_A		
-  # MT539994.1 failed_B		
-  
-  
-  allerrorsdf<-list()
-  allflagged<-list()
-  ax_exflagged<-list()
-  
-  #read and format fullblast results
-  fullblast<-read.and.format.full.blast(input)
-  
-  #read self-blast results
-  ax1<-data.table::fread(paste0(outDir,selfblastout),data.table = F)
-    
-  #add origpath
-  ax1<-merge(ax1,fullblast[,c("saccver", "K","P","C","O","F","G","S","seq.text")], by.x = "qseqid", by.y = "saccver",all.x = T,all.y = F)
-  
-  #remove known flags
-  if(!is.null(known_flags)) {
-    kf<-data.table::fread(known_flags,data.table = F,header = F)
-    ax1<-ax1[!ax1$qseqid %in% kf$V1,]
-    ax1<-ax1[!ax1$saccver %in% kf$V1,]
-  }
-  
-  rm(fullblast)
-  
-  for(h in 1:3){
-    
-    TaxlevelTest<-TaxlevelTestall[h]
-    
-    message("finding errors in database using taxonlevel ",TaxlevelTest)
-  
-    #limit to taxleveltest not unknown
-    ax<-ax1[ax1[,TaxlevelTest]!="unknown",]
-    
-    #if TaxlevelTest[i]="S" remove sp.-type entries  ##if always doing this, could do pre-BLAST
-    if(TaxlevelTest=="S"){
-      message("Removing species with 'sp.', numbers or more than one space")
-      if(length(grep(" sp\\.",ax$S,ignore.case = T))>0) ax<-ax[-grep(" sp\\.",ax$S,ignore.case = T),]
-      if(length(grep(" .* .*",ax$S,ignore.case = T))>0) ax<-ax[-grep(" .* .*",ax$S,ignore.case = T),]
-      if(length(grep("[0-9]",ax$S))>0) ax<-ax[-grep("[0-9]",ax$S),]
-      
-      #remove crappy hits 
  
-    #1. btab$S contains uncultured
-    message("Removing species containing the terms: uncultured, environmental, 
-            unidentified,fungal, eukaryote or unclassified")
-    if(length(grep("uncultured",ax$S,ignore.case = T))>0) ax<-ax[-grep("uncultured",ax$S,ignore.case = T),]
-    if(length(grep("environmental",ax$S,ignore.case = T))>0) ax<-ax[-grep("environmental",ax$S,ignore.case = T),]
-    if(length(grep("unclassified",ax$S,ignore.case = T))>0) ax<-ax[-grep("unclassified",ax$S,ignore.case = T),]
-    if(length(grep("unidentified",ax$S,ignore.case = T))>0) ax<-ax[-grep("unidentified",ax$S,ignore.case = T),]
-    if(length(grep("fungal ",ax$S,ignore.case = T))>0) ax<-ax[-grep("fungal ",ax$S,ignore.case = T),]
-    if(length(grep("eukaryote",ax$S,ignore.case = T))>0) ax<-ax[-grep("eukaryote",ax$S,ignore.case = T),]
-    if(length(grep("synthetic",ax$S,ignore.case = T))>0) ax<-ax[-grep("synthetic",ax$S,ignore.case = T),]
-    }
-    
-    #change colnames
-    ax$qseq<-ax$seq.text
-    ax$seq.text<-NULL
-    ax$Ko<-ax$K
-    ax$Po<-ax$P
-    ax$Co<-ax$C
-    ax$Oo<-ax$O
-    ax$Fo<-ax$F
-    ax$Go<-ax$G
-    ax$So<-ax$S
-    ax$K<-NULL
-    ax$P<-NULL
-    ax$C<-NULL
-    ax$O<-NULL
-    ax$F<-NULL
-    ax$G<-NULL
-    ax$S<-NULL
-    
-    #add full origpath
-    ax$origpath<-paste(ax$Ko,ax$Po,ax$Co,ax$Oo,ax$Fo,ax$Go,ax$So,sep=";")
-    #add hitpath 
-    ax<-add.lineage.df(ax,ncbiTaxDir)
-    ax$hitpath<-paste(ax$K,ax$P,ax$C,ax$O,ax$F,ax$G,ax$S,sep=";")
-    
-    #limit to taxleveltest
-    ax<-ax[ax[,TaxlevelTest]!="unknown",]
-    #if TaxlevelTest[i]="S" remove sp.-type entries  ##if always doing this, could do pre-BLAST
-    if(TaxlevelTest=="S"){
-      message("Removing species with 'sp.', numbers or more than one space")
-      if(length(grep(" sp\\.",ax$S,ignore.case = T))>0) ax<-ax[-grep(" sp\\.",ax$S,ignore.case = T),]
-      if(length(grep(" .* .*",ax$S,ignore.case = T))>0) ax<-ax[-grep(" .* .*",ax$S,ignore.case = T),]
-      if(length(grep("[0-9]",ax$S))>0) ax<-ax[-grep("[0-9]",ax$S),]
-      
-      #1. btab$S contains uncultured
-    message("Removing species containing the terms: uncultured, environmental, 
-            unidentified,fungal, eukaryote or unclassified")
-    if(length(grep("uncultured",ax$S,ignore.case = T))>0) ax<-ax[-grep("uncultured",ax$S,ignore.case = T),]
-    if(length(grep("environmental",ax$S,ignore.case = T))>0) ax<-ax[-grep("environmental",ax$S,ignore.case = T),]
-    if(length(grep("unclassified",ax$S,ignore.case = T))>0) ax<-ax[-grep("unclassified",ax$S,ignore.case = T),]
-    if(length(grep("unidentified",ax$S,ignore.case = T))>0) ax<-ax[-grep("unidentified",ax$S,ignore.case = T),]
-    if(length(grep("fungal ",ax$S,ignore.case = T))>0) ax<-ax[-grep("fungal ",ax$S,ignore.case = T),]
-    if(length(grep("eukaryote",ax$S,ignore.case = T))>0) ax<-ax[-grep("eukaryote",ax$S,ignore.case = T),]
-    if(length(grep("synthetic",ax$S,ignore.case = T))>0) ax<-ax[-grep("synthetic",ax$S,ignore.case = T),]
-    }
-    
-    #order
-    ax<-ax[order(ax$qseqid,ax$pident,decreasing = T),]
-     
-    #add paths of taxleveltest
-    ax$origtaxleveltest<-path.at.level(ax$origpath,TaxlevelTest)
-    ax$hitleveltest<-path.at.level(ax$hitpath,TaxlevelTest)
-    
-    #remove potential erroroneous seqs. 
-    #where, apart from itself, all hits above threshold(?) (80%) belong to different families. 
-    #e.g ax[ax$qseqid=="KC429304.1",] (item 5003) KC429304.1 (5193)
-    #AND the different families have at least one high hit e.g. >98%
-    #AND it did not have hits to other sequences of its own family 
-    #AND the other hits belong to only one family...necessary? not being implemeneted
-    #AND there are other members of the family in the database
-    
-    #remove errors after each loop, otherwise some are missed (e.g.s)
-    # qseqid	real	designated	flagged by script
-    # MT539994.1	human	Eukaryota;Arthropoda;Insecta;Hymenoptera;Formicidae	y ref 8710
-    # MK685331.1	human	Eukaryota;Arthropoda;Arachnida;Araneae;Lycosidae	No, because of MT434973.1 ref8435
-    # MT217036.1	human	Eukaryota;Chordata;Lepidosauria;Squamata;Gekkonidae	No, because of MK685331.2 ref 8679
-    # MT434973.1	human	Eukaryota;Arthropoda;Arachnida;Araneae;Hahniidae	No, because of MK685331.1 ref 8685
-    #looping didnt solve this. added a human-specific test
-    
-    ax.list<-split(ax,ax$qseqid)
-    
-    errors<-list()
-    #think I need to save human sequences until the end, otherwise if a human seq fails (and I only have one anyway because of choosing one seq per taxid), because everything else was erroneous, it is removed and then we have lots of other incorrect failures
-    #now implemented in read.and.format.full.blast
-    
-    for(i in 1:length(ax.list)){
-      
-             #if(ax.list[[i]]$qseqid[1]=="KC429304.1") stop(i)
-            # }
-      outcome<-"failed"
-      
-      #remove self-hit
-      xx<-ax.list[[i]][ax.list[[i]]$saccver!=ax.list[[i]]$qseqid[1],]
-      
-      #if no other hits, cannot fail
-      if(nrow(xx)==0) outcome<-"passed"
-      
-      #use a threshold here. i.e. of the remaning hits, keep only >80%
-      xx<-xx[xx$pident>=80,]
-      
-      if(nrow(xx)==0) outcome<-"passed"
-      
-      #human test
-      if(outcome=="failed") {
-        hutaxleveltest<-path.at.level("Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens",TaxlevelTest)
-        if(hutaxleveltest!=xx$origtaxleveltest[1]) if("Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens" %in% xx$hitpath) {
-          #using full path here to avoid other Hominidae...(?)
-          if(max(xx[xx$hitpath=="Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens","pident"])>98) outcome<-"human"
-        }
-      }
-      
-      #all other hits belong to other families only, and do not include original family
-      if(outcome=="failed") if(xx$origtaxleveltest[1] %in% xx$hitleveltest) outcome<-"passed"
-      
-      #remaining families contain a high hit (e.g. 98%)
-      if(outcome=="failed" | outcome=="human") if(max(xx$pident)<98) outcome<-"passed"
-          
-      #database contains other representatives of this family?
-      if(outcome=="failed") if(length(unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],"qseqid"]))==1) outcome<-"passed"
-        
-      if(outcome=="failed" | outcome=="human") {
-        errors[[i]]<-ax.list[[i]]
-        current<-ax.list[[i]]$qseqid[1]
-        if(outcome=="failed") {
-          message(current," failed_A")
-          errors[[i]]$reason<-"filterA"
-        }
-        if(outcome=="human") {
-          message(current," failedHu - possible human")
-          errors[[i]]$reason<-"filterHu"
-        }
-        #remove from db before next loop.  
-        ax.list<-lapply(ax.list, function(x) x[x$saccver!=current,]) 
-      } else errors[[i]]<-NULL
-    }
-    
-    
-    #these settings are identifying likely errors, cool, but not finding KC429304.1
-    # passes filter because there are no other members of this family in the db
-
-    #h
-    
-    errors2<-errors %>% discard(is.null)
-    if(length(errors2)>0) {
-      errors3<-do.call(rbind,errors2)
-      errorstemp<-errors3[,c("qseqid","saccver" ,"pident","origtaxleveltest","hitleveltest","reason","qseq")]
-      flagged<-unique(errors3$qseqid)
-    } else {
-      errorstemp<-NULL
-      flagged<-NULL
-    }
-    
-    #FILTERB
-    #second filter based on hits. if all hits from an entry are NEVER the same as the origpath, likely an error
-    #AND there were high hits
-    #AND there other members of the taxonlevel in the database
-    
-    ax2<-do.call(rbind,ax.list)
-    ax.list2<-split(ax2,ax2$saccver)
-    error.filter2<-list()
-    for(i in 1:length(ax.list2)){
-      outcome<-"failed"
-      
-         #if(ax.list2[[i]]$saccver[1]=="KC429304.1") stop(i)
-            
-    
-      current<-unique(ax.list2[[i]]$saccver)[1]
-      currenttax<-ax.list2[[i]]$hitleveltest[1]
-    
-      #were there other members of the family in the database. If not, must pass.
-      if(length(unique(ax2[ax2$origtaxleveltest==currenttax,"qseqid"]))==1) outcome<-"passed"
-    
-      if(outcome=="failed"){
-      
-        yy<-ax.list2[[i]][ax.list2[[i]]$saccver==current,]
-        yy<-yy[yy$qseqid!=current,]
-       
-        #if all hits from an entry are NEVER the same as the origpath, if there were high hits
-        if(nrow(yy)>0) if(!yy$hitleveltest[1] %in% yy$origtaxleveltest) if(max(yy$pident)>98) {
-          error.filter2[[i]]<-yy 
-          message(current," failed_B")
-          error.filter2[[i]]$reason<-"filterB"
-        } else error.filter2[[i]]<-NULL
-      } else error.filter2[[i]]<-NULL
-    }
-    
-    #h
-       
-    error.filter2<-error.filter2 %>% discard(is.null)
-    if(length(error.filter2)>0) {
-      error.filter2df<-do.call(rbind,error.filter2)
-      error.filter2df<-error.filter2df[order(error.filter2df$saccver,error.filter2df$pident,decreasing = T),]
-      error.filter2df<-error.filter2df[,c("qseqid","saccver" ,"pident","origtaxleveltest","hitleveltest","reason","qseq")]
-      flagged2<-unique(error.filter2df$saccver)
-    } else   {
-      flagged2<-NULL
-      error.filter2df<-NULL
-    }
-    
-    #combine filter results within h loop
-    allerrorsdf[[h]]<-rbind(errorstemp,error.filter2df)
-    allerrorsdf[[h]]$taxlevel<-TaxlevelTestall[h]
-    allflagged[[h]]<-c(flagged, flagged2)
-  } #h
-  
-  #combine results for all taxon loops
-  allerrorsdf<-do.call(rbind,allerrorsdf) #note that some qseqids will be repeated (different taxlevels)
-  
-  allflagged<-do.call(c,allflagged)
-  allflagged<-unique(allflagged)
-  # ax_exflagged<-ax[!ax$qseqid %in% allflagged,]
-  # ax_exflagged<-ax_exflagged[!ax_exflagged$saccver %in% allflagged,]
-  # #min cols
-  # ax_exflagged<-ax_exflagged[,c("qseqid","saccver","taxids","pident","origpath","hitpath")]
-  
-  write.table(allflagged,paste0(outDir,flagged_accessions),row.names = F,quote = F,sep = "\t",col.names = F)
-  write.table(allerrorsdf,file = paste0(outDir,flagged_error_detailed_table),quote = F,sep = "\t",row.names = F)
-  #write.table(ax_exflagged,file = paste0(outDir,corrected_db),quote = F,sep = "\t",row.names = F)
-  
-  message("Note: The filter is run three times - at family, genus and species level. 
-          There are likely to be duplicates in the output, where the accession was flagged at multiple levels. 
-  
-  
-          Explanation of filters: 
-  
-          filterA: Indicates qseqid was flagged because
-           Apart from itself, all hits >80% belonged to different taxa at this taxlevel (F, G or S) 
-            AND there was at least one hit >98%
-              AND there were other members of the taxon in the database
-                
-          filterHu (a special case of filterA): Indicates qseqid was flagged because
-           It was not an entry designated as human, but has a hit >98% matching  
-           Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens
-           
-          FilterB: Indicates a saccver was flagged because (note saccver, not qseqid)
-            Apart from hitself, this saccver was never in the results for its designated taxon
-              AND there were high hits >98%
-                AND there other members of the taxon in the database
-           ")
-  
-  rm(ax1)
-  rm(ax)
-  rm(ax2)
-  #rm(ax_exflagged)
-  rm(ax.list)
-  rm(ax.list2)
-  
   message("newly flagged accession numbers")
-  print(as.data.frame(allflagged))
-  
-  t2<-Sys.time()
-  
-  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
-  
-  message("finding errors complete in ",t3," mins")
-
-  #table size too big for DT
-  #message("flagged accession detailed results - inspect carefully")
-  # DT::datatable(allerrorsdf, rownames = FALSE, options = list(pageLength = 50, scrollX=T),
-  #               caption = "flagged accession detailed results - inspect carefully")
-  # #note:DT only working inside this IF statement because it is the last thing in the statement
-  #tables not printing!
-  # message("newly flagged accession numbers")
-  # print(allflagged)
-  # 
+  print(flagged$V1)
   
 } else message("This step was not set to run")
+
+message("outside chunk")
+  flagged
 ```
 
 # calc_bar_gap
@@ -568,7 +224,7 @@ if("calc_bar_gap" %in% steps) {
     
     #
     if(use_flagged_accessions_bcg) {
-      message("Removing flagged accessions")
+      message("Excluding flagged accessions")
     #ax_exflagged<-data.table::fread(paste0(outDir,corrected_db),data.table=F,
     #select = c("qseqid","saccver","taxids","pident","origpath","hitpath"))
     flagged<-data.table::fread(paste0(outDir,flagged_accessions),data.table = F,header = F)
@@ -581,7 +237,7 @@ if("calc_bar_gap" %in% steps) {
         ax_exflagged<-ax_exflagged[!ax_exflagged$qseqid %in% kf$V1,]
         ax_exflagged<-ax_exflagged[!ax_exflagged$saccver %in% kf$V1,]
       }
-    } else message("Not removing any accessions")
+    } else message("Not excluding any accessions")
     
     rm(ax)
   
@@ -593,16 +249,6 @@ if("calc_bar_gap" %in% steps) {
     for(h in 1:3){
     
       TaxlevelTest<-TaxlevelTestall[h]
-      
-      #limit to taxleveltest not unknown
-      if(TaxlevelTest=="F") coltax<-5
-      if(TaxlevelTest=="G") coltax<-6
-      if(TaxlevelTest=="S") coltax<-7
-      taxa.unknown<-do.call(rbind,stringr::str_split(ax_exflagged$origpath,";"))[,coltax]
-      ax_exflagged<-ax_exflagged[taxa.unknown!="unknown",]
-      taxa.unknown<-do.call(rbind,stringr::str_split(ax_exflagged$hitpath,";"))[,coltax]
-      ax_exflagged<-ax_exflagged[taxa.unknown!="unknown",]
-      
       ax_exflagged$origtaxleveltest<-path.at.level(ax_exflagged$origpath,TaxlevelTest)
       ax_exflagged$hitleveltest<-path.at.level(ax_exflagged$hitpath,TaxlevelTest)
   
@@ -636,31 +282,25 @@ if("calc_bar_gap" %in% steps) {
       
       message("Taxa with among-taxa variarion >= 99% at ",TaxlevelTestall[h]," level.
               Inspect ",further_potential_errors," for further details and to manually flag accessions")
+      print(overlaps[[h]])
       
-      if(length(overlaps[[h]])>0){
-        print(overlaps[[h]])
-        
-        # if(TaxlevelTestall[h]=="F") print.details.among<-print.details.among.F
-        # if(TaxlevelTestall[h]=="G") print.details.among<-print.details.among.G
-        # if(TaxlevelTestall[h]=="S") print.details.among<-print.details.among.S
-        # 
-        #if(print.details.among){
-        #message("Details of hits for taxa with among-taxa variarion >= 99% at ",TaxlevelTestall[h]," level.")
-        potential.errors<-list()
-          for(j in 1:length(overlaps[[h]])){
-            #message(overlaps[[h]][j])
-            xy<-ax_exflagged[ax_exflagged$origtaxleveltest==overlaps[[h]][j],] 
-            xy<-xy[xy$pident>=99,] 
-            potential.errors[[j]]<-xy[xy$hitleveltest!=overlaps[[h]][j],]
-          }
-        
-        potential.errors.out[[h]]<-do.call(rbind,potential.errors)
-        potential.errors.out[[h]]$level<- TaxlevelTest
-      } else {
-        message("No further potential errors found")
-        potential.errors.out[[h]]<-NULL
-      }
+      # if(TaxlevelTestall[h]=="F") print.details.among<-print.details.among.F
+      # if(TaxlevelTestall[h]=="G") print.details.among<-print.details.among.G
+      # if(TaxlevelTestall[h]=="S") print.details.among<-print.details.among.S
+      # 
+      #if(print.details.among){
+      #message("Details of hits for taxa with among-taxa variarion >= 99% at ",TaxlevelTestall[h]," level.")
+      potential.errors<-list()
+        for(j in 1:length(overlaps[[h]])){
+          #message(overlaps[[h]][j])
+          xy<-ax_exflagged[ax_exflagged$origtaxleveltest==overlaps[[h]][j],] 
+          xy<-xy[xy$pident>=99,] 
+          potential.errors[[j]]<-xy[xy$hitleveltest!=overlaps[[h]][j],]
+        }
       
+      potential.errors.out[[h]]<-do.call(rbind,potential.errors)
+      potential.errors.out[[h]]$level<- TaxlevelTest
+    
   
     #plot
     newtablong<-reshape2::melt(newtab[,c("taxon","max_within","min_within","max_among","min_among")],id.vars="taxon")
@@ -733,7 +373,7 @@ if("calc_bar_gap" %in% steps) {
     #         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), panel.background = element_blank(),
     #         axis.line = element_line(colour = "black"))
     
-    } #end h-loop
+    }
     
     #gather all potential errors and save in file
   potential.errors.out<- do.call(rbind,potential.errors.out)
@@ -754,8 +394,6 @@ if("calc_bar_gap" %in% steps) {
   # message("Adding accession numbers of closest taxon to ",paste0(outDir,corrected_db))
   # write.table(ax_exflagged,file = paste0(outDir,corrected_db),quote = F,sep = "\t",row.names = F)
 
-  message("The following tables indicate, for each % threshold, the number of times that taxa from different families/genera/species are within the threshold (nTaxaAmong)")
-  
   message("Family level")
   if(!is.null(plot.limit.taxon)) message("Limited to ",plot.limit.taxon)
   print(perc_among_res[[1]])
@@ -774,4 +412,46 @@ if("calc_bar_gap" %in% steps) {
   
 } else message("This step was not set to run")
     
+```
+
+# metabin
+```{r metabin, eval=TRUE,echo=F,fig.height=7,fig.width=10}
+ #STEP4 metabin
+#what to do here? loop tops? loop blast?
+#already found pidents. Just tops remaining
+#use flagged accessions?
+if("metabin" %in% steps){
+  
+  #setwd(outDir)
+  
+  t1<-Sys.time()
+  
+  tops<-c(0,1,2,5,10,100)
+  outfiles<-""
+  l=0
+  for(j in 1:length(tops)){
+        l=l+1
+        
+        outfiles[l]<-paste0(outDir,paste0(metabin_out,"_top",tops[j]))
+        if(use_flagged_accessions){
+        system2("metabin",c("-i",input, "-o",outfiles[l], "--FilterFile",paste0(outDir,flagged_accessions), "--FilterCol","saccver", "-S",
+                            98,"-G", 95
+                         ,"-F", 85,"-A", 70, "--TopSpecies", tops[j],"--TopGenus",
+                         tops[j],"--TopFamily", tops[j]
+                         ,"--TopAF", 100,"--no_mbk"),wait=T)
+        } else {
+          system2("metabin",c("-i",input, "-o",outfiles[l], "-S", 98,"-G", 95
+                         ,"-F", 85,"-A", 70, "--TopSpecies", tops[j],"--TopGenus",
+                         tops[j],"--TopFamily", tops[j]
+                         ,"--TopAF", 100,"--no_mbk"),wait=T)
+        }
+  }
+  
+  t2<-Sys.time()
+  
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  
+  message("metabin complete in ",t3," mins")
+} else message("This step was not set to run")
+
 ```
