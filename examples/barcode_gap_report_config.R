@@ -20,24 +20,24 @@
 bastoolsDir<-"/home/tutorial/TOOLS/bastools/"
 input<-"/home/tutorial/SCRIPTS/PB_tests/2019_August_002.VENE.lenFilt.trimmed.ids.SC4.pol.blast.txt" #example
 ncbiTaxDir<-"/home/tutorial/TOOLS/metabinkit.install/db/"
-#outDir<-"/home/tutorial/SCRIPTS/PB_tests/"
-steps<-c("selfblast") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin"
-plot.limit.taxon<-"Bivalvia" # this is a grep, can be NULL #(step3)
+KronaPath<-"/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
+outDir<-"/home/tutorial/SCRIPTS/PB_tests/"
+steps<-c("calc_bar_gap") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin"
+plot.limit.taxon<-"Veneridae" # this is a grep, can be NULL #(step3)
+known_flags<-"/home/tutorial/SCRIPTS/PB_tests/known_flags.txt"
 metabin_S<-98
 metabin_G<-95
 metabin_F<-85
 use_flagged_accessions=T #use this file for metabinkit? (step4)
 
 #outfiles
-outDir="/home/tutorial/SCRIPTS/PB_tests/"
-
 krona_html_db="database.html" #(step1)
 selfblastout="tempBLASTDB.tsv" #(step1)
 flagged_accessions="VENE_flagged.tsv" #(step2)
 flagged_error_detailed_table="VENE_flagged_details.tsv" #(step2)
-corrected_db="VENE_correct_database" #(step2, needed for plotting in step 3)
-out_html="VENE_barcode_gap_report.html"
+corrected_db="VENE_correct_database.tsv" #(step2, needed for plotting in step 3)
+out_html="VENE_barcode_gap_report.html" #full path
 metabin_out="VENE_metabin" # .tsv will be added to this root
 
 #knit
-rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = out_html)
+rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = paste0(outDir,out_html))
