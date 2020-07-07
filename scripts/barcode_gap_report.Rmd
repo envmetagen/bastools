@@ -18,8 +18,6 @@ options(httr_oob_default = TRUE)
 all.stats<-list()
 TaxlevelTestall<-c("F","G","S")
 
-outDir="/home/tutorial/SCRIPTS/PB_tests/"
-
 krona_html_db=paste0(outDir,krona_html_db) #(step1)
 selfblastout=paste0(outDir,selfblastout) #(step1)
 flagged_accessions=paste0(outDir,flagged_accessions) #(step2)
@@ -48,7 +46,7 @@ read.and.format.full.blast<-function(input){
     fullblast<-fullblast[fullblast$pident>80,]
     
     #make new header names with taxids, for building db
-    fullblast$seq.name<-paste0(fullblast$saccver," taxid=", fullblast$taxids,"; ",fullblast$ssciname)
+    fullblast$seq.name<-paste0(fullblast$saccver," taxid=", fullblast$taxids,"; ")
     
     #change sseq to seq.text, for phylotools
     colnames(fullblast)<-gsub("sseq","seq.text",colnames(fullblast)) 
@@ -67,13 +65,13 @@ if("selfblast" %in% steps) {
   
   setwd(outDir)
   
-  selfblastt1<-Sys.time()
+  t1<-Sys.time()
   
   fullblast<-read.and.format.full.blast(input)
   
   #MAKE KRONA OF DB
   x<-data.frame(taxon=unique(fullblast$origpathS),count=1)
-  bas.krona.plot(taxatable = x,out = krona_html_db)
+  bas.krona.plot(taxatable = x,out = krona_html_db,KronaPath=KronaPath)
   message("krona plot for self-blast database saved to ", getwd(),"/",krona_html_db)
   
   phylotools::dat2fasta(fullblast[,c("seq.name","seq.text")],paste0("tempBLASTDB.fasta"))
