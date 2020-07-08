@@ -764,4 +764,3 @@ if("calc_bar_gap" %in% steps) {
 } else message("This step was not set to run")
     
 ```
-
