@@ -53,7 +53,7 @@ if("step8" %in% stepstotake){
 ####################################################
 
 #step 8a find errors 
-if("step8" %in% stepstotake){  
+if("step8a" %in% stepstotake){  
   
   message("STEP8a-finding database errors")
   
@@ -65,6 +65,7 @@ if("step8" %in% stepstotake){
     message(paste("finding errors for ",files[i]))
   
     #outfiles
+    input<-paste0(outDir,files[i])
     krona_html_db=gsub(".blast.filt.txt",".blast.filt.database.html",files[i])
     selfblastout=gsub(".blast.filt.txt",".blast.filt.tempBLASTDB.tsv",files[i])
     flagged_accessions=gsub(".blast.filt.txt",".blast.filt.flagged.tsv",files[i])
@@ -130,7 +131,7 @@ if("step9" %in% stepstotake){
         message("Not applying any accession filters")
       }
       
-      if(!is.null(FilterFile)){
+      if(is.null(FilterFile)){
       system2("metabin",c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
                           ,"-F", fpident,"-A", abspident, "--TopSpecies", top,"--TopGenus",
                           top,"--TopFamily", top
@@ -141,7 +142,7 @@ if("step9" %in% stepstotake){
                             ,"-F", fpident,"-A", abspident, "--TopSpecies", top,"--TopGenus",
                             top,"--TopFamily", top
                             ,"--TopAF", top,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"
-                            ,"--FilterFile",FilterFile),
+                            ,"--FilterFile",FilterFile,"--FilterCol","saccver"),
                 wait=T)
       }
     }
