@@ -20,17 +20,6 @@ options(httr_oob_default = TRUE)
 all.stats<-list()
 TaxlevelTestall<-c("F","G","S")
 
-
-krona_html_db=paste0(outDir,krona_html_db) #(step1)
-selfblastout=paste0(outDir,selfblastout) #(step1)
-flagged_accessions=paste0(outDir,flagged_accessions) #(step2)
-flagged_error_detailed_table=paste0(outDir,flagged_error_detailed_table) #(step2)
-corrected_db=paste0(outDir,corrected_db) #(step2, needed for plotting in step 3)
-out_html=paste0(outDir,out_html)
-metabin_out=paste0(outDir,metabin_out) # .tsv will be added to this root
-
-read.and.format.full.blast<-function(input){
-=======
 read.and.format.full.blast<-function(input,minpident=80){
   
   output<-list()
