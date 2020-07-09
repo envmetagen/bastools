@@ -128,8 +128,6 @@ if("selfblast" %in% steps) {
   phylotools::dat2fasta(fullblast[,c("seq.name","seq.text")],paste0(outDir,"tempBLASTDB.fasta"))
   #phylotools::dat2fasta(fullblast[[1]][,c("seq.name","seq.text")],paste0("tempBLASTquery.fasta"))
   
-  rm(fullblast)
-  
   #make blastdb using metabinkit
   system2("metabinkit_blastgendb",c("-f",paste0(outDir,"tempBLASTDB.fasta"),"-o", paste0(outDir,"tempBLASTDB"),"-c"),wait = T)
   
@@ -140,6 +138,7 @@ if("selfblast" %in% steps) {
   
   min_qcov<-round(min(nchar(fullblast$seq.text))/max(nchar(fullblast$seq.text))*100,digits = 0)
   
+  rm(fullblast)
   
   system2(command = "blastn",
           args=c("-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
