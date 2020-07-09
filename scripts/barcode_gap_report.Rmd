@@ -324,7 +324,7 @@ if("find_db_errors" %in% steps) {
     
     for(i in 1:length(ax.list)){
       
-             #if(ax.list[[i]]$qseqid[1]=="KC429304.1") stop(i)
+             #if(ax.list[[i]]$qseqid[1]=="GU189658.1") stop(i)
             # }
       outcome<-"failed"
       
@@ -341,10 +341,13 @@ if("find_db_errors" %in% steps) {
       
       #human test
       if(outcome=="failed") {
-        hutaxleveltest<-path.at.level("Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens",TaxlevelTest)
-        if(hutaxleveltest!=xx$origtaxleveltest[1]) if("Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens" %in% xx$hitpath) {
+        #hutaxleveltest<-path.at.level("Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens",TaxlevelTest)
+        #still assigns other primates as likely human, skip primates
+        if(length(grep("Eukaryota;Chordata;Mammalia;Primates",xx$origtaxleveltest[1]))!=1) {
+          if("Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens" %in% xx$hitpath) {
           #using full path here to avoid other Hominidae...(?)
-          if(max(xx[xx$hitpath=="Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens","pident"])>98) outcome<-"human"
+            if(max(xx[xx$hitpath=="Eukaryota;Chordata;Mammalia;Primates;Hominidae;Homo;Homo sapiens","pident"])>98) outcome<-"human"
+          }
         }
       }
       

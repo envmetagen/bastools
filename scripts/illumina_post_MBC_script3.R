@@ -173,7 +173,7 @@ if("step10" %in% stepstotake){
   for(i in 1:length(files)){
     otutabfile<-files[i]
     if(use.metabin) {
-      binfile<-gsub(".blast.filt.txt",".bins.tsv",files[i])
+      binfile<-gsub(".otutab.tsv",".bins.tsv",files[i])
     } else {
       binfile<-gsub(".otutab.tsv",".bins.txt",files[i])
     }
@@ -275,5 +275,35 @@ if("step14" %in% stepstotake){
   message("STEP14 complete")
   
 }
+
+####################################################
+#step 15 make standard heatmaps
+if("step15" %in% stepstotake){  
+  
+  message("STEP15 - heatmaps")
+  #message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
+  
+  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
+  for(i in 1:length(files)){
+    a<-data.table::fread(files[i],data.table = F)
+    master_sheet<-data.frame(ss_sample_id=colnames(a[,-1]))
+    hm<-taxatab.heatmap(taxatab = a,master_sheet = master_sheet,tidy.taxon.names = "kingdom",taxafontsize=8,colfontsize=8)
+    
+    
+    #saving image
+    jpeg(filename=gsub(".txt$",".heatmap.jpg",files[i]),
+         unit="in",
+         width=27,
+         height=13,
+         pointsize=12,
+         res=200)
+    hm
+    dev.off()
+    
+  }
+  message("STEP15 complete")
+  
+}
+
 
 
