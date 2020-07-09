@@ -138,9 +138,10 @@ if("selfblast" %in% steps) {
   system2(command = "blastn",
           args=c("-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
                  "'6 qseqid saccver staxid pident'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
-                 70, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",98,
+                 70, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",80,
                  "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", 
                  paste0(outDir,selfblastout)), wait = T)
+  #needed to relax -qcov because the sseqs produced from first blast may be variable, some may be a bit short, therefore wouldnt have hits on self-blast
   
   #hard coded for now, note the "taxids" rather than "staxid", which metabin does not accept
   headers<-paste0("'1i",paste(c("qseqid", "saccver", "taxids", "pident"),collapse = "\t"),"'")
@@ -324,7 +325,7 @@ if("find_db_errors" %in% steps) {
     
     for(i in 1:length(ax.list)){
       
-             #if(ax.list[[i]]$qseqid[1]=="GU189658.1") stop(i)
+             if(ax.list[[i]]$qseqid[1]=="AB331708.1") stop(i)
             # }
       outcome<-"failed"
       
