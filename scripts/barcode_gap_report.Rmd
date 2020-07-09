@@ -155,6 +155,11 @@ if("selfblast" %in% steps) {
   
   system2("sed",c("-i", headers, paste0(outDir,selfblastout)),wait = T)
   
+  #remove tempdb
+  file.remove(list.files(pattern = "tempBLASTDB.n.*"))
+  file.remove("tempBLASTDB.fasta")
+  file.remove("tempBLASTDB.taxid_map.tsv")
+  
   t2<-Sys.time()
   
   t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
