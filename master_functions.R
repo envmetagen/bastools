@@ -1179,18 +1179,19 @@ splice.taxatables<-function(files){
 bas.krona.plot<-function(taxatable,KronaPath=NULL,out=NULL){
   if(is.data.frame(taxatable)) {
     a<-taxatable
-  } else a<-read.table(taxatable,header = T,sep = "\t")
+  } else a<-data.table::fread(taxatable,data.table = F)
   
   b<-as.data.frame(do.call(rbind, stringr::str_split(a[,1],";")))
   colnames(b)<-c("K","P","C","O","F","G","S")
   
   if(length(colnames(a))>2) {
-    a$all<-rowSums(a[,2:length(colnames(a))])
+    a$all<-rowSums(a[,-1])
   } else {
     a$all<-a[,2]
   }
   
-  d<-colnames(a[,2:length(colnames(a))])
+  d<-colnames(a[,-1])
+  d<-d[c(length(d),1:(length(d)-1))]
   
   for(i in 1:length(d)){
     sample<-cbind(a[,d[i]],b)
@@ -1206,9 +1207,9 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL,out=NULL){
     outfile<-out
   } else {outfile<-paste0(gsub(".txt",".krona.html",taxatable))}
   
-  system2(command = command,args = c(paste0(d[i],".krona.txt"),"-o",outfile) ,stdout = F,stderr = "",wait = T)
+  system2(command = command,args = c(paste0(d,".krona.txt"),"-o",outfile) ,stdout = F,stderr = "",wait = T)
   
-  file.remove(paste0(d[i],".krona.txt"))
+  file.remove(paste0(d,".krona.txt"))
 }
 
 taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F,grouping="ss_sample_id",

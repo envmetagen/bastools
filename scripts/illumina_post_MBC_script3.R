@@ -145,7 +145,9 @@ if("step9" %in% stepstotake){
                             ,"--FilterFile",FilterFile,"--FilterCol","saccver"),
                 wait=T)
       }
-    }
+    } #use.metabin
+    
+    
     } else {
   
     for(i in 1:length(files)){
@@ -202,16 +204,42 @@ if("step11" %in% stepstotake){
 }
 
 ####################################################
-#step 12 splice taxa tables
+#step 12 splice taxa tables and produce OTU.per.bin file
 
 if("step12" %in% stepstotake){  
   
-  message("STEP12 - splice tables")
-  message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
+  message("STEP12 - splice tables and produce OTU.per.bin file")
+  #message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-gsub(".fasta$",".taxatable.tf.txt",startingfastas)
   
   splice.taxatables(files)
+  
+  ####output OTUs.per.bin
+  files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
+  for(i in 1:length(files)){
+    taxatab<-data.table::fread(files[i],data.table = F)
+    otufile<-gsub(".taxatable.tf.spliced.txt$",".otutab.tsv",gsub(".*-","",files[i]))
+    binfile<-gsub(".otutab.tsv",".bins.tsv",otufile)
+    
+    otutab<-data.table::fread(otufile,data.table = F)
+    colnames(otutab)<-c("OTU_name",colnames(otutab[,-1]))
+    
+    bins<-data.table::fread(binfile,data.table = F)
+    #remove "size=" from binfile
+    bins$OTU_name<-do.call(rbind,stringr::str_split(bins$qseqid,";"))[,1]
+    bins$path<-paste(bins$K,bins$P,bins$C,bins$O,bins$F,bins$G,bins$S,sep = ";")
+    #subset only OTUs that were in this project
+    taxatab.ids<-colnames(taxatab[,-1])
+    otutab<-otutab[,colnames(otutab) %in% c("OTU_name",taxatab.ids),drop=F]
+    otutab<-otutab[rowSums(otutab[,-1,drop=F])>0,]
+    
+    bins2<-bins[bins$OTU_name %in% otutab$OTU_name,]
+    
+    otus.per.bin<-as.data.frame(table(bins2$path))
+    colnames(otus.per.bin)<-c("path","nOTUs")
+    write.table(otus.per.bin,gsub(".taxatable.tf.spliced.txt",".otus.per.bin.tsv",files[i]),sep="\t",row.names=F,quote = F)
+  }
   
   message("STEP12 complete")
   
@@ -270,7 +298,7 @@ if("step14" %in% stepstotake){
   
   files<-list.files(pattern = ".taxatable.tf.spliced.txt$")
   for(i in 1:length(files)){
-    bas.krona.plot(files[i],KronaPath)
+    bas.krona.plot(taxatable = files[i],KronaPath)
   }
   message("STEP14 complete")
   
@@ -287,7 +315,7 @@ if("step15" %in% stepstotake){
   for(i in 1:length(files)){
     a<-data.table::fread(files[i],data.table = F)
     master_sheet<-data.frame(ss_sample_id=colnames(a[,-1]))
-    hm<-taxatab.heatmap(taxatab = a,master_sheet = master_sheet,tidy.taxon.names = "kingdom",taxafontsize=8,colfontsize=8)
+    hm<-taxatab.heatmap(taxatab = a,master_sheet = master_sheet,inc.values = F,tidy.taxon.names = "kingdom",taxafontsize=8,colfontsize=8)
     
     
     #saving image
@@ -297,7 +325,7 @@ if("step15" %in% stepstotake){
          height=13,
          pointsize=12,
          res=200)
-    hm
+    ComplexHeatmap::draw(hm)
     dev.off()
     
   }
