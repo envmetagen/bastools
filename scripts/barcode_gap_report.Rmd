@@ -135,10 +135,16 @@ if("selfblast" %in% steps) {
   
   message("straight SELF-BLAST running...")
   
+  #dealing with variable lengths of sseq short sequences.
+   #need to relax -qcov because the sseqs produced from first blast may be variable, some may be a bit short, therefore wouldnt have hits on self-blast, if "-qcov_hsp_perc=98
+  
+  min_qcov<-round(min(nchar(fullblast$seq.text))/max(nchar(fullblast$seq.text))*100,digits = 0)
+  
+  
   system2(command = "blastn",
           args=c("-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
                  "'6 qseqid saccver staxid pident'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
-                 70, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",80,
+                 70, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",min_qcov,
                  "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", 
                  paste0(outDir,selfblastout)), wait = T)
   #needed to relax -qcov because the sseqs produced from first blast may be variable, some may be a bit short, therefore wouldnt have hits on self-blast
@@ -325,7 +331,7 @@ if("find_db_errors" %in% steps) {
     
     for(i in 1:length(ax.list)){
       
-             if(ax.list[[i]]$qseqid[1]=="AB331708.1") stop(i)
+             #if(ax.list[[i]]$qseqid[1]=="AB331708.1") stop(i)
             # }
       outcome<-"failed"
       
