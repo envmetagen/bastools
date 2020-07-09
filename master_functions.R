@@ -6160,5 +6160,14 @@ filter.blast3<-function(blastfile,ncbiTaxDir,out,rm.unclassified=T){
   }
   
   write.table(x = btab,file = out,sep="\t",quote = F,row.names = F)
+}
+
+bas.get.flagged.ids.google<-function(out){
   
+  sheeturl<-"https://docs.google.com/spreadsheets/d/1wgFzeM3YLyT-77mz0vANHJY6PCBIRrMeLFbrg690uso/edit#gid=0"
+  
+  url2<-stringr::str_split(sheeturl,"/d/")[[1]][2]
+  url2<-stringr::str_split(url2,"/")[[1]][1]
+  ss_info<-googlesheets4::read_sheet(ss = url2)
+  write.table(ss_info$UNIQUE,file = out,row.names = F,quote=F,col.names = F)
 }
