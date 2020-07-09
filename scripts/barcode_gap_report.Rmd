@@ -133,23 +133,25 @@ if("selfblast" %in% steps) {
   
   message("straight SELF-BLAST running...")
   
-  #dealing with variable lengths of sseq short sequences.
-   #need to relax -qcov because the sseqs produced from first blast may be variable, some may be a bit short, therefore wouldnt have hits on self-blast, if "-qcov_hsp_perc=98
+  #dealing with variable lengths of sseq sequences.
+   #need to relax -qcov because the sseqs produced from first blast may be variable, some may be a bit short, therefore wouldnt have hits on self-blast, if "-qcov_hsp_perc=98, leads to incorrectly flagged seqs!
   
-  min_qcovtemp<-round(min(nchar(fullblast$seq.text))/max(nchar(fullblast$seq.text))*100,digits = 0)
+  #min_qcovtemp<-round(min(nchar(fullblast$seq.text))/max(nchar(fullblast$seq.text))*100,digits = 0)
+  
+  #decided to add as a check later instead
   
   rm(fullblast)
   
   system2(command = "blastn",
           args=c("-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
-                 "'6 qseqid saccver staxid pident'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
-                 70, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",min_qcovtemp,
+                 "'6 qseqid saccver staxid pident qcovs'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
+                 100, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",98,
                  "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", 
                  paste0(outDir,selfblastout)), wait = T)
-  #needed to relax -qcov because the sseqs produced from first blast may be variable, some may be a bit short, therefore wouldnt have hits on self-blast
+  
   
   #hard coded for now, note the "taxids" rather than "staxid", which metabin does not accept
-  headers<-paste0("'1i",paste(c("qseqid", "saccver", "taxids", "pident"),collapse = "\t"),"'")
+  headers<-paste0("'1i",paste(c("qseqid", "saccver", "taxids", "pident", "qcovs"),collapse = "\t"),"'")
   
   system2("sed",c("-i", headers, paste0(outDir,selfblastout)),wait = T)
   
@@ -330,8 +332,8 @@ if("find_db_errors" %in% steps) {
     
     for(i in 1:length(ax.list)){
       
-             #if(ax.list[[i]]$qseqid[1]=="AB331708.1") stop(i)
-            # }
+             #if(ax.list[[i]]$qseqid[1]=="AB331718.1") stop(i)
+             #}
       outcome<-"failed"
       
       #remove self-hit
@@ -363,10 +365,26 @@ if("find_db_errors" %in% steps) {
       #remaining families contain a high hit (e.g. 98%)
       if(outcome=="failed" | outcome=="human") if(max(xx$pident)<98) outcome<-"passed"
           
-      #database contains other representatives of this family?
-      if(outcome=="failed") if(length(unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],"qseqid"]))==1) outcome<-"passed"
+      #if database doesnt contain other representatives of the taxon, then pass it. If it does contain other representatives then fail it, but only if other representatives have at least one longer sequence, or  that is within 2% of query length (otherwise they wont be in blast results and can be erroneously flagged)
+      if(outcome=="failed") {
         
-      if(outcome=="failed" | outcome=="human") {
+        if(length(unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],"qseqid"]))!=1) {
+          qlen<-nchar(xx$qseq[1])
+          minslen<-round(qlen*0.981,digits = 0) #just adding to one to be sure it is above
+          seqs.in.group<-unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],c("qseqid", "qseq")]) #will include itself
+          seqs.in.group<-seqs.in.group[!seqs.in.group$qseqid==xx$qseqid[1],]
+          slens<-nchar(seqs.in.group$qseq)
+          
+          if(max(slens)<minslen) outcome<-"passed" 
+          
+          # pc<-slens/qlen
+          # if(pc>=1.02 | pc<=0.98) outcome<-"passed"
+          # #if(max(slens)>minslen) outcome<-"failed" else outcome<-"passed"
+          
+        } else outcome<-"passed"
+      }
+  
+     if(outcome=="failed" | outcome=="human") {
         errors[[i]]<-ax.list[[i]]
         current<-ax.list[[i]]$qseqid[1]
         if(outcome=="failed") {
@@ -380,7 +398,7 @@ if("find_db_errors" %in% steps) {
         #remove from db before next loop.  
         ax.list<-lapply(ax.list, function(x) x[x$saccver!=current,]) 
       } else errors[[i]]<-NULL
-    }
+    } #
     
     
     #these settings are identifying likely errors, cool, but not finding KC429304.1
@@ -447,7 +465,7 @@ if("find_db_errors" %in% steps) {
     
     #combine filter results within h loop
     allerrorsdf[[h]]<-rbind(errorstemp,error.filter2df)
-    allerrorsdf[[h]]$taxlevel<-TaxlevelTestall[h]
+    if(length(allerrorsdf)>0) allerrorsdf[[h]]$taxlevel<-TaxlevelTestall[h]
     allflagged[[h]]<-c(flagged, flagged2)
   } #h
   
