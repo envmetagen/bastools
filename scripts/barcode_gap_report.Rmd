@@ -175,9 +175,11 @@ if("selfblast" %in% steps) {
 ### So far haven seen any flagged accessions that seem incorrectly flagged. But not all errors are caught. Main case is when there are multiple erroneously labelled entries of the same taxon. 
 ```{r find_db_errors, eval=TRUE,echo=F}
 if("find_db_errors" %in% steps) {
-  
+
   t1<-Sys.time()
-  
+
+  message("using min representaives=3")
+    
   #setwd(outDir)
   
   #overall should do this at family, genus and species and combine results
@@ -370,22 +372,20 @@ if("find_db_errors" %in% steps) {
       #remaining families contain a high hit (e.g. 98%)
       if(outcome=="failed" | outcome=="human") if(max(xx$pident)<98) outcome<-"passed"
           
-      #if database doesnt contain other representatives of the taxon, then pass it. If it does contain other representatives then fail it, but only if other representatives have at least one longer sequence, or  that is within 2% of query length (otherwise they wont be in blast results and can be erroneously flagged)
+      #if database doesnt contain at least 3 other representatives of the taxon, then pass it. If it does contain 3 other representatives then fail it, but only if other representatives have at least 3 sequences that are within 2% of query length (otherwise they wont be in blast results and can be erroneously flagged)
       if(outcome=="failed") {
         
-        if(length(unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],"qseqid"]))!=1) {
+        if(length(unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],"qseqid"]))<3) {
           qlen<-nchar(xx$qseq[1])
           minslen<-round(qlen*0.981,digits = 0) #just adding to one to be sure it is above
           seqs.in.group<-unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],c("qseqid", "qseq")]) #will include itself
           seqs.in.group<-seqs.in.group[!seqs.in.group$qseqid==xx$qseqid[1],]
           slens<-nchar(seqs.in.group$qseq)
+          slens<-slens[order(slens,decreasing = T)]
+          slens<-slens[slens>minslen]
           
-          if(max(slens)<minslen) outcome<-"passed" 
-          
-          # pc<-slens/qlen
-          # if(pc>=1.02 | pc<=0.98) outcome<-"passed"
-          # #if(max(slens)>minslen) outcome<-"failed" else outcome<-"passed"
-          
+          if(length(slens)<3) outcome<-"passed" 
+        
         } else outcome<-"passed"
       }
   
@@ -421,10 +421,10 @@ if("find_db_errors" %in% steps) {
       flagged<-NULL
     }
     
-    #FILTERB
+    #FILTER_B
     #second filter based on hits. if all hits from an entry are NEVER the same as the origpath, likely an error
     #AND there were high hits
-    #AND there other members of the taxonlevel in the database
+    #AND there at least three other members of the taxonlevel in the database
     
     ax2<-do.call(rbind,ax.list)
     ax.list2<-split(ax2,ax2$saccver)
@@ -438,9 +438,12 @@ if("find_db_errors" %in% steps) {
       current<-unique(ax.list2[[i]]$saccver)[1]
       currenttax<-ax.list2[[i]]$hitleveltest[1]
     
-      #were there other members of the family in the database. If not, must pass.
-      if(length(unique(ax2[ax2$origtaxleveltest==currenttax,"qseqid"]))==1) outcome<-"passed"
-    
+      #were there at least three other members of the family in the database. If not, must pass.
+      #if(length(unique(ax2[ax2$origtaxleveltest==currenttax,"qseqid"]))==1) #old rule
+      if(length(unique(ax2[ax2$origtaxleveltest==currenttax,"qseqid"]))<3) outcome<-"passed"
+      
+      #not implementing the length thing here, should I?
+     
       if(outcome=="failed"){
       
         yy<-ax.list2[[i]][ax.list2[[i]]$saccver==current,]

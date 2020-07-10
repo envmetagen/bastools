@@ -5678,7 +5678,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   
   #then group by group.by
   for(i in 1:length(taxatab.list)){
-    taxatab.list[[i]]<-sumreps(taxatab = taxatab.list[[i]],ms_ss = ms.split[[i]],grouping = group.by,discard = F,current.grouping = current.grouping)
+    taxatab.list[[i]]<-sumreps(taxatab = taxatab.list[[i]],ms_ss = ms.split[[i]],grouping = group.by,discard = F,
+                               current.grouping = current.grouping)
   }
   
   #then make all taxa present in all taxatables, in same order
