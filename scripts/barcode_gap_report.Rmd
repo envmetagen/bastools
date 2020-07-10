@@ -339,8 +339,8 @@ if("find_db_errors" %in% steps) {
     
     for(i in 1:length(ax.list)){
       
-             #if(ax.list[[i]]$qseqid[1]=="AB331718.1") stop(i)
-             #}
+             if(ax.list[[i]]$qseqid[1]=="AF508071.1") stop(i)
+             }
       outcome<-"failed"
       
       #remove self-hit
@@ -375,14 +375,14 @@ if("find_db_errors" %in% steps) {
       #if database doesnt contain at least 3 other representatives of the taxon, then pass it. If it does contain 3 other representatives then fail it, but only if other representatives have at least 3 sequences that are within 2% of query length (otherwise they wont be in blast results and can be erroneously flagged)
       if(outcome=="failed") {
         
-        if(length(unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],"qseqid"]))<3) {
+        if(length(unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],"qseqid"]))>3) {
           qlen<-nchar(xx$qseq[1])
           minslen<-round(qlen*0.981,digits = 0) #just adding to one to be sure it is above
           seqs.in.group<-unique(ax[ax$origtaxleveltest==xx$origtaxleveltest[1],c("qseqid", "qseq")]) #will include itself
           seqs.in.group<-seqs.in.group[!seqs.in.group$qseqid==xx$qseqid[1],]
           slens<-nchar(seqs.in.group$qseq)
           slens<-slens[order(slens,decreasing = T)]
-          slens<-slens[slens>minslen]
+          slens<-slens[slens>=minslen]
           
           if(length(slens)<3) outcome<-"passed" 
         

@@ -110,7 +110,7 @@ if("step9" %in% stepstotake){
         
         if(!is.null(known_flags)) flags_pre_defined<-data.table::fread(known_flags,data.table = F,header = F)
         
-        if(exists(x = "flags_step8a")) if(exists("flags_pre_defined")) {
+        if(exists("flags_step8a")) if(exists("flags_pre_defined")) {
           message("Combining pre-defined flags and flags found in step8a")
           all_flags<-rbind(flags_pre_defined,flags_step8a)
           }
