@@ -63,6 +63,7 @@ if("step8a" %in% stepstotake){
   
   for(i in 1:length(files)){
     message(paste("finding errors for ",files[i]))
+    message("excluding all XM_,XR_,XP_ accessions. These are in-silico generated ")
   
     #outfiles
     input<-paste0(outDir,files[i])

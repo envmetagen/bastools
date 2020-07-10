@@ -224,11 +224,31 @@ if("find_db_errors" %in% steps) {
   #add origpath
   ax1<-merge(ax1,fullblast[,c("saccver", "K","P","C","O","F","G","S","seq.text")], by.x = "qseqid", by.y = "saccver",all.x = T,all.y = F)
   
+  before<-length(unique(ax1$qseqid))
+  
+  axtemp<-ax1
+  
+  #remove XM_,XR_,XP_ accessions These are 'PREDICTED' in-silico generated
+  message("excluding 'PREDICTED', in-silico generated, accessions")
+  if(length(grep("XM_.*",ax1$qseqid))>0) ax1<-ax1[-grep("XM_.*",ax1$qseqid),] 
+  if(length(grep("XR_.*",ax1$qseqid))>0) ax1<-ax1[-grep("XR_.*",ax1$qseqid),] 
+  if(length(grep("XP_.*",ax1$qseqid))>0) ax1<-ax1[-grep("XP_.*",ax1$qseqid),] 
+  if(length(grep("XM_.*",ax1$saccver))>0) ax1<-ax1[-grep("XM_.*",ax1$saccver),] 
+  if(length(grep("XR_.*",ax1$saccver))>0) ax1<-ax1[-grep("XR_.*",ax1$saccver),] 
+  if(length(grep("XP_.*",ax1$saccver))>0) ax1<-ax1[-grep("XP_.*",ax1$saccver),] 
+  
+  message("'PREDICTED' in-silico sequences removed:",before-length(unique(ax1$qseqid)))
+  removed.accs<-axtemp[!axtemp$qseqid %in% unique(ax1$qseqid),]
+  print(removed.accs[!duplicated(removed.accs$qseqid),c("qseqid","K","P","C","O","F","G","S")])
+  
+    
   #remove known flags
   if(!is.null(known_flags)) {
+    before<-length(unique(ax1$qseqid))
     kf<-data.table::fread(known_flags,data.table = F,header = F)
     ax1<-ax1[!ax1$qseqid %in% kf$V1,]
     ax1<-ax1[!ax1$saccver %in% kf$V1,]
+    message("Known flagged sequences removed:",before-length(unique(ax1$qseqid)))
   }
   
   rm(fullblast)
