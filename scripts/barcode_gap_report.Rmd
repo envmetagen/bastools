@@ -339,8 +339,8 @@ if("find_db_errors" %in% steps) {
     
     for(i in 1:length(ax.list)){
       
-             if(ax.list[[i]]$qseqid[1]=="AF508071.1") stop(i)
-             }
+             #if(ax.list[[i]]$qseqid[1]=="AF508071.1") stop(i)
+             #}
       outcome<-"failed"
       
       #remove self-hit
