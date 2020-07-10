@@ -240,6 +240,7 @@ if("find_db_errors" %in% steps) {
   message("'PREDICTED' in-silico sequences removed:",before-length(unique(ax1$qseqid)))
   removed.accs<-axtemp[!axtemp$qseqid %in% unique(ax1$qseqid),]
   print(removed.accs[!duplicated(removed.accs$qseqid),c("qseqid","K","P","C","O","F","G","S")])
+  removed.accs$qseqid
   
     
   #remove known flags
@@ -502,15 +503,12 @@ if("find_db_errors" %in% steps) {
   
   allflagged<-do.call(c,allflagged)
   allflagged<-unique(allflagged)
-  # ax_exflagged<-ax[!ax$qseqid %in% allflagged,]
-  # ax_exflagged<-ax_exflagged[!ax_exflagged$saccver %in% allflagged,]
-  # #min cols
-  # ax_exflagged<-ax_exflagged[,c("qseqid","saccver","taxids","pident","origpath","hitpath")]
+  
+  if(length(removed.accs$qseqid)>0) allflagged<-c(removed.accs$qseqid,allflagged)
   
   write.table(allflagged,paste0(outDir,flagged_accessions),row.names = F,quote = F,sep = "\t",col.names = F)
   write.table(allerrorsdf,file = paste0(outDir,flagged_error_detailed_table),quote = F,sep = "\t",row.names = F)
-  #write.table(ax_exflagged,file = paste0(outDir,corrected_db),quote = F,sep = "\t",row.names = F)
-  
+
   message("Note: The filter is run three times - at family, genus and species level. 
           There are likely to be duplicates in the output, where the accession was flagged at multiple levels. 
   
@@ -613,8 +611,7 @@ if("calc_bar_gap" %in% steps) {
     #
     if(use_flagged_accessions_bcg) {
       message("Removing flagged accessions")
-    #ax_exflagged<-data.table::fread(paste0(outDir,corrected_db),data.table=F,
-    #select = c("qseqid","saccver","taxids","pident","origpath","hitpath"))
+    
     flagged<-data.table::fread(paste0(outDir,flagged_accessions),data.table = F,header = F)
      ax_exflagged<-ax_exflagged[!ax_exflagged$qseqid %in% flagged$V1,]
       ax_exflagged<-ax_exflagged[!ax_exflagged$saccver %in% flagged$V1,]
