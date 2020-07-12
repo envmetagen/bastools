@@ -49,10 +49,10 @@ read.and.format.full.blast<-function(input,minpident=80){
     fullblast<-fullblast[!duplicated(fullblast$saccver),] #too many seqs
     fullblast<-fullblast[fullblast$pident>minpident,] #is this dodgy? 
     
-    #limit to max 50 per taxid to overcome the "thunnus issue"
+    #limit to max 15 per taxid to overcome the "thunnus issue"
     fullblast_spl<-split(fullblast,fullblast$taxids)
     for(i in 1:length(fullblast_spl)){
-      if(nrow(fullblast_spl[[i]])>50) fullblast_spl[[i]]<-fullblast_spl[[i]][1:50,]
+      if(nrow(fullblast_spl[[i]])>15) fullblast_spl[[i]]<-fullblast_spl[[i]][1:15,]
     }
     
     fullblast<-do.call(rbind,fullblast_spl)
@@ -145,7 +145,7 @@ if("selfblast" %in% steps) {
   system2(command = "blastn",
           args=c("-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
                  "'6 qseqid saccver staxid pident qcovs'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
-                 100, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",98,
+                 500, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",98,
                  "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", 
                  paste0(outDir,selfblastout)), wait = T)
   
@@ -178,7 +178,7 @@ if("find_db_errors" %in% steps) {
 
   t1<-Sys.time()
 
-  message("using min representaives=3")
+  message("using min representatives=3")
     
   #setwd(outDir)
   
@@ -239,8 +239,7 @@ if("find_db_errors" %in% steps) {
   
   message("'PREDICTED' in-silico sequences removed:",before-length(unique(ax1$qseqid)))
   removed.accs<-axtemp[!axtemp$qseqid %in% unique(ax1$qseqid),]
-  print(removed.accs[!duplicated(removed.accs$qseqid),c("qseqid","K","P","C","O","F","G","S")])
-  removed.accs$qseqid
+  removed.accs<-removed.accs[!duplicated(removed.accs$qseqid),c("qseqid","K","P","C","O","F","G","S")]
   
     
   #remove known flags
@@ -360,7 +359,7 @@ if("find_db_errors" %in% steps) {
     
     for(i in 1:length(ax.list)){
       
-             #if(ax.list[[i]]$qseqid[1]=="AF508071.1") stop(i)
+             #if(ax.list[[i]]$qseqid[1]=="MH688257.1") stop(i)
              #}
       outcome<-"failed"
       
@@ -370,10 +369,15 @@ if("find_db_errors" %in% steps) {
       #if no other hits, cannot fail
       if(nrow(xx)==0) outcome<-"passed"
       
-      #use a threshold here. i.e. of the remaning hits, keep only >80%
-      xx<-xx[xx$pident>=80,]
+      #use a threshold here. i.e. of the remaning hits, keep only >80%, justified? Already applying a 70% in blast...
+      #xx<-xx[xx$pident>=80,]
       
+      #if no other hits, cannot fail
       if(nrow(xx)==0) outcome<-"passed"
+      
+      #an issue here. if max_target_seqs was too low in original blast then all hits might be above e.g. 99% and we might not have hits to other members of the taxon, even though they are very similar. then will be incorrectly flagged. So can only fail if we have "distant" hits in our results.
+      #BIG ISSUE...but I I am only passing if there are three members...so why? Actually think I can just increase tempBLAST to e.g. 500 seqs! try this  
+      #if(min(xx$pident)>81) outcome<-"passed" #just using 81 to keep 80.5 etc
       
       #human test
       if(outcome=="failed") {
@@ -447,6 +451,7 @@ if("find_db_errors" %in% steps) {
     #AND there were high hits
     #AND there at least three other members of the taxonlevel in the database
     
+    
     ax2<-do.call(rbind,ax.list)
     ax.list2<-split(ax2,ax2$saccver)
     error.filter2<-list()
@@ -464,6 +469,8 @@ if("find_db_errors" %in% steps) {
       if(length(unique(ax2[ax2$origtaxleveltest==currenttax,"qseqid"]))<3) outcome<-"passed"
       
       #not implementing the length thing here, should I?
+      
+      #not implementing distant hits either, should I?
      
       if(outcome=="failed"){
       
