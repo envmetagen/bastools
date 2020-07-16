@@ -100,8 +100,8 @@ if("selfblast" %in% steps) {
   message("straight SELF-BLAST running...")
   
   if(!exists("divergence")) {
-    divergence<-c(Family=5,Genus=5,Species=5)
-    message("Defaulting to divergence of Family=5,Genus=5,Species=5")
+    divergence<-rep(5,length(TaxlevelTestall))
+    message("Defaulting to divergence of 5 for all levels")
   }
   
   perc_identity<-98-max(divergence)-5 #adding the minus 5 just to catch a few more hits, 98 because this is what I use later to say there were "high" hits
@@ -512,12 +512,12 @@ if("calc_bar_gap" %in% steps) {
   overlaps<-list()
   potential.errors.out<-list()
   
-   #loop by taxa level (FGS), fnding errors for each level
+   #loop by taxa level, plotting errors for each level
   hierarchy<-c("K","P","C","O","F","G","S")
   
-  for(h in 1:length(TaxlevelTestall)){
+  for(h in 1:length(hierarchy)){
   
-    TaxlevelTest<-TaxlevelTestall[h]
+    TaxlevelTest<-hierarchy[h]
     
     #limit to taxleveltest not unknown
     sb$origtax<-stringr::str_split(sb$origpath,";",simplify = T)[,match(TaxlevelTest,hierarchy)]
@@ -555,7 +555,7 @@ if("calc_bar_gap" %in% steps) {
     #print overlaps for inspection later
     overlaps[[h]]<-unique(newtab[newtab$max_among>=99,"taxon"])
     
-    message("Taxa with among-taxa variarion >= 99% at ",TaxlevelTestall[h]," level.
+    message("Taxa with among-taxa variarion >= 99% at ",TaxlevelTest," level.
             Inspect ",further_potential_errors," for further details and to manually flag accessions")
     
     if(length(overlaps[[h]])>0){
@@ -654,7 +654,7 @@ if("calc_bar_gap" %in% steps) {
   write.table(potential.errors.out,paste0(outDir,further_potential_errors),row.names=F,quote=F,sep="\t")
   
   #plots
-  for(h in 1:length(TaxlevelTestall)){
+  for(h in 1:length(hierarchy)){
     print(plot.list.all[[h]][[1]])  
     print(plot.list.all[[h]][[2]])  
     print(plot.list.all[[h]][[3]])  
@@ -662,8 +662,8 @@ if("calc_bar_gap" %in% steps) {
   
   message("The following tables indicate, for each % threshold, the number of times that taxa from different families/genera/species are within the threshold (nTaxaAmong)")
   
-  for(h in 1:length(TaxlevelTestall)){
-    message("Level=",TaxlevelTestall[h])
+  for(h in 1:length(hierarchy)){
+    message("Level=",hierarchy[h])
     if(!is.null(plot.limit.taxon)) message("Limited to ",plot.limit.taxon)
     print(perc_among_res[[h]])
   }

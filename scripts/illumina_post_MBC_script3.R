@@ -74,8 +74,7 @@ if("step8a" %in% stepstotake){
     further_potential_errors=gsub(".blast.filt.txt",".blast.filt.non-flagged.potential.errors.tsv",files[i])
     out_html=gsub(".blast.filt.txt",".blast.filt.barcode.gap.report.html",files[i])
     
-    TaxlevelTestall<-c("K","P","C","O","F","G")
-    divergence<-c(Kingdom=5,Phylum=5,Class=5,Order=5,Family=5,Genus=5)
+    divergence<-rep(5,length(TaxlevelTestall))
     use_flagged_accessions_bcg=T
     plot.limit.taxon=NULL
     #knit

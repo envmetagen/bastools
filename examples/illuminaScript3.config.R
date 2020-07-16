@@ -53,6 +53,7 @@ KronaPath="/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
 known_flags="/home/tutorial/REPTILE/auto_and_manual_flags_reptile.txt"
 #get from google?
 use_flagged_accessions_mbk=T
+TaxlevelTestall<-c("K","P","C","O","F") #TaxlevelTestall<-c("K","P","C","O","F","G","S")
 
 #percentage identity threshold to consider (1=1%)
 #top=1 #this will overwrite all other tops! hash it out to not use it!
