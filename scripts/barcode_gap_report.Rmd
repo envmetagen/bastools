@@ -106,9 +106,11 @@ if("selfblast" %in% steps) {
   
   perc_identity<-98-max(divergence)-5 #adding the minus 5 just to catch a few more hits, 98 because this is what I use later to say there were "high" hits
   
-  argsblast=c("-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
+  message("word_size set to 20. This was tested for a fragment of c. 105bp and did not result in many fewer hits than word_size of 11 (word_size 28 did), but if testing a shorter fragment consider revising")
+  
+  argsblast=c("-task","megablast", "-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
                  "'6 qseqid saccver staxid pident sseq'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
-                 500, "-max_hsps",1,"-word_size", 11,"-perc_identity", perc_identity,"-qcov_hsp_perc",98,
+                 500, "-max_hsps",1,"-word_size", 20,"-perc_identity", perc_identity,"-qcov_hsp_perc",98,
                  "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", 
                  paste0(outDir,selfblastout))
   

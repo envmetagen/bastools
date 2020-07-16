@@ -141,23 +141,19 @@ if("step9" %in% stepstotake){
         topAF<-top
       }
       
-      if(is.null(FilterFile)){
-      system2("metabin",c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
-                          ,"-F", fpident,"-A", abspident, "--TopSpecies", topS,"--TopGenus",
-                          topG,"--TopFamily", topF
-                          ,"--TopAF", topAF,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"),
-              wait=T)
-      } else {
-        system2("metabin",c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
-                            ,"-F", fpident,"-A", abspident, "--TopSpecies", topS,"--TopGenus",
-                            topG,"--TopFamily", topF
-                            ,"--TopAF", topAF,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"
-                            ,"--FilterFile",FilterFile,"--FilterCol","saccver"),
-                wait=T)
+      #set metabin args
+       argsmbk<-c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
+                  ,"-F", fpident,"-A", abspident, "--TopSpecies", topS,"--TopGenus",
+                  topG,"--TopFamily", topF
+                  ,"--TopAF", topAF,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w","--sp_discard_num")
+       
+       if(!is.null(FilterFile)) argsmbk<-c(argsmbk,"--FilterFile",FilterFile,"--FilterCol","saccver")
+       if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
+       if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
+       if(!is.null(FamilyBL)) argsmbk<-c(argsmbk,"--FamilyBL",FamilyBL)
+       
+       system2("metabin",argsmbk, wait=T)
       }
-    } #use.metabin
-    
-    
     } else {
   
     for(i in 1:length(files)){

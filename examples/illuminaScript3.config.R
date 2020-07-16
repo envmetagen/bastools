@@ -49,8 +49,8 @@ min_qcovs=70
 max_evalue=0.001
 
 use.metabin=T #use metabin or older script for processing?
-KronaPath="/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
-known_flags="/home/tutorial/REPTILE/auto_and_manual_flags_reptile.txt"
+KronaPath="/home/tutorial/TOOLS/Krona.install/bin/ktImportText" #full path
+known_flags="/home/tutorial/REPTILE/auto_and_manual_flags_reptile.txt" #full path
 #get from google?
 use_flagged_accessions_mbk=T
 TaxlevelTestall<-c("K","P","C","O","F") #TaxlevelTestall<-c("K","P","C","O","F","G","S")
@@ -73,8 +73,10 @@ abspident=80
 #taxon filter percent (0.1=0.1%)
 filterpc=0.1
 
+## allow taxa_disabling
+SpeciesBL="species_blacklist_test.txt"
+GenusBL="genus_blacklist_test.txt"
+FamilyBL=NULL
+
 
 source("/home/bastian.egeter/git_bastools/bastools/scripts/illumina_post_MBC_script3.R")
-
-
-
