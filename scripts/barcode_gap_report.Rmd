@@ -27,6 +27,7 @@ read.and.format.full.blast<-function(input,known_flags=NULL){
   #remove known flags
   if(!is.null(known_flags)) {
     message("Removing hits to known flags")
+    if(!file.exists(known_flags)) stop(known_flags,"not found")
     before<-length(unique(fullblast$saccver))
     kf<-data.table::fread(known_flags,data.table = F,header = F)
     fullblast<-fullblast[!fullblast$saccver %in% kf$V1,]
@@ -82,7 +83,7 @@ if("selfblast" %in% steps) {
   
   t1<-Sys.time()
   
-  fullblast<-read.and.format.full.blast(input) #should only do once
+  fullblast<-read.and.format.full.blast(input) 
   
   #MAKE KRONA OF DB
   x<-as.data.frame(table(fullblast$origpath))
