@@ -24,7 +24,11 @@ KronaPath<-"/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
 outDir<-"/home/tutorial/SCRIPTS/PB_tests/"
 steps<-c("calc_bar_gap") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin"
 plot.limit.taxon<-"Veneridae" # this is a grep, can be NULL #(step3)
-known_flags<-"/home/tutorial/SCRIPTS/PB_tests/known_flags.txt"
+known_flags<-NULL #"/home/tutorial/SCRIPTS/PB_tests/known_flags.txt"
+
+TaxlevelTestall<-c("K","P","C","O","F")
+divergence<-c(Kingdom=5,Phylum=5,Class=5,Order=5,Family=5)
+
 metabin_S<-98
 metabin_G<-95
 metabin_F<-85
