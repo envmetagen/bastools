@@ -19,7 +19,7 @@
 startingfastas<-"12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.fasta"
 ####To blast entire nt just use
 #startingfastas<-c("file1.fasta","file2.fasta")
-
+#stepstotake<-c("step7","step8","step8a","step9","step10","step11","step12","step13","step14")
 stepstotake<-c("step9","step10","step11","step12","step13","step14")
 
 #all directories must have trailing "/"
@@ -55,7 +55,12 @@ known_flags="/home/tutorial/REPTILE/auto_and_manual_flags_reptile.txt"
 use_flagged_accessions_mbk=T
 
 #percentage identity threshold to consider (1=1%)
-top=1
+#top=1 #this will overwrite all other tops! hash it out to not use it!
+topS=100
+topG=100
+topF=100
+topAF=2
+
 #percentage identity for species level
 spident=98
 #percentage identity for genus level

@@ -134,17 +134,25 @@ if("step9" %in% stepstotake){
         message("Not applying any accession filters")
       }
       
+      if(exists("top")){
+        message("Overwriting all tops with ", top)
+        topS<-top
+        topG<-top
+        topF<-top
+        topAF<-top
+      }
+      
       if(is.null(FilterFile)){
       system2("metabin",c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
-                          ,"-F", fpident,"-A", abspident, "--TopSpecies", top,"--TopGenus",
-                          top,"--TopFamily", top
-                          ,"--TopAF", top,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"),
+                          ,"-F", fpident,"-A", abspident, "--TopSpecies", topS,"--TopGenus",
+                          topG,"--TopFamily", topF
+                          ,"--TopAF", topAF,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"),
               wait=T)
       } else {
         system2("metabin",c("-i",filtered_blastfile, "-o",binfile, "-S", spident,"-G", gpident
-                            ,"-F", fpident,"-A", abspident, "--TopSpecies", top,"--TopGenus",
-                            top,"--TopFamily", top
-                            ,"--TopAF", top,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"
+                            ,"-F", fpident,"-A", abspident, "--TopSpecies", topS,"--TopGenus",
+                            topG,"--TopFamily", topF
+                            ,"--TopAF", topAF,"--no_mbk","--sp_discard_sp", "--sp_discard_mt2w", "--sp_discard_num"
                             ,"--FilterFile",FilterFile,"--FilterCol","saccver"),
                 wait=T)
       }
