@@ -6159,6 +6159,7 @@ filter.blast3<-function(blastfile,ncbiTaxDir,out,rm.unclassified=T){
     if(length(grep("unidentified",btab$S,ignore.case = T))>0) btab<-btab[-grep("unidentified",btab$S,ignore.case = T),]
     if(length(grep("fungal ",btab$S,ignore.case = T))>0) btab<-btab[-grep("fungal ",btab$S,ignore.case = T),]
     if(length(grep("eukaryote",btab$S,ignore.case = T))>0) btab<-btab[-grep("eukaryote",btab$S,ignore.case = T),]
+    if(length(grep("synthetic",btab$S,ignore.case = T))>0) btab<-btab[-grep("synthetic",btab$S,ignore.case = T),]
   }
   
   write.table(x = btab,file = out,sep="\t",quote = F,row.names = F)
