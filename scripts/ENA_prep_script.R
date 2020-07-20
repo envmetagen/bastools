@@ -2,9 +2,9 @@
 ########################################CODE
 setwd(outdir)
 
-if(ms_option=1) packages.needed<-c("googlesheets4","httpuv","data.table")
+if(ms_option==1) packages.needed<-c("googlesheets4","httpuv","data.table")
 
-if(ms_option=2) packages.needed<-c("data.table")
+if(ms_option==2) packages.needed<-c("data.table")
 
 for(i in 1:length(packages.needed)){
   if(!packages.needed[i] %in% rownames(installed.packages())) {
