@@ -123,7 +123,6 @@ message(paste(sum(files %in% list.files()), "of", length(files), "files found, o
 
 write.table(files,file = filelist,quote = F,row.names = F,sep = "\t",col.names = F)
 
-
 ########################################MD5SUMS
 checksum<-data.frame(md5=rep(0,length(files)))
 

@@ -1,17 +1,32 @@
 #making sample sheet, library sheet (adding md5sums), file list and password file
 
+
+##############INSTRUCTIONS
+#works on emg1 and emg2
 #first make a copy this file, do not edit this directly
-#change settings as desired
-#run in R, e.g. from terminal Rscript this_file.R
+#change settings as desired and save file
+#then, run from terminal "Rscript this_file.R"
+#source /opt/env.sh
+#cd to the filelist directoy (here /mnt/Disk2/FilipaMSMartins/7.run_180201/ena/upload/)
+# emg_ena_upload.sh -l filelist -u Webin-XXXX -p ENA_password.txt
+#replacing 'filelist' with the filelist output below (here "filipa_test_ENA_FILES.txt") 
+#replace Webin-XXXX with your username
+# replace ENA_password.txt with the full path to the ENA_password.txt file, which is outdir/ENA_password.txt
+#here, "/mnt/Disk2/FilipaMSMartins/7.run_180201/ena/ENA_password.txt"
+
+#go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
+#or here for real https://www.ebi.ac.uk/ena/submit/sra/
+
+##################################
 
 #CONFIG
 ms_option=1 #choose 1 or 2, see below
 
-#full path. Must already exist. If using Option 2 below, this folder must contain the 3 tsv files required.
+#full path, including trailing '/'. Must already exist. If using Option 2 below, this folder must contain the 3 tsv files required.
 #Final ENA upload files will also be added here
-outdir<-"/home/tutorial/test/"
+outdir<-"/mnt/Disk2/FilipaMSMartins/7.run_180201/ena"
 #directory with files for upload
-fileDir<-"/mnt/Disk2/MISEQ_RUNS/2017_12_AZORES-IRANVERTS-NZFROG-OZ-GUELTA/PP121217-56327499/BEFORE_PAIRED_END/FIRST_ATTEMPT/"
+fileDir<-"/mnt/Disk2/FilipaMSMartins/7.run_180201/ena/upload/"
 
 ####ms_option=1
 #use google. This is ok, but can be problematic because 
