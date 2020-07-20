@@ -38,7 +38,7 @@ refdb = "/mnt/Disk1/Tools/BLAST+/DBs/nt_v5/nt"
 #sheet urls (here using "processing sheet")
 #sheeturls<-"https://docs.google.com/spreadsheets/d/1Eu8EDcGgeGh3yv-q3ATq4uMrRsA3iL9Gqy4HfYhRCoU/edit#gid=0"
 #experiment_id<-"2018_04"
-taxidlimit=NULL
+taxidlimit=NULL # taxidlimit=c("2210","9606") in same order as starting fastas  
 opts=c("-task","blastn","-outfmt", "6 qseqid pident qcovs saccver staxid ssciname sseq","-num_threads", 64,
        "-max_target_seqs", 50, "-max_hsps",1,"-word_size", 11, "-perc_identity", 50,
        "-qcov_hsp_perc", 98, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1)
