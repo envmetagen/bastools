@@ -19,10 +19,21 @@ library(tidyverse)
 options(httr_oob_default = TRUE)
 all.stats<-list()
 
-read.and.format.full.blast<-function(input,known_flags=NULL){
+read.and.format.full.blast<-function(input,known_flags=NULL,rm.low.read.queries=0.90){
+  #rm.low.read.queries means remove queries where size (in qseqid) < quantile 90% e.g. 90% of reads might have 35 reads or more
+  
+  require(stringr)
   
   #read full blast results
-  fullblast<-data.table::fread(input,data.table=F, select = c("saccver","taxids","pident","sseq") )
+  fullblast<-data.table::fread(input,data.table=F, select = c("saccver","taxids","pident","sseq","qseqid")) #qseqid only for read size
+  
+  #remove hits to low abundance reads
+  if(!is.null(rm.low.read.queries)) {
+  fullblast$otu_sizes<-as.numeric(stringr::str_split(fullblast$qseqid,"size=",simplify = T)[,2])
+  cutoff<-quantile(fullblast$otu_sizes,rm.low.read.queries)
+  fullblast<-fullblast[fullblast$otu_sizes>=cutoff,]
+  message("Not testing queries that had a read count less than ",cutoff," (quantile=",rm.low.read.queries*100,"%)")
+  }
   
   #remove known flags
   if(!is.null(known_flags)) {

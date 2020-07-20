@@ -1,6 +1,5 @@
 #making sample sheet, library sheet (adding md5sums), file list and password file
 
-
 ##############INSTRUCTIONS
 #works on emg1 and emg2
 #first make a copy this file, do not edit this directly
@@ -12,16 +11,18 @@
 
 #source /opt/env.sh
 #cd to the filelist directoy (here /mnt/Disk2/FilipaMSMartins/7.run_180201/ena/upload/)
-#emg_ena_upload.sh -l filelist -u Webin-XXXX -p ENA_password.txt
+# nohup emg_ena_upload.sh -l filelist -u Webin-XXXX -p ENA_password.txt 2>upload.log 1>&2 & 
+#(change name of log file if you wish)
 #replacing 'filelist' with the filelist output below (here "filipa_test_ENA_FILES.txt") 
 #replace Webin-XXXX with your username
-#replace ENA_password.txt with the full path to the ENA_password.txt file, which is outdir/ENA_password.txt
-#here, "/mnt/Disk2/FilipaMSMartins/7.run_180201/ena/ENA_password.txt"
 
-
-#to complete metadata entry, use the sample_sheet_name and library_sheet_name that were created and enter them here:
+#to complete metadata entry, use the output files (sample_sheet_name and library_sheet_name) that were created and enter them here:
 #go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
 #or here for real https://www.ebi.ac.uk/ena/submit/sra/
+
+#if you havent done so already you will need to create a project first
+#read my notes for more
+#https://docs.google.com/document/d/1DOHRvA9cjwfrsLDkeZ4SRfIP7GIo9d0dxl5vjTBqfFY/edit#
 
 ##################################
 
@@ -29,7 +30,8 @@
 ms_option=1 #choose 1 or 2, see below
 
 #full path, including trailing '/'. Must already exist. If using Option 2 below, this folder must contain the 3 tsv files required.
-#Final ENA upload files will also be added here
+#Final ENA upload files (sample_sheet_name and library_sheet_name) will also be added here
+#the filelist and password file will be written to fileDir
 outdir<-"/mnt/Disk2/FilipaMSMartins/7.run_180201/ena"
 #directory with files for upload
 fileDir<-"/mnt/Disk2/FilipaMSMartins/7.run_180201/ena/upload/"

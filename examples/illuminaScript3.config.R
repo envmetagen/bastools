@@ -11,7 +11,7 @@
 #once settings are changed, from terminal run
 # nohup Rscript test.config.R  2>run.processing.log 1>&2 &
 
-
+  
 ###################
 #SETTINGS
 

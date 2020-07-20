@@ -141,15 +141,7 @@ sub_library_sheet$reverse_file_md5<-checksum2$V1[length(sub_library_sheet$revers
 sub_library_sheet[is.na(sub_library_sheet)]<-""
 
 #write library sheet
-write.table(x = sub_library_sheet,file = library_sheet_name,quote = F,row.names = F,sep = "\t",col.names = T)
+write.table(x = sub_library_sheet,file = paste0(outdir,library_sheet_name),quote = F,row.names = F,sep = "\t",col.names = T)
 
 #write password file
 write.table(passwd,file = "ENA_password.txt",quote = F,row.names = F,sep = "\t",col.names = F)
-
-#run from terminal
-# emg_ena_upload.sh -l filelist -u Webin-51203 -p ENA_password.txt
-
-#go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
-#or here for real https://www.ebi.ac.uk/ena/submit/sra/
-
-####need to see if can upload md5s directly to google sheet
