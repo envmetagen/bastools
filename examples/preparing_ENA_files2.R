@@ -4,16 +4,22 @@
 ##############INSTRUCTIONS
 #works on emg1 and emg2
 #first make a copy this file, do not edit this directly
-#change settings as desired and save file
-#then, run from terminal "Rscript this_file.R"
+#change settings as desired and save this file
+#then, from terminal 
+#"Rscript this_file.R"
+
+#to upload fastq.gz files to ena:
+
 #source /opt/env.sh
 #cd to the filelist directoy (here /mnt/Disk2/FilipaMSMartins/7.run_180201/ena/upload/)
-# emg_ena_upload.sh -l filelist -u Webin-XXXX -p ENA_password.txt
+#emg_ena_upload.sh -l filelist -u Webin-XXXX -p ENA_password.txt
 #replacing 'filelist' with the filelist output below (here "filipa_test_ENA_FILES.txt") 
 #replace Webin-XXXX with your username
-# replace ENA_password.txt with the full path to the ENA_password.txt file, which is outdir/ENA_password.txt
+#replace ENA_password.txt with the full path to the ENA_password.txt file, which is outdir/ENA_password.txt
 #here, "/mnt/Disk2/FilipaMSMartins/7.run_180201/ena/ENA_password.txt"
 
+
+#to complete metadata entry, use the sample_sheet_name and library_sheet_name that were created and enter them here:
 #go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
 #or here for real https://www.ebi.ac.uk/ena/submit/sra/
 
