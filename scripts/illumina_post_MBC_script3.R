@@ -57,7 +57,7 @@ if("step8a" %in% stepstotake){
   
   message("STEP8a-finding database errors")
   
-  steps<-c("selfblast", "find_db_errors","calc_bar_gap") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin"
+  steps<-c("selfblast", "find_db_errors","calc_bar_gap","thresher") #options: "selfblast", "find_db_errors", "calc_bar_gap","thresher"
   
   files<-gsub(".fasta$",".blast.filt.txt",startingfastas)
   
