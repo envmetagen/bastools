@@ -824,10 +824,6 @@ write.table(sb2,"tempBLASTDB.ALL.tsv",quote = F,row.names = F,sep = "\t")
     sb2<-data.table::fread(sb2,data.table = F)
 
 #loop bin at all levels
-#binning settings to loop through
-tops<-c(0,1,2,10,100)
-#order=S,G,F,AF
-pidents.list<-list(strict=c(99,97,95,90),medium=c(98,96,93,88),relaxed=c(93,85,81,80)) 
 
 binfile.list<-list()
 countloop<-0

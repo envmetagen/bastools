@@ -86,7 +86,10 @@ if("step8a" %in% stepstotake){
     counts.out<-gsub(".blast.filt.txt",".blast.filt.thresher.counts.tsv",files[i])
     final.table.out<-gsub(".blast.filt.txt",".blast.filt.thresher.final.table.tsv",files[i])
     threshersteps<-c("threshblast","threshbin","threshplots")
-    
+    #binning settings to loop through
+    tops<-c(0,1,100)
+    #order=S,G,F,AF
+    pidents.list<-list(strict=c(99,97,95,90),medium=c(98,94,92,88),relaxed=c(93,85,75,60)) 
     
     #knit
     rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = paste0(outDir,out_html))

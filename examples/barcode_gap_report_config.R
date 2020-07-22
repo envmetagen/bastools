@@ -33,14 +33,17 @@ TaxlevelTestall<-c("K","P","C","O","F") # not required for step3
 plot.at.level<-"F" #for thresher
 limit.plot.to.taxon<-c("Mammalia","C") #for thresher
 
-#saving main results (can be fed to plotting chunk)
+#thresher
 counts.out<-"PBthresh_counts.tsv"#for thresher
 final.table.out<-"PBthresh_final.table.tsv" #for thresher
 threshersteps<-c("threshblast","threshbin","threshplots")
-
 divergence<-rep(5,length(TaxlevelTestall)) # not required for step3
 use_flagged_accessions_bcg=F
 use_flagged_accessions_mbk=T
+#binning settings to loop through
+tops<-c(0,1,100)
+#order=S,G,F,AF
+pidents.list<-list(strict=c(99,97,95,90),medium=c(98,94,92,88),relaxed=c(93,85,75,60)) 
 
 #outfiles
 krona_html_db="database.html" #(step1)
