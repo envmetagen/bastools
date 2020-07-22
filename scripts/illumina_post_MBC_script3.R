@@ -77,6 +77,17 @@ if("step8a" %in% stepstotake){
     divergence<-rep(5,length(TaxlevelTestall))
     use_flagged_accessions_bcg=T
     plot.limit.taxon=NULL
+    
+    #thresher
+    use_flagged_accessions_mbk=T
+    plot.at.level<-"F" #for thresher
+    limit.plot.to.taxon<-NULL #for thresher
+    #saving main results (can be fed to plotting chunk)
+    counts.out<-gsub(".blast.filt.txt",".blast.filt.thresher.counts.tsv",files[i])
+    final.table.out<-gsub(".blast.filt.txt",".blast.filt.thresher.final.table.tsv",files[i])
+    threshersteps<-c("threshblast","threshbin","threshplots")
+    
+    
     #knit
     rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = paste0(outDir,out_html))
     

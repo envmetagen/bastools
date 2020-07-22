@@ -27,7 +27,7 @@ read.and.format.full.blast<-function(input,known_flags=NULL,rm.low.read.queries=
   #read full blast results
   fullblast<-data.table::fread(input,data.table=F, select = c("saccver","taxids","pident","sseq","qseqid")) #qseqid only for read size
   
-  #remove hits to low abundance reads
+    #remove hits to low abundance reads
   if(!is.null(rm.low.read.queries)) {
   fullblast$otu_sizes<-as.numeric(stringr::str_split(fullblast$qseqid,"size=",simplify = T)[,2])
   cutoff<-quantile(fullblast$otu_sizes,rm.low.read.queries)
@@ -220,8 +220,8 @@ if("find_db_errors" %in% steps) {
   hierarchy<-c("K","P","C","O","F","G","S")
   
   if(!exists("divergence")) {
-    divergence<-c(Class=5,Order=5,Family=5,Genus=5,Species=5)   ##TODO change this if extending to other levels
-    message("Defaulting to divergence of Family=5,Genus=5,Species=5")
+    divergence<-rep(5,length(TaxlevelTestall))  ##TODO change this if extending to other levels
+    message("Defaulting to divergence of 5 for all levels")
   }
     
   #if 5 then a query will fail if the genus is not present within 5% identity of the top hit, but how to choose? 
@@ -450,7 +450,7 @@ if("find_db_errors" %in% steps) {
   #combine results for all taxon loops
   allerrorsdf<-do.call(rbind,allerrors) 
   allflagged<-do.call(c,allflagged)
-  if(length(removed.accs$origseqid)>0) allflagged<-c(removed.accs$origseqid,allflagged)
+  if(length(removed.accs$origseqid)>0) allflagged<-unique(c(removed.accs$origseqid,allflagged))
   
   write.table(allflagged,paste0(outDir,flagged_accessions),row.names = F,quote = F,sep = "\t",col.names = F)
   write.table(allerrorsdf,file = paste0(outDir,flagged_error_detailed_table),quote = F,sep = "\t",row.names = F)
@@ -490,7 +490,6 @@ if("find_db_errors" %in% steps) {
 
 # calc_bar_gap
 ## basically, plot the blast results indicating the within-taxon variation vs among-taxon variation at F, G & S levels to help to choose appropriate binning thresholds.
-## By default, flagged entries from previous step are excluded.  
 ## What we want to use in the end is the lowest %identity (to limit our loss of reads assigned at each level) that excludes other taxa (to increase resolution). In practice this is a trade-off because we often get overlap of within-taxon variation and among-taxon variation. Feeding these % identities to metabinkit (lca approach), we will never get "wrong" results (unless we still have database errors), but we will just lose resolution if the % identity is too low OR too high. E.g. if species threshold is 95% (caseA), many queries will have hits to multiple species and wont be binned at species-level, but if species threshold is 100% (caseB) many queries will have no hits passing this filter and so also wont be binned at species-level. CaseA can be partially overcome by applying a low "Top.." value.  E.g. if species threshold is 95% but a Top of 1% has been applied, then there will not be as many hits surviving the filters and we will get higher numbers of queries at species-level. How to choose tops? Is using a low top always ok?
 ```{r calc_bar_gap, eval=TRUE,echo=F,fig.height=7,fig.width=10}
  #STEP3 calculate barcoding gaps
@@ -500,25 +499,25 @@ if("calc_bar_gap" %in% steps) {
   
   if(!is.null(plot.limit.taxon)) message("Limiting plots to ",plot.limit.taxon)
   
-  #read selfblastresults
-  sb<-data.table::fread(paste0(outDir,selfblastout),data.table = F)
-  
-  if(use_flagged_accessions_bcg) {
-    message("Removing newly flagged accessions")
-  
-    flagged<-data.table::fread(paste0(outDir,flagged_accessions),data.table = F,header = F)
-    sb<-sb[!sb$origseqid %in% flagged$V1,]
-    sb<-sb[!sb$hitseqid %in% flagged$V1,]
+    #read selfblastresults
+    sbo<-data.table::fread(paste0(outDir,selfblastout),data.table = F)
     
-  #remove known flags
-    if(!is.null(known_flags)) {
-      message("Removing known flagged accessions")
-      kf<-data.table::fread(known_flags,data.table = F,header = F)
-      sb<-sb[!sb$origseqid %in% kf$V1,]
-      sb<-sb[!sb$hitseqid %in% kf$V1,]
-    }
-  } else message("Not removing any accessions")
-  
+    if(use_flagged_accessions_bcg) {
+      message("Removing newly flagged accessions")
+    
+      flagged<-data.table::fread(paste0(outDir,flagged_accessions),data.table = F,header = F)
+      sbo<-sbo[!sbo$origseqid %in% flagged$V1,]
+      sbo<-sbo[!sbo$hitseqid %in% flagged$V1,]
+    } else message("Not removing newly flagged accessions")
+      
+    #remove known flags
+      if(!is.null(known_flags)) {
+        message("Removing known flagged accessions")
+        kf<-data.table::fread(known_flags,data.table = F,header = F)
+        sbo<-sbo[!sbo$origseqid %in% kf$V1,]
+        sbo<-sbo[!sbo$hitseqid %in% kf$V1,]
+      } else message("Not removing any known_flags")
+    
   plot.list.loop<-list()
   plot.list.all<-list()
   perc_among_res<-list()
@@ -529,6 +528,8 @@ if("calc_bar_gap" %in% steps) {
   hierarchy<-c("K","P","C","O","F","G","S")
   
   for(h in 1:length(hierarchy)){
+    
+    sb<-sbo
   
     TaxlevelTest<-hierarchy[h]
     
@@ -596,7 +597,15 @@ if("calc_bar_gap" %in% steps) {
   #plot limit
   if(!is.null(plot.limit.taxon)) {
     before<-nrow(newtablong)
-    newtablongtemp<-newtablong[grep(plot.limit.taxon,newtablong$taxon),]
+    
+    #generate taxa list
+    taxa.list<-list()
+    for(k in 1:length(plot.limit.taxon)){
+      taxa.list[[k]]<-unique(grep(plot.limit.taxon[k],newtablong$taxon,value = T))
+    }
+    taxa.list.to.use<-do.call(c,taxa.list)
+    
+    newtablongtemp<-newtablong[newtablong$taxon %in% taxa.list.to.use,]
     after<-nrow(newtablongtemp)
     if(before>0 & after==0) {
       message("No overlaps remaning after plot.limit.taxon at this level, reverting to entire plot")
@@ -645,7 +654,7 @@ if("calc_bar_gap" %in% steps) {
     plot.list.loop[[2]]<-plotb
     plot.list.loop[[3]]<-plotc
     plot.list.all[[h]]<-plot.list.loop
-    } #end h-loop
+  } #end h-loop
   
   #gather all potential errors and save in file
   potential.errors.out<- do.call(rbind,potential.errors.out)
@@ -689,4 +698,384 @@ if("calc_bar_gap" %in% steps) {
   
 } else message("This step was not set to run")
     
+```
+
+# thresher
+## This run a loop blast and a loop binning to see how many correct assignations we get under different scenarios
+```{r thresher, eval=TRUE,echo=F,fig.height=7,fig.width=10}
+ #STEP3 calculate barcoding gaps
+if("thresher" %in% steps) {
+  if("threshblast" %in% threshersteps){
+  
+  t1<-Sys.time()
+  #read selfblastresults
+    sb<-data.table::fread(paste0(outDir,selfblastout),data.table = F)
+    
+    if(use_flagged_accessions_mbk) {
+      message("Removing newly flagged accessions")
+    
+      flagged<-data.table::fread(paste0(outDir,flagged_accessions),data.table = F,header = F)
+      sb<-sb[!sb$origseqid %in% flagged$V1,]
+      sb<-sb[!sb$hitseqid %in% flagged$V1,]
+    } else message("Not removing newly flagged accessions")
+      
+    #remove known flags
+      if(!is.null(known_flags)) {
+        message("Removing known flagged accessions")
+        kf<-data.table::fread(known_flags,data.table = F,header = F)
+        sb<-sb[!sb$origseqid %in% kf$V1,]
+        sb<-sb[!sb$hitseqid %in% kf$V1,]
+      } else message("Not removing any known_flags")
+    
+    hierarchy<-c("K","P","C","O","F","G","S")
+#ok, so this is a more or less complete comparison of everything in blast database,
+#can I run "fake loop blast" by just excluding results taxon by taxon?
+#make fake loop blast files
+#how about just remove all the non-species level entries and go from there, easier
+sb$origtax<-stringr::str_split(sb$origpath,";",simplify = T)[,7]
+sb$hittax<-stringr::str_split(sb$hitpath,";",simplify = T)[,7]
+
+sb<-sb[sb$origtax!="unknown",]
+sb<-sb[sb$hittax!="unknown",]
+
+message("Removing species with 'sp.', numbers or more than one space")
+
+if(length(grep(" sp\\.",sb$origtax,ignore.case = T))>0) sb<-sb[-grep(" sp\\.",sb$origtax,ignore.case = T),]
+if(length(grep(" .* .*",sb$origtax,ignore.case = T))>0) sb<-sb[-grep(" .* .*",sb$origtax,ignore.case = T),]
+if(length(grep("[0-9]",sb$origtax))>0) sb<-sb[-grep("[0-9]",sb$origtax),]
+
+if(length(grep(" sp\\.",sb$hittax,ignore.case = T))>0) sb<-sb[-grep(" sp\\.",sb$hittax,ignore.case = T),]
+if(length(grep(" .* .*",sb$hittax,ignore.case = T))>0) sb<-sb[-grep(" .* .*",sb$hittax,ignore.case = T),]
+if(length(grep("[0-9]",sb$hittax))>0) sb<-sb[-grep("[0-9]",sb$hittax),]
+
+#remove crappy hits 
+
+message("Removing species containing the terms: uncultured, environmental, 
+            unidentified,fungal, eukaryote, unclassified, synthetic")
+
+crap<-c("uncultured","environmental","unclassified","unidentified","fungal ","eukaryote","synthetic")
+
+for(i in 1:length(crap)){
+  if(length(grep(crap[i],sb$origtax,ignore.case = T))>0) sb<-sb[-grep(crap[i],sb$origtax,ignore.case = T),]
+  if(length(grep(crap[i],sb$hittaxid,ignore.case = T))>0) sb<-sb[-grep(crap[i],sb$hittaxid,ignore.case = T),]
+}
+
+lineage<-as.data.frame(stringr::str_split(sb$hitpath,";",simplify = T))
+colnames(lineage)<-c("K","P","C","O","F","G","S")
+
+###using this point as bin blast, could be earlier
+
+sb<-sb[,c("origseqid","hitseqid", "pident","hittaxid","origpath","origseq")]
+colnames(sb)<-c("qseqid","saccver", "pident","taxids","origpath","origseq")
+sb<-cbind(sb,lineage)
+sb$origgenus<-stringr::str_split(sb$origpath,";",simplify = T)[,6]
+sb$origspecies<-stringr::str_split(sb$origpath,";",simplify = T)[,7]
+sb$qseqid<-paste0(sb$qseqid,"_S")
+
+sbforpaths<-sb[!duplicated(sb$qseqid),c("qseqid","origpath")]
+  
+TaxlevelTest=c("S","G","F")
+
+for(h in 1:length(TaxlevelTest)){
+  #genus should be, for each query remove the hits to the same species
+  #family should be, for each query remove hits to same genus
+  
+  #problems with this approach, how many queries disappear because there are no hits that did not belong to that genus, looks like a lot
+  #so these are not being tested at all
+  
+  #soooo, back to thresh blast, can I make identical output to sb2
+  
+  if(TaxlevelTest[h]=="G") {
+    threshold.bin.blast2(df = sb,TaxlevelTest = "G",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "taxids")
+    sb.tbbG<-data.table::fread("tempBLASTDB.G.tsv",data.table = F)
+    sb.tbbG<-add.lineage.df(sb.tbbG,ncbiTaxDir = ncbiTaxDir) #for metabin
+    sb.tbbG<-merge(sb.tbbG,sbforpaths,all.x=T,all.y = F,by = "qseqid")
+    sb.tbbG$origgenus<-stringr::str_split(sb.tbbG$origpath,";",simplify = T)[,6]
+    sb.tbbG$origspecies<-stringr::str_split(sb.tbbG$origpath,";",simplify = T)[,7]
+    sb.tbbG$origseq<-sb.tbbG$qseq
+    sb.tbbG<-sb.tbbG[,c("qseqid","saccver","pident","taxids", "origpath","origseq", "K","P","C" ,"O","F","G","S","origgenus","origspecies")]
+    sb.tbbG$qseqid<-gsub("_S$","_G",sb.tbbG$qseqid)
+  }
+  
+  if(TaxlevelTest[h]=="F") {
+    threshold.bin.blast2(df = sb,TaxlevelTest = "F",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "taxids")
+    sb.tbbF<-data.table::fread("tempBLASTDB.F.tsv",data.table = F)
+    sb.tbbF<-add.lineage.df(sb.tbbF,ncbiTaxDir = ncbiTaxDir)
+    sb.tbbF<-merge(sb.tbbF,sbforpaths,all.x=T,all.y = F,by = "qseqid")
+    sb.tbbF$origgenus<-stringr::str_split(sb.tbbF$origpath,";",simplify = T)[,6]
+    sb.tbbF$origspecies<-stringr::str_split(sb.tbbF$origpath,";",simplify = T)[,7]
+    sb.tbbF<-sb.tbbF[,c("qseqid","saccver","pident","taxids", "origpath","K","P","C" ,"O","F","G","S","origgenus","origspecies")]
+    sb.tbbF$origseq<-sb.tbbF$qseq
+    sb.tbbF<-sb.tbbF[,c("qseqid","saccver","pident","taxids", "origpath","origseq", "K","P","C" ,"O","F","G","S","origgenus","origspecies")]
+    sb.tbbF$qseqid<-gsub("_S$","_F",sb.tbbF$qseqid)
+  }
+  
+  if(TaxlevelTest[h]=="S") sb.splS<-sb #else sb.spl<-split(sb,sb$qseqid)
+}
+
+sb2<-rbind(sb.splS,sb.tbbG,sb.tbbF)
+
+write.table(sb2,"tempBLASTDB.ALL.tsv",quote = F,row.names = F,sep = "\t")
+
+  }
+  
+  if("threshbin" %in% threshersteps){
+    
+    sb2<-data.table::fread(sb2,data.table = F)
+
+#loop bin at all levels
+#binning settings to loop through
+tops<-c(0,1,2,10,100)
+#order=S,G,F,AF
+pidents.list<-list(strict=c(99,97,95,90),medium=c(98,96,93,88),relaxed=c(93,85,81,80)) 
+
+binfile.list<-list()
+countloop<-0
+for(j in 1:length(tops)){
+  for(k in 1:length(pidents.list)){
+    binfile<-paste0("top_",tops[j],".pidents_",paste(pidents.list[[k]],collapse = "."))
+    countloop<-countloop+1
+    binfile.list[[countloop]]<-binfile
+    argsmbk<-c("-i","tempBLASTDB.ALL.tsv", "-o",binfile,"--no_mbk")
+    argsmbk<-c(argsmbk,"-S", pidents.list[[k]][1],"-G", pidents.list[[k]][2],"-F", pidents.list[[k]][3],"-A", pidents.list[[k]][4],
+               "--TopSpecies", tops[j],"--TopGenus",
+               tops[j],"--TopFamily", tops[j]
+               ,"--TopAF", tops[j])
+    if(!is.null(known_flags)) argsmbk<-c(argsmbk,"--FilterFile",known_flags,"--FilterCol","saccver")
+    system2("metabin",argsmbk, wait=T)
+  }
+}
+
+outfiles<-do.call(c,binfile.list)
+
+#set metabin args
+# if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
+# if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
+# if(!is.null(FamilyBL)) argsmbk<-c(argsmbk,"--FamilyBL",FamilyBL)
+#######################################################
+
+#read metabin results and merge with sb
+results<-list()
+sb3<-sb2[!duplicated(sb2$qseqid),]
+
+for(i in 1:length(outfiles)){
+  a<-data.table::fread(paste0(outfiles[i],".tsv"),data.table = F)
+  a$binpath<-paste(a$K,a$P,a$C,a$O,a$F,a$G,a$S,sep = ";")
+  sb4<-merge(sb3[,c("qseqid","origpath")],a[,c("qseqid","binpath")],all.x = T,all.y = F,by = "qseqid")
+  sb4$settings<-outfiles[i]
+  results[[i]]<-sb4
+}
+
+results<-do.call(rbind, results)
+
+results$level<-substr(results$qseqid,nchar(results$qseqid),nchar(results$qseqid))
+results$binpathS<-results$binpath
+results$binpathG<-path.at.level(results$binpathS,level = "G")
+results$binpathF<-path.at.level(results$binpathS,level = "F")
+results$origpathS<-results$origpath
+results$origpathG<-path.at.level(results$origpathS,level = "G")
+results$origpathF<-path.at.level(results$origpathS,level = "F")
+
+final.table<-results
+
+final.table$no.hits<-FALSE
+
+#correct 
+final.table$correctS<-final.table$binpathS==final.table$origpathS
+final.table$correctG<-final.table$binpathG==final.table$origpathG
+final.table$correctF<-final.table$binpathF==final.table$origpathF
+
+#above desired rank (doesnt check if above rank is correct...)
+final.table$aboveS<-bas.get.ranks(data.frame(taxon=final.table$binpathS))
+final.table$aboveG<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathG,";NA")))
+final.table$aboveF<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathF,";NA;NA")))
+
+final.table[(final.table$aboveF=="htf") & final.table$level=="F","aboveF"]<-"above"
+final.table[(final.table$aboveG=="htf" | final.table$aboveG=="family") & final.table$level=="G","aboveG"]<-"above"
+final.table[(final.table$aboveS=="htf" | final.table$aboveS=="family" | final.table$aboveS=="genus") & 
+              final.table$level=="S","aboveS"]<-"above"
+
+#incorrect
+final.table$incorrectS<-(!final.table$correctS) & final.table$aboveS=="species"
+final.table$incorrectG<-(!final.table$correctG) & final.table$aboveG=="genus"
+final.table$incorrectF<-(!final.table$correctF) & final.table$aboveF=="family"
+
+#change above from "above" to T/F
+final.table$aboveS<-final.table$aboveS!="species"
+final.table$aboveG<-final.table$aboveG!="genus"
+final.table$aboveF<-final.table$aboveF!="family"
+
+#failed
+final.table$failedS<-final.table$binpathS=="NA;NA;NA;NA;NA;NA;NA"
+final.table$failedG<-final.table$binpathG=="NA;NA;NA;NA;NA;NA"
+final.table$failedF<-final.table$binpathF=="NA;NA;NA;NA;NA"
+
+#if failed, other outcomes are NA
+final.table[final.table$failedS==TRUE,c("correctS","aboveS","incorrectS")]<-NA
+final.table[final.table$failedG==TRUE,c("correctG","aboveG","incorrectG")]<-NA
+final.table[final.table$failedF==TRUE,c("correctF","aboveF","incorrectF")]<-NA
+
+#final.table$settings<-paste0(final.table$Spident,"_",final.table$Gpident,"_",final.table$Fpident,"_top",final.table$top)
+
+write.table(final.table,final.table.out,quote = F,sep = "\t",row.names = F)
+
+#print incorrects
+incorrects<-list()
+incorrects2<-list()
+require(tidyverse)
+for(i in 1:length(unique(final.table$level))){
+  levelincor<-unique(final.table$level)[i]
+  finalincor<-final.table[final.table$level==levelincor,]
+  #remove failed
+  finalincor<-finalincor[!is.na(finalincor$correctS),]
+  
+  for(j in 1:length(unique(finalincor$settings))){
+    finalsets<-unique(finalincor$settings)[j]
+    finalincorset<-finalincor[(finalincor$settings==finalsets & finalincor[,paste0("incorrect",levelincor)]==TRUE),]
+    if(nrow(finalincorset)>0) incorrects[[j]]<-finalincorset[,c(paste0("origpath",levelincor),paste0("binpath",levelincor),"qseqid")]
+    incorrects<-incorrects %>% discard(is.null)
+  }
+  
+  if(length(incorrects)>0) {
+    incorrects2[[i]]<-do.call(rbind,incorrects)
+    colnames(incorrects2[[i]])<-c("origpath","binpath","qseqid")
+  } else incorrects2[[i]]<-NULL
+  
+}
+
+incorrects2<-incorrects2 %>% discard(is.null)
+incorrectsdf<-do.call(rbind,incorrects2)
+incorrectsdf<-incorrectsdf[!duplicated(incorrectsdf$qseqid),]
+message("Results flagged as incorrect:")
+print(incorrectsdf)
+
+
+  }
+  
+  if("threshplots" %in% threshersteps) {
+#summary counts
+
+allcounts<-list()
+
+for(j in 1:length(unique(final.table$level))){
+  
+  current.level<-unique(final.table$level)[j]
+  
+  final.tableS<-final.table[final.table$level==current.level,]
+  
+  nsettings<-length(unique(final.tableS$settings))
+  
+  countsS<-data.frame(settings=rep("none",nsettings)
+                      ,no_hits=rep(0,nsettings),
+                      correct=rep(0,nsettings)
+                      ,above=rep(0,nsettings),
+                      incorrect=rep(0,nsettings),
+                      failed=rep(0,nsettings)
+  )
+  
+  countsS$settings<-as.character(countsS$settings)
+  
+  countsS$level<-current.level
+  
+  for(i in 1:length(unique(final.tableS$settings))){
+    current.setting<-unique(final.tableS$settings)[i]
+    countsS$settings[i]<-current.setting
+    countsS$no_hits[i]<-sum(final.tableS[final.tableS$settings==current.setting,"no.hits"])
+    
+    final.tableSx<-final.tableS[final.tableS$no.hits==FALSE,]
+    
+    countsS$correct[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("correct",current.level)],na.rm = T)
+    countsS$incorrect[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("incorrect",current.level)],na.rm = T)
+    countsS$above[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("above",current.level)],na.rm = T)
+    countsS$failed[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("failed",current.level)],na.rm = T)
+  }
+  
+  allcounts[[j]]<-countsS
+  
+}
+
+allcounts<-do.call(rbind,allcounts)
+
+allcounts$sum<-rowSums(allcounts[,c("no_hits","correct","above","incorrect","failed")])
+
+write.table(allcounts,counts.out,quote = F,sep = "\t",row.names = F)
+
+#######################################################
+#PLOTTING 
+allcounts$settings<-paste0(allcounts$settings,allcounts$level)
+
+longcount<-reshape2::melt(allcounts[,c("no_hits","correct","above","incorrect","failed","settings")],id.vars="settings")
+
+plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
+count.plot<-ggplot(data=longcount , aes(y=value, x=settings, fill=variable))+geom_bar(stat = "identity")+
+  theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
+        axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
+  scale_fill_manual(values = plot.cols) 
+#geom_text(aes(label = paste(round(value/total.reads*100,digits = 0),"%")), 
+#         position = position_stack(vjust = 0.5), size = 2)
+
+count.plot
+
+#############################################  
+#plot by taxon, optional filter by taxa  
+
+out.plot.list<-list()
+
+final.table.list<-split(final.table,final.table$level)
+
+for(i in 1:length(final.table.list)){
+  
+  xx<-final.table.list[[i]]
+  
+  levelxx<-xx[1,c("level")]
+  longcount<-reshape2::melt(xx[,c("no.hits",paste0("correct",levelxx),paste0("above",levelxx),paste0("incorrect",levelxx),
+                                  paste0("failed",levelxx)
+                                  ,"settings",paste0("origpath",levelxx))],
+                            id.vars=c("settings",paste0("origpath",levelxx)))
+  
+  colnames(longcount)[2]<-"origpathS"
+  
+  #extract table to limit by taxon
+  if(!is.null(limit.plot.to.taxon)){
+    indexTax<-match(limit.plot.to.taxon[2],table = c("K","P","C","O","F","G","S"))
+    longcount<-longcount[do.call(rbind,stringr::str_split(longcount$origpathS,";"))[,indexTax]==limit.plot.to.taxon[1],]
+  }
+  
+  #plot at level
+  indexn<-match(plot.at.level,table = c("K","P","C","O","F","G","S"))
+  longcount$plotpath<-do.call(rbind,stringr::str_split(longcount$origpathS,";"))[,indexn]
+  
+  #sublabel
+  if(levelxx=="S") sublabel<-"Binning outcomes if species is in database"
+  if(levelxx=="G") sublabel<-"Binning outcomes if species is not in database"
+  if(levelxx=="F") sublabel<-"Binning outcomes if genus is not in database"
+  
+  #plot
+  plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
+  count.plot<-ggplot(data=longcount , aes(y=as.numeric(as.logical(value)), x=settings, fill=variable))+geom_bar(stat = "identity")+
+    theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
+          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
+    scale_fill_manual(values = plot.cols) +
+    facet_wrap(~plotpath,scales = "free") + 
+    ggtitle(paste0("TestLevel=",levelxx,"; limit=",limit.plot.to.taxon[1],"; PlotLevel=",plot.at.level), subtitle = sublabel)
+  
+  
+  out.plot.list[[i]]<-count.plot
+  names(out.plot.list)[i]<-levelxx
+}
+
+out.plot.list[[1]]
+out.plot.list[[2]]
+out.plot.list[[3]]
+
+t2<-Sys.time()
+  
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  
+  message("threshing complete in ",t3," mins")
+  }
+  
+} else message("This step was not set to run")
+    
+  
 ```
