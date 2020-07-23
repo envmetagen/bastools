@@ -775,7 +775,7 @@ sb$qseqid<-paste0(sb$qseqid,"_S")
 sbforpaths<-sb[!duplicated(sb$qseqid),c("qseqid","origpath")]
   
 TaxlevelTest=c("S","G","F")
-
+setwd(outDir)
 for(h in 1:length(TaxlevelTest)){
   #genus should be, for each query remove the hits to the same species
   #family should be, for each query remove hits to same genus
@@ -815,13 +815,13 @@ for(h in 1:length(TaxlevelTest)){
 
 sb2<-rbind(sb.splS,sb.tbbG,sb.tbbF)
 
-write.table(sb2,"tempBLASTDB.ALL.tsv",quote = F,row.names = F,sep = "\t")
+write.table(sb2,paste0(outDir,"tempBLASTDB.ALL.tsv"),quote = F,row.names = F,sep = "\t")
 
   }
   
   if("threshbin" %in% threshersteps){
     
-    sb2<-data.table::fread(sb2,data.table = F)
+    sb2<-data.table::fread(paste0(outDir,"tempBLASTDB.ALL.tsv"),data.table = F)
 
 #loop bin at all levels
 
@@ -832,7 +832,7 @@ for(j in 1:length(tops)){
     binfile<-paste0("top_",tops[j],".pidents_",paste(pidents.list[[k]],collapse = "."))
     countloop<-countloop+1
     binfile.list[[countloop]]<-binfile
-    argsmbk<-c("-i","tempBLASTDB.ALL.tsv", "-o",binfile,"--no_mbk")
+    argsmbk<-c("-i",paste0(outDir,"tempBLASTDB.ALL.tsv"), "-o",paste0(outDir,binfile),"--no_mbk")
     argsmbk<-c(argsmbk,"-S", pidents.list[[k]][1],"-G", pidents.list[[k]][2],"-F", pidents.list[[k]][3],"-A", pidents.list[[k]][4],
                "--TopSpecies", tops[j],"--TopGenus",
                tops[j],"--TopFamily", tops[j]
@@ -855,11 +855,12 @@ results<-list()
 sb3<-sb2[!duplicated(sb2$qseqid),]
 
 for(i in 1:length(outfiles)){
-  a<-data.table::fread(paste0(outfiles[i],".tsv"),data.table = F)
+  a<-data.table::fread(paste0(outDir,outfiles[i],".tsv"),data.table = F)
   a$binpath<-paste(a$K,a$P,a$C,a$O,a$F,a$G,a$S,sep = ";")
   sb4<-merge(sb3[,c("qseqid","origpath")],a[,c("qseqid","binpath")],all.x = T,all.y = F,by = "qseqid")
   sb4$settings<-outfiles[i]
   results[[i]]<-sb4
+  file.remove(paste0(outDir,outfiles[i]))
 }
 
 results<-do.call(rbind, results)
@@ -913,7 +914,7 @@ final.table[final.table$failedF==TRUE,c("correctF","aboveF","incorrectF")]<-NA
 
 #final.table$settings<-paste0(final.table$Spident,"_",final.table$Gpident,"_",final.table$Fpident,"_top",final.table$top)
 
-write.table(final.table,final.table.out,quote = F,sep = "\t",row.names = F)
+write.table(final.table,paste0(outDir,final.table.out),quote = F,sep = "\t",row.names = F)
 
 #print incorrects
 incorrects<-list()
@@ -950,6 +951,8 @@ print(incorrectsdf)
   
   if("threshplots" %in% threshersteps) {
 #summary counts
+    
+    final.table<-data.table::fread(paste0(outDir,final.table.out),data.table = F)
 
 allcounts<-list()
 
@@ -994,7 +997,7 @@ allcounts<-do.call(rbind,allcounts)
 
 allcounts$sum<-rowSums(allcounts[,c("no_hits","correct","above","incorrect","failed")])
 
-write.table(allcounts,counts.out,quote = F,sep = "\t",row.names = F)
+write.table(allcounts,paste0(outDir,counts.out),quote = F,sep = "\t",row.names = F)
 
 #######################################################
 #PLOTTING 

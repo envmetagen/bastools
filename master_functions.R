@@ -6217,7 +6217,7 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
   a<-Sys.time()
   for(i in 1:length(unique(df$qseqid))){
     
-    message("loop ",i)
+    #message("loop ",i)
     
     #make query fasta
     b<-df[df$qseqid==unique(df$qseqid)[i],]
