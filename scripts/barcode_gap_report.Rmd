@@ -8,10 +8,10 @@ includes:
       #in_header: rmarkdownsettings.txt
       extra_dependencies: ["float"]
 ---
-# The input is the results of a "thorough" blast against a large database, e.g. nt. Or it could be the results of any full length alignment (as long as the alignment has a very diverse array of taxa, and a lot of sequences)
-## e.g. blastn -query my.fasta -db nt -outfmt '6 qseqid saccver staxid pident sseq' -evalue 1 -max_target_seqs 100 -max_hsps 1 -word_size 11 -perc_identity 50 -qcov_hsp_perc 98 -gapopen 0 -gapextend 2 -reward 1 -penalty -1 -dust no -out my.blast.tsv
-## In any case I recommend such settings for metabarcoding in general, although it takes longer, as they are much more informative, intuitive and useful.
-## megablast and longer word size ok, main thing is the gap extension settings to ensure full length alignments (min 98% cover), as anything less is not good for metabarcoding
+## The input is the results of a "thorough" blast against a large database, e.g. nt. Or it could be the results of any full length alignment (as long as the alignment has a very diverse array of taxa, and a lot of sequences)
+### e.g. blastn -query my.fasta -db nt -outfmt '6 qseqid saccver staxid pident sseq' -evalue 1 -max_target_seqs 100 -max_hsps 1 -word_size 11 -perc_identity 50 -qcov_hsp_perc 98 -gapopen 0 -gapextend 2 -reward 1 -penalty -1 -dust no -out my.blast.tsv
+### In any case I recommend such settings for metabarcoding in general, although it takes longer, as they are much more informative, intuitive and useful.
+### megablast and longer word size ok, main thing is the gap extension settings to ensure full length alignments (min 98% cover), as anything less is not good for metabarcoding
 ```{r load functions, eval=TRUE, results='hide',echo=F}
 knitr::opts_chunk$set(fig.pos = "!H", out.extra = "")
 source(paste0(bastoolsDir,"master_functions.R"))
@@ -712,7 +712,12 @@ if("calc_bar_gap" %in% steps) {
 ## This runs a loop blast and a loop binning to see how many correct assignations we get under different scenarios
 ## Loop blast means: for each query run a blast against all other sequences in the results, except for the query species. i.e. do we get the correct genus if the species is not in the database. Simialrly, do we get the correct family when the family is not in the database
 ## Outputs
-### Plots of the binning results classified as no_hits (no hits when taxon was removed), correct (the bin taxon path matches identically the query taxon path), above (the bin taxon path was assigned at a higher taxonomic level than the one being tested), incorrect (the bin taxon was at the correct taxonomic level but was assigned to a different taxon that the original tacon path), failed (did not pass binning thresholds / lowest common ancestor was above kingdom)
+### Plots of the binning results classified as:
+#### no_hits (no hits when taxon was removed)
+#### correct (the bin taxon path matches identically the query taxon path)
+#### above (the bin taxon path was assigned at a higher taxonomic level than the one being tested)
+#### incorrect (the bin taxon was at the correct taxonomic level but was assigned to a different taxon that the original tacon path)
+#### failed (did not pass binning thresholds / lowest common ancestor was above kingdom)
 ### The plots can be limited to specific taxa of interest and can be summarised at any desired taxonomic level 
 ```{r thresherblast, eval=TRUE,echo=F,fig.height=12,fig.width=10,results='hide'}
  #STEP3 calculate barcoding gaps
@@ -831,12 +836,10 @@ t2<-Sys.time()
 
 ```
 
-```{r thresher, eval=TRUE,echo=F,fig.height=12,fig.width=10}
+```{r thresher, eval=TRUE,echo=F,fig.height=13,fig.width=10}
  #STEP3 calculate barcoding gaps
 
 #split this chunk to hide loop bin output from report
-
-
 if("thresher" %in% steps) {
 t1<-Sys.time()
   
@@ -1035,6 +1038,8 @@ allcounts$settings<-paste0(allcounts$settings,allcounts$level)
 longcount<-reshape2::melt(allcounts[,c("no_hits","correct","above","incorrect","failed","settings")],id.vars="settings")
 longcount$level<-substr(longcount$settings,nchar(longcount$settings),nchar(longcount$settings))
 longcount$settings<-substr(longcount$settings,1,nchar(longcount$settings)-1)
+longcount$settings<-gsub("top_","",longcount$settings)
+longcount$settings<-gsub("pidents_","",longcount$settings)
 longcount$settings<-as.factor(longcount$settings)
 
 plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
@@ -1080,6 +1085,9 @@ for(i in 1:length(final.table.list)){
   if(levelxx=="S") sublabel<-"Binning outcomes if species is in database"
   if(levelxx=="G") sublabel<-"Binning outcomes if species is not in database"
   if(levelxx=="F") sublabel<-"Binning outcomes if genus is not in database"
+  
+  longcount$settings<-gsub("top_","",longcount$settings)
+  longcount$settings<-gsub("pidents_","",longcount$settings)
   
   #plot
   plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
