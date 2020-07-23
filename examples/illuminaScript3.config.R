@@ -55,6 +55,9 @@ known_flags="/home/tutorial/REPTILE/auto_and_manual_flags_reptile.txt" #full pat
 use_flagged_accessions_mbk=T
 TaxlevelTestall<-c("K","P","C","O","F") #TaxlevelTestall<-c("K","P","C","O","F","G","S")
 
+plot.at.level<-"O" #for thresher
+limit.plot.to.taxon<-c("Mammalia","C") #for thresher, the taxon name and level can be NULL
+
 #percentage identity threshold to consider (1=1%)
 #top=1 #this will overwrite all other tops! hash it out to not use it!
 topS=100

@@ -80,8 +80,16 @@ if("step8a" %in% stepstotake){
     
     #thresher
     use_flagged_accessions_mbk=T
-    plot.at.level<-"C" #for thresher
-    limit.plot.to.taxon<-NULL #for thresher
+    if(!exist("plot.at.level")) {
+      plot.at.level<-"C" #for thresher
+      message("Defaulting to class plot level")
+    }
+    
+    if(!exist("limit.plot.to.taxon")) {
+      limit.plot.to.taxon<-NULL #for thresher
+      message("Not limiting plots by taxon")
+    }
+    
     #saving main results (can be fed to plotting chunk)
     counts.out<-gsub(".blast.filt.txt",".blast.filt.thresher.counts.tsv",files[i])
     final.table.out<-gsub(".blast.filt.txt",".blast.filt.thresher.final.table.tsv",files[i])
@@ -89,7 +97,7 @@ if("step8a" %in% stepstotake){
     #binning settings to loop through
     tops<-c(0,1,100)
     #order=S,G,F,AF
-    pidents.list<-list(strict=c(99,97,95,90),medium=c(98,94,92,88),relaxed=c(93,85,75,60)) 
+    pidents.list<-list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)) 
     
     #knit
     rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = paste0(outDir,out_html))

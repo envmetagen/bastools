@@ -1,5 +1,5 @@
 ---
-title: "Plotting barcode gaps from self-blast results"
+title: "Barcode Gap Report, Database Error Flagging, Taxonomic Assignment Threshold Analysis"
 html_notebook: default
 subtitle: ''
 classoption: portrait
@@ -8,9 +8,10 @@ includes:
       #in_header: rmarkdownsettings.txt
       extra_dependencies: ["float"]
 ---
-# Prerequisites. The input is the results of a "thorough" blast against a large database, ideally nt
-## e.g. blastn -query my.fasta -db nt -outfmt '6 qseqid saccver staxid pident sseq' -evalue 1 -max_target_seqs 50 -max_hsps 1 -word_size 11 -perc_identity 50 -qcov_hsp_perc 98 -gapopen 0 -gapextend 2 -reward 1 -penalty -1 -dust no -out my.blast.tsv
-## In any case I recommend such settings, although it takes longer, as they are much more informative and useful for metabarcoding.
+# The input is the results of a "thorough" blast against a large database, e.g. nt. Or it could be the results of any full length alignment (as long as the alignment has a very diverse array of taxa, and a lot of sequences)
+## e.g. blastn -query my.fasta -db nt -outfmt '6 qseqid saccver staxid pident sseq' -evalue 1 -max_target_seqs 100 -max_hsps 1 -word_size 11 -perc_identity 50 -qcov_hsp_perc 98 -gapopen 0 -gapextend 2 -reward 1 -penalty -1 -dust no -out my.blast.tsv
+## In any case I recommend such settings for metabarcoding in general, although it takes longer, as they are much more informative, intuitive and useful.
+## megablast and longer word size ok, main thing is the gap extension settings to ensure full length alignments (min 98% cover), as anything less is not good for metabarcoding
 ```{r load functions, eval=TRUE, results='hide',echo=F}
 knitr::opts_chunk$set(fig.pos = "!H", out.extra = "")
 source(paste0(bastoolsDir,"master_functions.R"))
@@ -168,8 +169,11 @@ if("selfblast" %in% steps) {
 
 ```
 
-## find_db_errors
-### For each taxonomic level (F,G,S) look for potentially misassigned entries (see output for rules). Output a table of the results for manual inspection
+## Find database errors
+### For each taxonomic level (F,G,S) look for potentially misassigned entries (see output for rules). 
+### Outputs
+#### The list of flagged accessions
+#### A detailed table of the flagged accessions (for manual double-checking)
 ### So far haven seen any flagged accessions that seem incorrectly flagged. But not all errors are caught. Main case is when there are multiple erroneously labelled entries of the same taxon. 
 ```{r find_db_errors, eval=TRUE,echo=F}
 if("find_db_errors" %in% steps) {
@@ -488,9 +492,13 @@ if("find_db_errors" %in% steps) {
 } else message("This step was not set to run")
 ```
 
-# calc_bar_gap
-## basically, plot the blast results indicating the within-taxon variation vs among-taxon variation at F, G & S levels to help to choose appropriate binning thresholds.
-## What we want to use in the end is the lowest %identity (to limit our loss of reads assigned at each level) that excludes other taxa (to increase resolution). In practice this is a trade-off because we often get overlap of within-taxon variation and among-taxon variation. Feeding these % identities to metabinkit (lca approach), we will never get "wrong" results (unless we still have database errors), but we will just lose resolution if the % identity is too low OR too high. E.g. if species threshold is 95% (caseA), many queries will have hits to multiple species and wont be binned at species-level, but if species threshold is 100% (caseB) many queries will have no hits passing this filter and so also wont be binned at species-level. CaseA can be partially overcome by applying a low "Top.." value.  E.g. if species threshold is 95% but a Top of 1% has been applied, then there will not be as many hits surviving the filters and we will get higher numbers of queries at species-level. How to choose tops? Is using a low top always ok?
+# Calculate barcoding gap
+## Plot the self-blast results indicating the within-taxon variation vs among-taxon variation at F, G & S levels to help to choose appropriate binning thresholds.
+## What we want to use in the end is the lowest %identity (to limit our loss of reads assigned at each level) that excludes other taxa (to increase resolution). In practice this is a trade-off because we often get overlap of within-taxon variation and among-taxon variation. 
+## Outputs
+### For each level, a plot of within-taxon variation vs among-taxon variation
+### For each level, a plot and table of the number and percentage of taxa that have barcode overlaps (ambiguity) at each % identity
+### A table of further potential errors (entries that had >99% to other taxa) for manual inspection
 ```{r calc_bar_gap, eval=TRUE,echo=F,fig.height=7,fig.width=10}
  #STEP3 calculate barcoding gaps
 if("calc_bar_gap" %in% steps) {
@@ -700,8 +708,12 @@ if("calc_bar_gap" %in% steps) {
     
 ```
 
-# thresher
-## This run a loop blast and a loop binning to see how many correct assignations we get under different scenarios
+# Calculate binning thresholds
+## This runs a loop blast and a loop binning to see how many correct assignations we get under different scenarios
+## Loop blast means: for each query run a blast against all other sequences in the results, except for the query species. i.e. do we get the correct genus if the species is not in the database. Simialrly, do we get the correct family when the family is not in the database
+## Outputs
+### Plots of the binning results classified as no_hits (no hits when taxon was removed), correct (the bin taxon path matches identically the query taxon path), above (the bin taxon path was assigned at a higher taxonomic level than the one being tested), incorrect (the bin taxon was at the correct taxonomic level but was assigned to a different taxon that the original tacon path), failed (did not pass binning thresholds / lowest common ancestor was above kingdom)
+### The plots can be limited to specific taxa of interest and can be summarised at any desired taxonomic level 
 ```{r thresherblast, eval=TRUE,echo=F,fig.height=12,fig.width=10,results='hide'}
  #STEP3 calculate barcoding gaps
 if("thresher" %in% steps) {
@@ -847,9 +859,11 @@ for(j in 1:length(tops)){
                tops[j],"--TopFamily", tops[j]
                ,"--TopAF", tops[j])
     
-    if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
-    if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
-    if(!is.null(FamilyBL)) argsmbk<-c(argsmbk,"--FamilyBL",FamilyBL)
+    #in the end I dont think this makes sense for threshing
+    
+    # if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
+    # if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
+    # if(!is.null(FamilyBL)) argsmbk<-c(argsmbk,"--FamilyBL",FamilyBL)
     
     
     if(!is.null(known_flags)) argsmbk<-c(argsmbk,"--FilterFile",known_flags,"--FilterCol","saccver")
@@ -956,8 +970,10 @@ for(i in 1:length(unique(final.table$level))){
 incorrects2<-incorrects2 %>% discard(is.null)
 incorrectsdf<-do.call(rbind,incorrects2)
 incorrectsdf<-incorrectsdf[!duplicated(incorrectsdf$qseqid),]
-message("Results incorrectly binned:")
-print(incorrectsdf)
+#message("Results incorrectly binned:")
+#print(incorrectsdf)
+
+#too long for rmd often, save to file? maybe enough to have final table 
 
 
   } #threshbin fin
@@ -1017,14 +1033,17 @@ write.table(allcounts,paste0(outDir,counts.out),quote = F,sep = "\t",row.names =
 allcounts$settings<-paste0(allcounts$settings,allcounts$level)
 
 longcount<-reshape2::melt(allcounts[,c("no_hits","correct","above","incorrect","failed","settings")],id.vars="settings")
+longcount$level<-substr(longcount$settings,nchar(longcount$settings),nchar(longcount$settings))
+longcount$settings<-substr(longcount$settings,1,nchar(longcount$settings)-1)
+longcount$settings<-as.factor(longcount$settings)
 
 plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
 count.plot<-ggplot(data=longcount , aes(y=value, x=settings, fill=variable))+geom_bar(stat = "identity")+
   theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
         axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
-  scale_fill_manual(values = plot.cols) + ggtitle("Overview")
-#geom_text(aes(label = paste(round(value/total.reads*100,digits = 0),"%")), 
-#         position = position_stack(vjust = 0.5), size = 2)
+  scale_fill_manual(values = plot.cols) + ggtitle("Overview")+
+  ylab("Number of queries") + xlab("Settings (top, S, G, F, AF)")+
+  facet_wrap(~level,scales = "free_x",)
 
 print(count.plot)
 
@@ -1069,7 +1088,8 @@ for(i in 1:length(final.table.list)){
           axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
     scale_fill_manual(values = plot.cols) +
     facet_wrap(~plotpath,scales = "free") + 
-    ggtitle(paste0("TestLevel=",levelxx,"; limit=",limit.plot.to.taxon[1],"; PlotLevel=",plot.at.level), subtitle = sublabel)
+    ggtitle(paste0("TestLevel=",levelxx,"; limit=",limit.plot.to.taxon[1],"; PlotLevel=",plot.at.level), subtitle = sublabel) +
+    ylab("Number of queries") + xlab("Settings (top, S, G, F, AF)")
   
   
   out.plot.list[[i]]<-count.plot
@@ -1088,6 +1108,4 @@ t2<-Sys.time()
   }
   
 } else message("This step was not set to run")
-    
-  
 ```

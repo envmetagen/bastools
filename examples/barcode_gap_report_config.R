@@ -31,7 +31,7 @@ TaxlevelTestall<-c("K","P","C","O","F") # not required for step3
 
 #thresher
 plot.at.level<-"F" #for thresher
-limit.plot.to.taxon<-c("Mammalia","C") #for thresher, can be NULL
+limit.plot.to.taxon<-c("Mammalia","C") #for thresher, the taxon name and level can be NULL
 counts.out<-"16S_PBthresh_counts.tsv"#for thresher
 final.table.out<-"16S_PBthresh_final.table.tsv" #for thresher
 threshersteps<-c("threshblast","threshbin","threshplots") #"threshblast","threshbin","threshplots"
@@ -41,11 +41,7 @@ use_flagged_accessions_mbk=T
 #binning settings to loop through
 tops<-c(0,1,100)
 #order=S,G,F,AF
-pidents.list<-list(strict=c(99,97,95,90),medium=c(98,94,92,88),relaxed=c(93,85,75,60)) 
-#blacklist files for metabin thresh
-SpeciesBL="/home/tutorial/temp/disabled.sp.iran.txt" #full paths, can be NULL
-GenusBL="/home/tutorial/temp/disabled.g.iran.txt"
-FamilyBL="/home/tutorial/temp/disabled.f.iran.txt"
+pidents.list<-list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)) #can be more than three
 
 #outfiles
 krona_html_db="database.html" #(step1)
