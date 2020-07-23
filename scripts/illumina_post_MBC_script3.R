@@ -80,12 +80,12 @@ if("step8a" %in% stepstotake){
     
     #thresher
     use_flagged_accessions_mbk=T
-    if(!exist("plot.at.level")) {
+    if(!exists("plot.at.level")) {
       plot.at.level<-"C" #for thresher
       message("Defaulting to class plot level")
     }
     
-    if(!exist("limit.plot.to.taxon")) {
+    if(!exists("limit.plot.to.taxon")) {
       limit.plot.to.taxon<-NULL #for thresher
       message("Not limiting plots by taxon")
     }
