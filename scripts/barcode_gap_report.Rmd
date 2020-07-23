@@ -702,12 +702,13 @@ if("calc_bar_gap" %in% steps) {
 
 # thresher
 ## This run a loop blast and a loop binning to see how many correct assignations we get under different scenarios
-```{r thresher, eval=TRUE,echo=F,fig.height=7,fig.width=10}
+```{r thresherblast, eval=TRUE,echo=F,fig.height=12,fig.width=10,results='hide'}
  #STEP3 calculate barcoding gaps
 if("thresher" %in% steps) {
+  t1<-Sys.time()
   if("threshblast" %in% threshersteps){
   
-  t1<-Sys.time()
+  
   #read selfblastresults
     sb<-data.table::fread(paste0(outDir,selfblastout),data.table = F)
     
@@ -728,9 +729,7 @@ if("thresher" %in% steps) {
       } else message("Not removing any known_flags")
     
     hierarchy<-c("K","P","C","O","F","G","S")
-#ok, so this is a more or less complete comparison of everything in blast database,
-#can I run "fake loop blast" by just excluding results taxon by taxon?
-#make fake loop blast files
+
 #how about just remove all the non-species level entries and go from there, easier
 sb$origtax<-stringr::str_split(sb$origpath,";",simplify = T)[,7]
 sb$hittax<-stringr::str_split(sb$hitpath,";",simplify = T)[,7]
@@ -763,8 +762,6 @@ for(i in 1:length(crap)){
 lineage<-as.data.frame(stringr::str_split(sb$hitpath,";",simplify = T))
 colnames(lineage)<-c("K","P","C","O","F","G","S")
 
-###using this point as bin blast, could be earlier
-
 sb<-sb[,c("origseqid","hitseqid", "pident","hittaxid","origpath","origseq")]
 colnames(sb)<-c("qseqid","saccver", "pident","taxids","origpath","origseq")
 sb<-cbind(sb,lineage)
@@ -779,11 +776,6 @@ setwd(outDir)
 for(h in 1:length(TaxlevelTest)){
   #genus should be, for each query remove the hits to the same species
   #family should be, for each query remove hits to same genus
-  
-  #problems with this approach, how many queries disappear because there are no hits that did not belong to that genus, looks like a lot
-  #so these are not being tested at all
-  
-  #soooo, back to thresh blast, can I make identical output to sb2
   
   if(TaxlevelTest[h]=="G") {
     threshold.bin.blast2(df = sb,TaxlevelTest = "G",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "taxids")
@@ -817,7 +809,24 @@ sb2<-rbind(sb.splS,sb.tbbG,sb.tbbF)
 
 write.table(sb2,paste0(outDir,"tempBLASTDB.ALL.tsv"),quote = F,row.names = F,sep = "\t")
 
+t2<-Sys.time()
+  
+  t3<-round(difftime(t2,t1,units = "mins"),digits = 2)
+  
+  message("blast threshing complete in ",t3," mins")
   }
+}
+
+```
+
+```{r thresher, eval=TRUE,echo=F,fig.height=12,fig.width=10}
+ #STEP3 calculate barcoding gaps
+
+#split this chunk to hide loop bin output from report
+
+
+if("thresher" %in% steps) {
+t1<-Sys.time()
   
   if("threshbin" %in% threshersteps){
     
@@ -837,6 +846,12 @@ for(j in 1:length(tops)){
                "--TopSpecies", tops[j],"--TopGenus",
                tops[j],"--TopFamily", tops[j]
                ,"--TopAF", tops[j])
+    
+    if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
+    if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
+    if(!is.null(FamilyBL)) argsmbk<-c(argsmbk,"--FamilyBL",FamilyBL)
+    
+    
     if(!is.null(known_flags)) argsmbk<-c(argsmbk,"--FilterFile",known_flags,"--FilterCol","saccver")
     system2("metabin",argsmbk, wait=T)
   }
@@ -845,10 +860,6 @@ for(j in 1:length(tops)){
 outfiles<-do.call(c,binfile.list)
 
 #set metabin args
-# if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
-# if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
-# if(!is.null(FamilyBL)) argsmbk<-c(argsmbk,"--FamilyBL",FamilyBL)
-#######################################################
 
 #read metabin results and merge with sb
 results<-list()
@@ -860,7 +871,9 @@ for(i in 1:length(outfiles)){
   sb4<-merge(sb3[,c("qseqid","origpath")],a[,c("qseqid","binpath")],all.x = T,all.y = F,by = "qseqid")
   sb4$settings<-outfiles[i]
   results[[i]]<-sb4
-  file.remove(paste0(outDir,outfiles[i]))
+  file.remove(paste0(outDir,outfiles[i],".tsv"))
+  file.remove(paste0(outDir,outfiles[i],".info.tsv"))
+  file.remove(paste0(outDir,outfiles[i],".versions.txt"))
 }
 
 results<-do.call(rbind, results)
@@ -943,11 +956,11 @@ for(i in 1:length(unique(final.table$level))){
 incorrects2<-incorrects2 %>% discard(is.null)
 incorrectsdf<-do.call(rbind,incorrects2)
 incorrectsdf<-incorrectsdf[!duplicated(incorrectsdf$qseqid),]
-message("Results flagged as incorrect:")
+message("Results incorrectly binned:")
 print(incorrectsdf)
 
 
-  }
+  } #threshbin fin
   
   if("threshplots" %in% threshersteps) {
 #summary counts
@@ -1009,11 +1022,11 @@ plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
 count.plot<-ggplot(data=longcount , aes(y=value, x=settings, fill=variable))+geom_bar(stat = "identity")+
   theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
         axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
-  scale_fill_manual(values = plot.cols) 
+  scale_fill_manual(values = plot.cols) + ggtitle("Overview")
 #geom_text(aes(label = paste(round(value/total.reads*100,digits = 0),"%")), 
 #         position = position_stack(vjust = 0.5), size = 2)
 
-count.plot
+print(count.plot)
 
 #############################################  
 #plot by taxon, optional filter by taxa  
@@ -1063,9 +1076,9 @@ for(i in 1:length(final.table.list)){
   names(out.plot.list)[i]<-levelxx
 }
 
-out.plot.list[[1]]
-out.plot.list[[2]]
-out.plot.list[[3]]
+print(out.plot.list[[1]])
+print(out.plot.list[[2]])
+print(out.plot.list[[3]])
 
 t2<-Sys.time()
   

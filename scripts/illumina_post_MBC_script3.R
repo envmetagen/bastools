@@ -80,7 +80,7 @@ if("step8a" %in% stepstotake){
     
     #thresher
     use_flagged_accessions_mbk=T
-    plot.at.level<-"F" #for thresher
+    plot.at.level<-"C" #for thresher
     limit.plot.to.taxon<-NULL #for thresher
     #saving main results (can be fed to plotting chunk)
     counts.out<-gsub(".blast.filt.txt",".blast.filt.thresher.counts.tsv",files[i])
