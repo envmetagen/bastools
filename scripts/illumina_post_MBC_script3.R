@@ -57,8 +57,6 @@ if("step8a" %in% stepstotake){
   
   message("STEP8a-finding database errors")
   
-  steps<-c("selfblast", "find_db_errors","calc_bar_gap","thresher") #options: "selfblast", "find_db_errors", "calc_bar_gap","thresher"
-  
   files<-gsub(".fasta$",".blast.filt.txt",startingfastas)
   
   for(i in 1:length(files)){
@@ -93,11 +91,6 @@ if("step8a" %in% stepstotake){
     #saving main results (can be fed to plotting chunk)
     counts.out<-gsub(".blast.filt.txt",".blast.filt.thresher.counts.tsv",files[i])
     final.table.out<-gsub(".blast.filt.txt",".blast.filt.thresher.final.table.tsv",files[i])
-    threshersteps<-c("threshblast","threshbin","threshplots")
-    #binning settings to loop through
-    tops<-c(0,1,100)
-    #order=S,G,F,AF
-    pidents.list<-list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)) 
     
     #knit
     rmarkdown::render(input = paste0(bastoolsDir,"scripts/barcode_gap_report.Rmd"),output_file = paste0(outDir,out_html))

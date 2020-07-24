@@ -19,7 +19,7 @@
 startingfastas<-"12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.fasta"
 ####To blast entire nt just use
 #startingfastas<-c("file1.fasta","file2.fasta")
-#stepstotake<-c("step7","step8","step8a","step9","step10","step11","step12","step13","step14")
+#stepstotake<-c("step7","step8","step8a","step9","step10","step11","step12","step13","step14","step15")
 stepstotake<-c("step9","step10","step11","step12","step13","step14")
 
 #all directories must have trailing "/"
@@ -48,15 +48,22 @@ min_qcovs=70
 #maximum evalue for filtering blast results
 max_evalue=0.001
 
-use.metabin=T #use metabin or older script for processing?
+use.metabin=T #use metabin or older script for processing? #step9
 KronaPath="/home/tutorial/TOOLS/Krona.install/bin/ktImportText" #full path
 known_flags="/home/tutorial/REPTILE/auto_and_manual_flags_reptile.txt" #full path
-#get from google?
-use_flagged_accessions_mbk=T
-TaxlevelTestall<-c("K","P","C","O","F") #TaxlevelTestall<-c("K","P","C","O","F","G","S")
+use_flagged_accessions_mbk=T #steps 8a and 9
 
-plot.at.level<-"O" #for thresher
-limit.plot.to.taxon<-c("Mammalia","C") #for thresher, the taxon name and level can be NULL
+#step8a
+steps<-c("selfblast", "find_db_errors", "calc_bar_gap","thresher") #options: "selfblast", "find_db_errors", "calc_bar_gap","thresher"
+threshersteps<-c("threshblast","threshbin","threshplots") #"threshblast","threshbin","threshplots"
+TaxlevelTestall<-c("K","P","C","O","F") #TaxlevelTestall<-c("K","P","C","O","F","G","S") #step 8a
+#thresher settings
+plot.at.level<-"O" 
+limit.plot.to.taxon<-c("Mammalia","C") #the taxon name and level can be NULL
+#binning settings to loop through
+tops<-c(0,1,100)
+#order=S,G,F,AF
+pidents.list<-list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)) #can be more than three
 
 #percentage identity threshold to consider (1=1%)
 #top=1 #this will overwrite all other tops! hash it out to not use it!

@@ -23,22 +23,24 @@ input<-"/home/tutorial/temp/16S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.
 ncbiTaxDir<-"/home/tutorial/TOOLS/metabinkit.install/db/"
 KronaPath<-"/home/tutorial/TOOLS/Krona.install/bin/ktImportText"
 outDir<-"/home/tutorial/temp/"
-steps<-c("thresher") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin","thresher"
-threshersteps<-c("threshplots") #"threshblast","threshbin","threshplots"
+steps<-c("selfblast", "find_db_errors", "calc_bar_gap","thresher") #options: "selfblast", "find_db_errors", "calc_bar_gap","metabin","thresher"
+threshersteps<-c("threshblast","threshbin","threshplots") #"threshblast","threshbin","threshplots"
 
 plot.limit.taxon<-c(";Mammalia;") # this is a grep, can be NULL #(step3) #can be multiple #suggest including ;xxx;
 known_flags<-"/media/sf_Documents/WORK/CIBIO/temp/known_flags_downloaded_22-7-20.txt" #"/home/tutorial/SCRIPTS/PB_tests/known_flags.txt" #full path, can be NULL
 
 TaxlevelTestall<-c("K","P","C","O","F") # not required for step3
 
+divergence<-rep(5,length(TaxlevelTestall)) # not required for step3
+use_flagged_accessions_bcg=F
+use_flagged_accessions_mbk=T
+
 #thresher
 plot.at.level<-"F" #for thresher
 limit.plot.to.taxon<-c("Mammalia","C") #for thresher, the taxon name and level can be NULL
 counts.out<-"16S_PBthresh_counts.tsv"#for thresher
 final.table.out<-"16S_PBthresh_final.table.tsv" #for thresher
-divergence<-rep(5,length(TaxlevelTestall)) # not required for step3
-use_flagged_accessions_bcg=F
-use_flagged_accessions_mbk=T
+
 #binning settings to loop through
 tops<-c(0,1,100)
 #order=S,G,F,AF

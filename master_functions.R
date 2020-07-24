@@ -6260,3 +6260,245 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
   message("Ouput saved to ",out)
 }
 
+plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.level="O"){
+  require(ggplot2)
+  final.table<-data.table::fread(thresher.final.table,data.table = F)
+  
+  allcounts<-list()
+  
+  for(j in 1:length(unique(final.table$level))){
+    
+    current.level<-unique(final.table$level)[j]
+    
+    final.tableS<-final.table[final.table$level==current.level,]
+    
+    nsettings<-length(unique(final.tableS$settings))
+    
+    countsS<-data.frame(settings=rep("none",nsettings)
+                        ,no_hits=rep(0,nsettings),
+                        correct=rep(0,nsettings)
+                        ,above=rep(0,nsettings),
+                        incorrect=rep(0,nsettings),
+                        failed=rep(0,nsettings)
+    )
+    
+    countsS$settings<-as.character(countsS$settings)
+    
+    countsS$level<-current.level
+    
+    for(i in 1:length(unique(final.tableS$settings))){
+      current.setting<-unique(final.tableS$settings)[i]
+      countsS$settings[i]<-current.setting
+      countsS$no_hits[i]<-sum(final.tableS[final.tableS$settings==current.setting,"no.hits"])
+      
+      final.tableSx<-final.tableS[final.tableS$no.hits==FALSE,]
+      
+      countsS$correct[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("correct",current.level)],na.rm = T)
+      countsS$incorrect[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("incorrect",current.level)],na.rm = T)
+      countsS$above[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("above",current.level)],na.rm = T)
+      countsS$failed[i]<-sum(final.tableSx[final.tableSx$settings==current.setting,paste0("failed",current.level)],na.rm = T)
+    }
+    
+    allcounts[[j]]<-countsS
+    
+  }
+  
+  allcounts<-do.call(rbind,allcounts)
+  
+  allcounts$sum<-rowSums(allcounts[,c("no_hits","correct","above","incorrect","failed")])
+  
+  #write.table(allcounts,paste0(outDir,counts.out),quote = F,sep = "\t",row.names = F)
+  
+  #######################################################
+  #PLOTTING 
+  allcounts$settings<-paste0(allcounts$settings,allcounts$level)
+  
+  longcount<-reshape2::melt(allcounts[,c("no_hits","correct","above","incorrect","failed","settings")],id.vars="settings")
+  longcount$level<-substr(longcount$settings,nchar(longcount$settings),nchar(longcount$settings))
+  longcount$settings<-substr(longcount$settings,1,nchar(longcount$settings)-1)
+  longcount$settings<-gsub("top_","",longcount$settings)
+  longcount$settings<-gsub("pidents_","",longcount$settings)
+  longcount$settings<-as.factor(longcount$settings)
+  
+  plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
+  count.plot.A<-ggplot(data=longcount , aes(y=value, x=settings, fill=variable))+geom_bar(stat = "identity")+
+    theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
+          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
+    scale_fill_manual(values = plot.cols) + ggtitle("Overview")+
+    ylab("Number of queries") + xlab("Settings (top, S, G, F, AF)")+
+    facet_wrap(~level,scales = "free_x",)
+  
+  #print(count.plot)
+  
+  #############################################  
+  #plot by taxon, optional filter by taxa  
+  
+  out.plot.list<-list()
+  
+  final.table.list<-split(final.table,final.table$level)
+  
+  if(!is.null(limit.plot.to.taxon))   message("Limiting plots to ",limit.plot.to.taxon[1],": taxonomic level ",limit.plot.to.taxon[2],
+                                              ". Overview plot will not be affected")
+  message("Plotting at level ",plot.at.level)
+  
+  for(i in 1:length(final.table.list)){
+    
+    xx<-final.table.list[[i]]
+    
+    levelxx<-xx[1,c("level")]
+    longcount<-reshape2::melt(xx[,c("no.hits",paste0("correct",levelxx),paste0("above",levelxx),paste0("incorrect",levelxx),
+                                    paste0("failed",levelxx)
+                                    ,"settings",paste0("origpath",levelxx))],
+                              id.vars=c("settings",paste0("origpath",levelxx)))
+    
+    colnames(longcount)[2]<-"origpathS"
+    
+    #extract table to limit by taxon
+    if(!is.null(limit.plot.to.taxon)){
+      indexTax<-match(limit.plot.to.taxon[2],table = c("K","P","C","O","F","G","S"))
+      longcount<-longcount[do.call(rbind,stringr::str_split(longcount$origpathS,";"))[,indexTax]==limit.plot.to.taxon[1],]
+    }
+    
+    #plot at level
+    indexn<-match(plot.at.level,table = c("K","P","C","O","F","G","S"))
+    if(grep(plot.at.level, c("K","P","C","O","F","G","S"))>grep(levelxx, c("K","P","C","O","F","G","S"))){
+      message("Cannot plot at ", plot.at.level," level for ",levelxx,", reverting to ",levelxx)
+      indexn<-match(levelxx,table = c("K","P","C","O","F","G","S"))
+    }
+    longcount$plotpath<-do.call(rbind,stringr::str_split(longcount$origpathS,";"))[,indexn]
+    
+    #sublabel
+    if(levelxx=="S") sublabel<-"Binning outcomes at species level if species is in database"
+    if(levelxx=="G") sublabel<-"Binning outcomes at genus level if species is not in database"
+    if(levelxx=="F") sublabel<-"Binning outcomes at family level if genus is not in database"
+    
+    longcount$settings<-gsub("top_","",longcount$settings)
+    longcount$settings<-gsub("pidents_","",longcount$settings)
+    
+    #plot
+    plot.cols<-c("gray70","yellow4","khaki2","#E31A1C","darkturquoise","green1")
+    count.plot<-ggplot(data=longcount , aes(y=as.numeric(as.logical(value)), x=settings, fill=variable))+geom_bar(stat = "identity")+
+      theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
+            axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
+      scale_fill_manual(values = plot.cols) +
+      facet_wrap(~plotpath,scales = "free") + 
+      ggtitle(paste0("TestLevel=",levelxx,"; limit=",limit.plot.to.taxon[1],"; PlotLevel=",plot.at.level), subtitle = sublabel) +
+      ylab("Number of queries") + xlab("Settings (top, S, G, F, AF)")
+    
+    
+    out.plot.list[[i]]<-count.plot
+    names(out.plot.list)[i]<-levelxx
+  }
+  
+  out.plot.list<-list(count.plot.A,out.plot.list)
+  
+  print(out.plot.list[[1]])
+  print(out.plot.list[[2]])
+}
+
+bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
+                     pidents.list=list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)),
+                     known_flags=NULL,final.table.out){
+  
+  sb2<-data.table::fread(blast.thresh.input,data.table = F)
+  
+  #loop bin at all levels
+  
+  binfile.list<-list()
+  countloop<-0
+  for(j in 1:length(tops)){
+    for(k in 1:length(pidents.list)){
+      binfile<-paste0("top_",tops[j],".pidents_",paste(pidents.list[[k]],collapse = "."))
+      countloop<-countloop+1
+      binfile.list[[countloop]]<-binfile
+      argsmbk<-c("-i",blast.thresh.input, "-o",binfile,"--no_mbk")
+      argsmbk<-c(argsmbk,"-S", pidents.list[[k]][1],"-G", pidents.list[[k]][2],"-F", pidents.list[[k]][3],"-A", pidents.list[[k]][4],
+                 "--TopSpecies", tops[j],"--TopGenus",
+                 tops[j],"--TopFamily", tops[j]
+                 ,"--TopAF", tops[j])
+      
+      #in the end I dont think this makes sense for threshing
+      
+      # if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
+      # if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
+      # if(!is.null(FamilyBL)) argsmbk<-c(argsmbk,"--FamilyBL",FamilyBL)
+      
+      
+      if(!is.null(known_flags)) argsmbk<-c(argsmbk,"--FilterFile",known_flags,"--FilterCol","saccver")
+      system2("metabin",argsmbk, wait=T)
+    }
+  }
+  
+  outfiles<-do.call(c,binfile.list)
+  
+  #set metabin args
+  
+  #read metabin results and merge with sb
+  results<-list()
+  sb3<-sb2[!duplicated(sb2$qseqid),]
+  
+  for(i in 1:length(outfiles)){
+    a<-data.table::fread(paste0(outfiles[i],".tsv"),data.table = F)
+    a$binpath<-paste(a$K,a$P,a$C,a$O,a$F,a$G,a$S,sep = ";")
+    sb4<-merge(sb3[,c("qseqid","origpath")],a[,c("qseqid","binpath")],all.x = T,all.y = F,by = "qseqid")
+    sb4$settings<-outfiles[i]
+    results[[i]]<-sb4
+    file.remove(paste0(outfiles[i],".tsv"))
+    file.remove(paste0(outfiles[i],".info.tsv"))
+    file.remove(paste0(outfiles[i],".versions.txt"))
+  }
+  
+  results<-do.call(rbind, results)
+  
+  results$level<-substr(results$qseqid,nchar(results$qseqid),nchar(results$qseqid))
+  results$binpathS<-results$binpath
+  results$binpathG<-path.at.level(results$binpathS,level = "G")
+  results$binpathF<-path.at.level(results$binpathS,level = "F")
+  results$origpathS<-results$origpath
+  results$origpathG<-path.at.level(results$origpathS,level = "G")
+  results$origpathF<-path.at.level(results$origpathS,level = "F")
+  
+  final.table<-results
+  
+  final.table$no.hits<-FALSE
+  
+  #correct 
+  final.table$correctS<-final.table$binpathS==final.table$origpathS
+  final.table$correctG<-final.table$binpathG==final.table$origpathG
+  final.table$correctF<-final.table$binpathF==final.table$origpathF
+  
+  #above desired rank (doesnt check if above rank is correct...)
+  final.table$aboveS<-bas.get.ranks(data.frame(taxon=final.table$binpathS))
+  final.table$aboveG<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathG,";NA")))
+  final.table$aboveF<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathF,";NA;NA")))
+  
+  final.table[(final.table$aboveF=="htf") & final.table$level=="F","aboveF"]<-"above"
+  final.table[(final.table$aboveG=="htf" | final.table$aboveG=="family") & final.table$level=="G","aboveG"]<-"above"
+  final.table[(final.table$aboveS=="htf" | final.table$aboveS=="family" | final.table$aboveS=="genus") & 
+                final.table$level=="S","aboveS"]<-"above"
+  
+  #incorrect
+  final.table$incorrectS<-(!final.table$correctS) & final.table$aboveS=="species"
+  final.table$incorrectG<-(!final.table$correctG) & final.table$aboveG=="genus"
+  final.table$incorrectF<-(!final.table$correctF) & final.table$aboveF=="family"
+  
+  #change above from "above" to T/F
+  final.table$aboveS<-final.table$aboveS!="species"
+  final.table$aboveG<-final.table$aboveG!="genus"
+  final.table$aboveF<-final.table$aboveF!="family"
+  
+  #failed
+  final.table$failedS<-final.table$binpathS=="NA;NA;NA;NA;NA;NA;NA"
+  final.table$failedG<-final.table$binpathG=="NA;NA;NA;NA;NA;NA"
+  final.table$failedF<-final.table$binpathF=="NA;NA;NA;NA;NA"
+  
+  #if failed, other outcomes are NA
+  final.table[final.table$failedS==TRUE,c("correctS","aboveS","incorrectS")]<-NA
+  final.table[final.table$failedG==TRUE,c("correctG","aboveG","incorrectG")]<-NA
+  final.table[final.table$failedF==TRUE,c("correctF","aboveF","incorrectF")]<-NA
+  
+  #final.table$settings<-paste0(final.table$Spident,"_",final.table$Gpident,"_",final.table$Fpident,"_top",final.table$top)
+  
+  write.table(final.table,final.table.out,quote = F,sep = "\t",row.names = F)
+}
+
