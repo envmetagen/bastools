@@ -100,7 +100,7 @@ if(!"library_name" %in% colnames(master_sheet)) stop("Must have column library_n
 
 message("Count libraries before subsetting=",length(master_sheet$library_name))
 #subset 
-if(!is.null(sample.subsetlist)){
+if(!is.null(library.subsetlist)){
   sub_master_sheet<-subset_mastersheet(master_sheet, library.subsetlist)
 } else sub_master_sheet<-master_sheet
 
