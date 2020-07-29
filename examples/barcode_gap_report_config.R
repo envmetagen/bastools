@@ -35,6 +35,14 @@ divergence<-rep(5,length(TaxlevelTestall)) # not required for step3
 use_flagged_accessions_bcg=F
 use_flagged_accessions_mbk=T
 
+#if not NULL these will be used for bcg plots and will be removed prior to bin threshing (but sb file will not be altered)
+#SpeciesBL = "/home/tutorial/temp/disabled.sp.iran.txt"
+#GenusBL = "/home/tutorial/temp/disabled.g.iran.txt"
+#FamilyBL = "/home/tutorial/temp/disabled.f.iran.txt"
+SpeciesBL = NULL
+GenusBL = NULL
+FamilyBL = NULL
+
 #thresher
 plot.at.level<-"F" #for thresher
 limit.plot.to.taxon<-c("Mammalia","C") #for thresher, the taxon name and level can be NULL

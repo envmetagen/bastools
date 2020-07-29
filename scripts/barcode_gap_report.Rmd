@@ -510,6 +510,31 @@ if("calc_bar_gap" %in% steps) {
     #read selfblastresults
     sbo<-data.table::fread(paste0(outDir,selfblastout),data.table = F)
     
+    
+  remove.taxa.from.list<-function(BL,sbo){
+    species_bl<-data.table::fread(BL,data.table = F, header = F)
+    exclude<-get.children.taxonkit(df = species_bl,column = "V1")
+    sbo<-sbo[!sbo$hittaxid %in% exclude,]
+    sbo<-sbo[!sbo$origtaxid %in% exclude,]
+  }
+  
+  if(!is.null(SpeciesBL)) {
+    message("Disabling species")
+    sbo<-remove.taxa.from.list(BL = SpeciesBL,sbo = sbo)
+  }
+  
+  if(!is.null(GenusBL)) {
+    message("Disabling genera")
+    sbo<-remove.taxa.from.list(GenusBL,sbo)
+  }
+  
+  if(!is.null(FamilyBL)) {
+    message("Disabling families")
+    sbo<-remove.taxa.from.list(FamilyBL,sbo)
+  }  
+  
+  #write.table(sb2,paste0(blast.thresh.input,"temp"),append = F,sep = "\t",quote = F,row.names = F)
+    
     if(use_flagged_accessions_bcg) {
       message("Removing newly flagged accessions")
     
@@ -720,7 +745,7 @@ if("calc_bar_gap" %in% steps) {
 #### failed (did not pass binning thresholds / lowest common ancestor was above kingdom)
 ### The plots can be limited to specific taxa of interest and can be summarised at any desired taxonomic level 
 ```{r thresherblast, eval=TRUE,echo=F,fig.height=12,fig.width=10,results='hide'}
- #STEP3 calculate barcoding gaps
+ #STEP4 thresher
 if("thresher" %in% steps) {
   t1<-Sys.time()
   if("threshblast" %in% threshersteps){
@@ -778,8 +803,8 @@ for(i in 1:length(crap)){
 lineage<-as.data.frame(stringr::str_split(sb$hitpath,";",simplify = T))
 colnames(lineage)<-c("K","P","C","O","F","G","S")
 
-sb<-sb[,c("origseqid","hitseqid", "pident","hittaxid","origpath","origseq")]
-colnames(sb)<-c("qseqid","saccver", "pident","taxids","origpath","origseq")
+sb<-sb[,c("origseqid","origtaxid","hitseqid", "pident","hittaxid","origpath","origseq")]
+colnames(sb)<-c("qseqid","origtaxid","saccver", "pident","taxids","origpath","origseq")
 sb<-cbind(sb,lineage)
 sb$origgenus<-stringr::str_split(sb$origpath,";",simplify = T)[,6]
 sb$origspecies<-stringr::str_split(sb$origpath,";",simplify = T)[,7]
@@ -794,7 +819,7 @@ for(h in 1:length(TaxlevelTest)){
   #family should be, for each query remove hits to same genus
   
   if(TaxlevelTest[h]=="G") {
-    threshold.bin.blast2(df = sb,TaxlevelTest = "G",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "taxids")
+    threshold.bin.blast2(df = sb,TaxlevelTest = "G",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "origtaxid")
     sb.tbbG<-data.table::fread("tempBLASTDB.G.tsv",data.table = F)
     sb.tbbG<-add.lineage.df(sb.tbbG,ncbiTaxDir = ncbiTaxDir) #for metabin
     sb.tbbG<-merge(sb.tbbG,sbforpaths,all.x=T,all.y = F,by = "qseqid")
@@ -806,19 +831,19 @@ for(h in 1:length(TaxlevelTest)){
   }
   
   if(TaxlevelTest[h]=="F") {
-    threshold.bin.blast2(df = sb,TaxlevelTest = "F",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "taxids")
+    threshold.bin.blast2(df = sb,TaxlevelTest = "F",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "origtaxid")
     sb.tbbF<-data.table::fread("tempBLASTDB.F.tsv",data.table = F)
     sb.tbbF<-add.lineage.df(sb.tbbF,ncbiTaxDir = ncbiTaxDir)
     sb.tbbF<-merge(sb.tbbF,sbforpaths,all.x=T,all.y = F,by = "qseqid")
     sb.tbbF$origgenus<-stringr::str_split(sb.tbbF$origpath,";",simplify = T)[,6]
     sb.tbbF$origspecies<-stringr::str_split(sb.tbbF$origpath,";",simplify = T)[,7]
-    sb.tbbF<-sb.tbbF[,c("qseqid","saccver","pident","taxids", "origpath","K","P","C" ,"O","F","G","S","origgenus","origspecies")]
     sb.tbbF$origseq<-sb.tbbF$qseq
     sb.tbbF<-sb.tbbF[,c("qseqid","saccver","pident","taxids", "origpath","origseq", "K","P","C" ,"O","F","G","S","origgenus","origspecies")]
     sb.tbbF$qseqid<-gsub("_S$","_F",sb.tbbF$qseqid)
   }
   
-  if(TaxlevelTest[h]=="S") sb.splS<-sb #else sb.spl<-split(sb,sb$qseqid)
+  if(TaxlevelTest[h]=="S") {sb.splS<-sb[,c("qseqid","saccver","pident","taxids", "origpath","origseq", "K","P","C","O","F","G","S","origgenus","origspecies")] }
+  
 }
 
 sb2<-rbind(sb.splS,sb.tbbG,sb.tbbF)
@@ -853,7 +878,8 @@ t1<-Sys.time()
     setwd(outDir)
     
     bin.thresh(blast.thresh.input=gsub(".tempBLASTDB.tsv$",".tempBLASTDBALL.tsv",paste0(outDir,selfblastout))
-                ,tops=tops,pidents.list=pidents.list,known_flags = known_flags,final.table.out = paste0(outDir,final.table.out))
+                ,tops=tops,pidents.list=pidents.list,known_flags = known_flags,final.table.out = paste0(outDir,final.table.out),
+               SpeciesBL = SpeciesBL,GenusBL = GenusBL,FamilyBL = FamilyBL)
     
 
 #print incorrects

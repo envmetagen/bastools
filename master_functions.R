@@ -478,8 +478,9 @@ add.lineage.df<-function(dframe,ncbiTaxDir,taxCol="taxids",as.taxids=F){
   return(dframe)
 }
 
-get.children.taxonkit<-function(df,column){
-  if(is.null(df$taxids)) {stop("No column called taxids")}
+get.children.taxonkit<-function(df,column="taxids"){
+  df$taxids<-df[,column]
+  #if(is.null(df$taxids)) {stop("No column called taxids")}
   df$taxids<-as.integer(as.character(df$taxids)) 
   #write taxids to file
   taxids_fileA<-paste0("taxids",as.numeric(Sys.time()),".txt")
@@ -6189,12 +6190,18 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
   colnames(df)<-gsub(taxidcol,"taxids",colnames(df))
   colnames(df)<-gsub(qpath,"qpath",colnames(df))
   
-  df$seq.name<-paste0(df$qseqid," taxid=",df$taxids,";")
+  df$seq.name<-paste0(df$qseqid," taxid=",df$taxids,";") 
   
   lineage<-as.data.frame(stringr::str_split(df$qpath,";",simplify = T))
   colnames(lineage)<-c("K","P","C","O","F","G","S")
   
   df<-cbind(df,lineage)
+  
+  # if(TaxlevelTest=="S") {
+  #   #ex.seqid.group<-"S"
+  #   out<-paste0("tempBLASTDB.",TaxlevelTest,".tsv")
+  #   if(file.exists(out)) file.remove(out)
+  # }
   
   if(TaxlevelTest=="G") {
     ex.seqid.group<-"S"
@@ -6398,12 +6405,38 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
 
 bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
                      pidents.list=list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)),
-                     known_flags=NULL,final.table.out){
+                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL){
   
   sb2<-data.table::fread(blast.thresh.input,data.table = F)
   
-  #loop bin at all levels
+  #need to add back origtaxids so we can do taxa disabling
+  sb2$origtaxids<-sb2[match(substr(sb2$qseqid,1,nchar(sb2x$qseqid)-2),sb2$saccver),"taxids"]
   
+  remove.taxa.from.list<-function(BL,sb2){
+    species_bl<-data.table::fread(BL,data.table = F, header = F)
+    exclude<-get.children.taxonkit(df = species_bl,column = "V1")
+    sb2<-sb2[!sb2$taxids %in% exclude,]
+    sb2<-sb2[!sb2$origtaxids %in% exclude,]
+  }
+  
+  if(!is.null(SpeciesBL)) {
+    message("Disabling species")
+    sb2<-remove.taxa.from.list(SpeciesBL,sb2)
+  }
+  
+  if(!is.null(GenusBL)) {
+    message("Disabling genera")
+    sb2<-remove.taxa.from.list(GenusBL,sb2)
+  }
+  
+  if(!is.null(FamilyBL)) {
+    message("Disabling families")
+    sb2<-remove.taxa.from.list(FamilyBL,sb2)
+  }  
+  
+  write.table(sb2,paste0(blast.thresh.input,"temp"),append = F,sep = "\t",quote = F,row.names = F)
+  
+  #loop bin at all levels
   binfile.list<-list()
   countloop<-0
   for(j in 1:length(tops)){
@@ -6411,13 +6444,13 @@ bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
       binfile<-paste0("top_",tops[j],".pidents_",paste(pidents.list[[k]],collapse = "."))
       countloop<-countloop+1
       binfile.list[[countloop]]<-binfile
-      argsmbk<-c("-i",blast.thresh.input, "-o",binfile,"--no_mbk")
+      argsmbk<-c("-i",paste0(blast.thresh.input,"temp"), "-o",binfile,"--no_mbk")
       argsmbk<-c(argsmbk,"-S", pidents.list[[k]][1],"-G", pidents.list[[k]][2],"-F", pidents.list[[k]][3],"-A", pidents.list[[k]][4],
                  "--TopSpecies", tops[j],"--TopGenus",
                  tops[j],"--TopFamily", tops[j]
                  ,"--TopAF", tops[j])
       
-      #in the end I dont think this makes sense for threshing
+      #in the end I dont think this makes sense for threshing, but maybe if removed prior to threshing
       
       # if(!is.null(SpeciesBL)) argsmbk<-c(argsmbk,"--SpeciesBL",SpeciesBL)
       # if(!is.null(GenusBL)) argsmbk<-c(argsmbk,"--GenusBL",GenusBL)
@@ -6428,6 +6461,8 @@ bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
       system2("metabin",argsmbk, wait=T)
     }
   }
+  
+  file.remove(paste0(blast.thresh.input,"temp"))
   
   outfiles<-do.call(c,binfile.list)
   
@@ -6498,6 +6533,36 @@ bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
   final.table[final.table$failedF==TRUE,c("correctF","aboveF","incorrectF")]<-NA
   
   #final.table$settings<-paste0(final.table$Spident,"_",final.table$Gpident,"_",final.table$Fpident,"_top",final.table$top)
+  
+  #print incorrects
+  incorrects<-list()
+  incorrects2<-list()
+  require(tidyverse)
+  for(i in 1:length(unique(final.table$level))){
+    levelincor<-unique(final.table$level)[i]
+    finalincor<-final.table[final.table$level==levelincor,]
+    #remove failed
+    finalincor<-finalincor[!is.na(finalincor$correctS),]
+
+    for(j in 1:length(unique(finalincor$settings))){
+      finalsets<-unique(finalincor$settings)[j]
+      finalincorset<-finalincor[(finalincor$settings==finalsets & finalincor[,paste0("incorrect",levelincor)]==TRUE),]
+      if(nrow(finalincorset)>0) incorrects[[j]]<-finalincorset[,c(paste0("origpath",levelincor),paste0("binpath",levelincor),"qseqid","settings")]
+      incorrects<-incorrects %>% discard(is.null)
+    }
+
+    if(length(incorrects)>0) {
+      incorrects2[[i]]<-do.call(rbind,incorrects)
+      colnames(incorrects2[[i]])<-c("origpath","binpath","qseqid","settings")
+    } else incorrects2[[i]]<-NULL
+
+  }
+
+  incorrects2<-incorrects2 %>% discard(is.null)
+  incorrectsdf<-do.call(rbind,incorrects2)
+  #incorrectsdf<-incorrectsdf[!duplicated(incorrectsdf$qseqid),]
+  message("Results incorrectly binned:")
+  print(incorrectsdf)
   
   write.table(final.table,final.table.out,quote = F,sep = "\t",row.names = F)
 }
