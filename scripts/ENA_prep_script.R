@@ -93,7 +93,7 @@ if(!is.null(sample.subsetlist)){
   sub_sample_sheet<-subset_mastersheet(sample_sheet, sample.subsetlist)
   
   #check again to see the subset made sense
-  master_xtabs(sub_sample_sheet,columns=c("sample_type",names(sample.subsetlist)))
+  print(master_xtabs(sub_sample_sheet,columns=c("sample_type",names(sample.subsetlist))))
 } else sub_sample_sheet<-sample_sheet
 
 #write 
