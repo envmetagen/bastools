@@ -67,6 +67,17 @@ subset_mastersheet<-function(master_sheet,...){
   return(m2)
 }
 
+master_xtabs<-function(master_sheet,columns){
+  
+  coln<-as.numeric(0)
+  for(i in 1:length(columns)){
+    coln[i]<-grep(paste0(columns[i],"$"), colnames(master_sheet))
+  }
+  
+  xtabs(data = master_sheet[,coln],addNA = T)
+}  
+
+
 ########################################SAMPLE DATA
 #first read ENA_sample_data sheet
 if(ms_option==1) sample_sheet<-google.read.master.url(sheeturl,ws = "ENA_sample_data")
