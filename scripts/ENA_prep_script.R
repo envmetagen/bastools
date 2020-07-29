@@ -93,7 +93,7 @@ message("warning appending column names to file is ok")
 
 ########################################LIBRARY DATA
 #first read mastersheet to get libraries wanted
-if(ms_option==1) master_sheet<-google.read.master.url(url = sheeturl)
+if(ms_option==1) master_sheet<-google.read.master.url(sheeturl)
 if(ms_option==2) master_sheet<-data.table::fread(master_sheet_file,data.table = F)  
 
 if(!"library_name" %in% colnames(master_sheet)) stop("Must have column library_name in Master_Samplesheet")
