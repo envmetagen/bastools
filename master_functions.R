@@ -6405,7 +6405,7 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
 
 bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
                      pidents.list=list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)),
-                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir){
+                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir= ncbiTaxDir){
   
   sb2<-data.table::fread(blast.thresh.input,data.table = F)
   
@@ -6421,17 +6421,17 @@ bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
   
   if(!is.null(SpeciesBL)) {
     message("Disabling species")
-    sb2<-remove.taxa.from.list(SpeciesBL,sb2,ncbiTaxDir = ncbiTaxDir)
+    sb2<-remove.taxa.from.list(BL = SpeciesBL,sb2 = sb2,ncbiTaxDir = ncbiTaxDir)
   }
   
   if(!is.null(GenusBL)) {
     message("Disabling genera")
-    sb2<-remove.taxa.from.list(GenusBL,sb2,ncbiTaxDir = ncbiTaxDir)
+    sb2<-remove.taxa.from.list(BL = GenusBL,sb2 = sb2,ncbiTaxDir = ncbiTaxDir)
   }
   
   if(!is.null(FamilyBL)) {
     message("Disabling families")
-    sb2<-remove.taxa.from.list(FamilyBL,sb2,ncbiTaxDir = ncbiTaxDir)
+    sb2<-remove.taxa.from.list(BL = FamilyBL,sb2 = sb2,ncbiTaxDir = ncbiTaxDir)
   }  
   
   write.table(sb2,paste0(blast.thresh.input,"temp"),append = F,sep = "\t",quote = F,row.names = F)
