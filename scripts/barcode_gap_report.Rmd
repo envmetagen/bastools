@@ -513,7 +513,7 @@ if("calc_bar_gap" %in% steps) {
     
   remove.taxa.from.list<-function(BL,sbo){
     species_bl<-data.table::fread(BL,data.table = F, header = F)
-    exclude<-get.children.taxonkit(df = species_bl,column = "V1")
+    exclude<-get.children.taxonkit(df = species_bl,column = "V1",ncbiTaxDir=ncbiTaxDir)
     sbo<-sbo[!sbo$hittaxid %in% exclude,]
     sbo<-sbo[!sbo$origtaxid %in% exclude,]
   }
