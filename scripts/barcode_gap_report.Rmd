@@ -511,26 +511,26 @@ if("calc_bar_gap" %in% steps) {
     sbo<-data.table::fread(paste0(outDir,selfblastout),data.table = F)
     
     
-  remove.taxa.from.list<-function(BL,sbo){
+  remove.taxa.from.list<-function(BL,sbo,ncbiTaxDir = ncbiTaxDir){
     species_bl<-data.table::fread(BL,data.table = F, header = F)
-    exclude<-get.children.taxonkit(df = species_bl,column = "V1",ncbiTaxDir=ncbiTaxDir)
+    exclude<-get.children.taxonkit(df = species_bl,column = "V1",ncbiTaxDir = ncbiTaxDir)
     sbo<-sbo[!sbo$hittaxid %in% exclude,]
     sbo<-sbo[!sbo$origtaxid %in% exclude,]
   }
   
   if(!is.null(SpeciesBL)) {
     message("Disabling species")
-    sbo<-remove.taxa.from.list(BL = SpeciesBL,sbo = sbo)
+    sbo<-remove.taxa.from.list(BL = SpeciesBL,sbo = sbo,ncbiTaxDir = ncbiTaxDir)
   }
   
   if(!is.null(GenusBL)) {
     message("Disabling genera")
-    sbo<-remove.taxa.from.list(GenusBL,sbo)
+    sbo<-remove.taxa.from.list(GenusBL,sbo,ncbiTaxDir = ncbiTaxDir)
   }
   
   if(!is.null(FamilyBL)) {
     message("Disabling families")
-    sbo<-remove.taxa.from.list(FamilyBL,sbo)
+    sbo<-remove.taxa.from.list(FamilyBL,sbo,ncbiTaxDir = ncbiTaxDir)
   }  
   
   #write.table(sb2,paste0(blast.thresh.input,"temp"),append = F,sep = "\t",quote = F,row.names = F)
@@ -867,9 +867,9 @@ t2<-Sys.time()
 ```
 
 ```{r thresher, eval=TRUE,echo=F,fig.height=13,fig.width=10}
- #STEP3 calculate barcoding gaps
+ #STEP4 thresher
 
-#split this chunk to hide loop bin output from report
+#split this chunk to hide loop blast output from report
 if("thresher" %in% steps) {
 t1<-Sys.time()
   
