@@ -6405,33 +6405,33 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
 
 bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
                      pidents.list=list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)),
-                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir= ncbiTaxDir){
+                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir){
   
   sb2<-data.table::fread(blast.thresh.input,data.table = F)
   
   #need to add back origtaxids so we can do taxa disabling
   sb2$origtaxids<-sb2[match(substr(sb2$qseqid,1,nchar(sb2$qseqid)-2),sb2$saccver),"taxids"]
   
-  remove.taxa.from.list<-function(BL,sb2,ncbiTaxDir){
+  remove.taxa.from.list<-function(BL,sbdf){
     species_bl<-data.table::fread(BL,data.table = F, header = F)
-    exclude<-get.children.taxonkit(df = species_bl,column = "V1",ncbiTaxDir)
-    sb2<-sb2[!sb2$taxids %in% exclude,]
-    sb2<-sb2[!sb2$origtaxids %in% exclude,]
+    exclude<-get.children.taxonkit(df = species_bl,column = "V1",ncbiTaxDir = ncbiTaxDir)
+    sbdf<-sbdf[!sbdf$taxids %in% exclude,]
+    sbdf<-sbdf[!sbdf$origtaxids %in% exclude,]
   }
   
   if(!is.null(SpeciesBL)) {
     message("Disabling species")
-    sb2<-remove.taxa.from.list(BL = SpeciesBL,sb2 = sb2,ncbiTaxDir)
+    sb2<-remove.taxa.from.list(BL = SpeciesBL,sbdf = sb2)
   }
   
   if(!is.null(GenusBL)) {
     message("Disabling genera")
-    sb2<-remove.taxa.from.list(BL = GenusBL,sb2 = sb2,ncbiTaxDir)
+    sb2<-remove.taxa.from.list(BL = GenusBL,sbdf = sb2)
   }
   
   if(!is.null(FamilyBL)) {
     message("Disabling families")
-    sb2<-remove.taxa.from.list(BL = FamilyBL,sb2 = sb2,ncbiTaxDir)
+    sb2<-remove.taxa.from.list(BL = FamilyBL,sbdf = sb2)
   }  
   
   write.table(sb2,paste0(blast.thresh.input,"temp"),append = F,sep = "\t",quote = F,row.names = F)

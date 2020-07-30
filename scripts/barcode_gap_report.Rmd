@@ -879,7 +879,7 @@ t1<-Sys.time()
     
     bin.thresh(blast.thresh.input=gsub(".tempBLASTDB.tsv$",".tempBLASTDBALL.tsv",paste0(outDir,selfblastout))
                 ,tops=tops,pidents.list=pidents.list,known_flags = known_flags,final.table.out = paste0(outDir,final.table.out),
-               SpeciesBL = SpeciesBL,GenusBL = GenusBL,FamilyBL = FamilyBL)
+               SpeciesBL = SpeciesBL,GenusBL = GenusBL,FamilyBL = FamilyBL,ncbiTaxDir = ncbiTaxDir)
     
 
 #print incorrects
