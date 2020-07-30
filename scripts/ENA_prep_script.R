@@ -100,7 +100,7 @@ if(!is.null(sample.subsetlist)){
 write.table(data.frame(V1=c("#checklist_accession","#unique_name_prefix"),V2=c("ERC000011","")),
             file = sample_sheet_name,quote = F,row.names = F,sep = "\t",col.names = F)
 write.table(sub_sample_sheet,file = sample_sheet_name,quote = F,row.names = F,sep = "\t",append = T)
-message("warning appending column names to file is ok")
+message("warning about appending column names to file is ok")
 
 ########################################LIBRARY DATA
 #first read mastersheet to get libraries wanted
@@ -170,3 +170,33 @@ write.table(x = sub_library_sheet,file = paste0(outdir,library_sheet_name),quote
 
 #write password file
 write.table(passwd,file = "ENA_password.txt",quote = F,row.names = F,sep = "\t",col.names = F)
+
+message("warning about appending column names to file is ok")
+
+message("Next do:
+
+source /opt/env.sh
+
+Then:
+
+cd ",fileDir,"
+
+Then: 
+
+nohup emg_ena_upload.sh -l ", filelist," -u Webin-XXXX -p ENA_password.txt 2>upload.log 1>&2 & 
+
+change name of log file if you wish
+replace Webin-XXXX with your username
+
+to complete metadata entry, use the output files that were created:","
+",
+paste0(outdir,sample_sheet_name),"
+",
+paste0(outdir,library_sheet_name)," 
+
+and enter them here https://wwwdev.ebi.ac.uk/ena/submit/sra/#home for testing
+or here for real https://www.ebi.ac.uk/ena/submit/sra/
+
+if you havent done so already you will need to create a project first
+read my notes for more
+https://docs.google.com/document/d/1DOHRvA9cjwfrsLDkeZ4SRfIP7GIo9d0dxl5vjTBqfFY/edit#")
