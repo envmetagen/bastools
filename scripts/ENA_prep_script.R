@@ -128,7 +128,7 @@ message("Count libraries after subsetting from library sheet=",length(sub_librar
 ########################################FILE LIST 
 #get filenames and check they exist
 setwd(fileDir)
-files<-c(sub_library_sheet$forward_file_name,sub_library_sheet$reverse_file_name)
+if(minion) files<-sub_library_sheet$forward_file_name else files<-c(sub_library_sheet$forward_file_name,sub_library_sheet$reverse_file_name)
 message(paste(sum(files %in% list.files()), "of", length(files), "files found, of which",
               length(files[duplicated(files)]), "are duplicates", files[duplicated(files)]))
 
@@ -144,12 +144,26 @@ checksum2<-as.data.frame(do.call(rbind,stringr::str_split(checksum$md5," ")))
 checksum2$V2<-NULL
 
 #add md5 to library data
-sub_library_sheet$forward_file_md5<-checksum2$V1[1:length(sub_library_sheet$forward_file_name)]
-sub_library_sheet$reverse_file_md5<-checksum2$V1[length(sub_library_sheet$reverse_file_name)+1:
+if(minion) {sub_library_sheet$forward_file_md5<-checksum2$V1[1:length(sub_library_sheet$forward_file_name)]
+} else {
+  sub_library_sheet$forward_file_md5<-checksum2$V1[1:length(sub_library_sheet$forward_file_name)]
+  sub_library_sheet$reverse_file_md5<-checksum2$V1[length(sub_library_sheet$reverse_file_name)+1:
                                                    length(sub_library_sheet$reverse_file_name)]
+}
 
 #change NAs to empty
 sub_library_sheet[is.na(sub_library_sheet)]<-""
+
+#remove rev filename if minion
+if(minion) {
+  colnames(sub_library_sheet)<-gsub("forward_file_name","file_name",colnames(sub_library_sheet))
+  colnames(sub_library_sheet)<-gsub("forward_file_md5","file_md5",colnames(sub_library_sheet))
+  colnames(sub_library_sheet)<-gsub("forward_file_unencrypted_md5","file_unencrypted_md5",colnames(sub_library_sheet))
+  sub_library_sheet<-sub_library_sheet[,-grep("reverse_.*",colnames(sub_library_sheet))]
+}
+  
+ # sample_alias	instrument_model	library_name	library_source	library_selection	library_strategy	design_description	library_construction_protocol	file_name	file_md5
+
 
 #write library sheet
 write.table(x = sub_library_sheet,file = paste0(outdir,library_sheet_name),quote = F,row.names = F,sep = "\t",col.names = T)

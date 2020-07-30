@@ -478,7 +478,7 @@ add.lineage.df<-function(dframe,ncbiTaxDir,taxCol="taxids",as.taxids=F){
   return(dframe)
 }
 
-get.children.taxonkit<-function(df,column="taxids"){
+get.children.taxonkit<-function(df,column="taxids",ncbiTaxDir){
   df$taxids<-df[,column]
   #if(is.null(df$taxids)) {stop("No column called taxids")}
   df$taxids<-as.integer(as.character(df$taxids)) 
@@ -6405,16 +6405,16 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
 
 bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
                      pidents.list=list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)),
-                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL){
+                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir){
   
   sb2<-data.table::fread(blast.thresh.input,data.table = F)
   
   #need to add back origtaxids so we can do taxa disabling
-  sb2$origtaxids<-sb2[match(substr(sb2$qseqid,1,nchar(sb2x$qseqid)-2),sb2$saccver),"taxids"]
+  sb2$origtaxids<-sb2[match(substr(sb2$qseqid,1,nchar(sb2$qseqid)-2),sb2$saccver),"taxids"]
   
   remove.taxa.from.list<-function(BL,sb2){
     species_bl<-data.table::fread(BL,data.table = F, header = F)
-    exclude<-get.children.taxonkit(df = species_bl,column = "V1")
+    exclude<-get.children.taxonkit(df = species_bl,column = "V1",ncbiTaxDir = ncbiTaxDir)
     sb2<-sb2[!sb2$taxids %in% exclude,]
     sb2<-sb2[!sb2$origtaxids %in% exclude,]
   }

@@ -6,7 +6,7 @@
 #change settings as desired and save this file
 #then, from terminal 
 #"Rscript this_file.R"
-
+  
 #to upload fastq.gz files to ena:
 
 #source /opt/env.sh
@@ -17,7 +17,7 @@
 #replace Webin-XXXX with your username
 
 #to complete metadata entry, use the output files (sample_sheet_name and library_sheet_name) that were created and enter them here:
-#go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
+  #go to https://wwwdev.ebi.ac.uk/ena/submit/sra/#home #FOR TESTING
 #or here for real https://www.ebi.ac.uk/ena/submit/sra/
 
 #if you havent done so already you will need to create a project first
@@ -28,6 +28,8 @@
 
 #CONFIG
 ms_option=1 #choose 1 or 2, see below
+
+minion=F #set to true if you are uploading minion files as single end fastqs  
 
 #full path, including trailing '/'. Must already exist. If using Option 2 below, this folder must contain the 3 tsv files required.
 #Final ENA upload files (sample_sheet_name and library_sheet_name) will also be added here
