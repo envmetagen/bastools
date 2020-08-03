@@ -30,3 +30,4 @@ A bunch of scripts for processing read and primer data
    - A script for preparing files for upload to ENA
    - See [the example config file](examples/preparing_ENA_files2.R) for more info 
 7. primer_script_FULLGB_Feb_2020.R
+   - long script to assess primer bias
