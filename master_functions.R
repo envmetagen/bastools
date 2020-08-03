@@ -3651,9 +3651,11 @@ plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
   plotlist
 }
 
-google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir=NULL,email=NULL,use.lengths=F,subsetList=NULL){
+google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,for.msi=F,tokenDir=NULL,email=NULL,use.lengths=F,subsetList=NULL){
   
-  if(sum(for.MBC,for.post.illscript2)!=1) stop("Only one output type must be TRUE")
+  require(insect)
+  
+  if(sum(for.msi,for.MBC,for.post.illscript2)!=1) stop("Only one output type must be TRUE")
   
   # Download master sheet
   # a<-getwd()
@@ -3722,6 +3724,17 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,tokenDir=NULL,emai
     
     master[is.na(master)]=""
     
+  }
+  
+  if(for.msi){
+    headers.msi<-c("barcode_name","ss_sample_id","primer_set","Primer_F","Primer_R","min_length","max_length","target_gene")
+    master<-master[,headers.msi]
+    master$sample_id<-master$ss_sample_id
+    colnames(master)<-gsub("Primer_F","primer_f",colnames(master))
+    colnames(master)<-gsub("Primer_R","primer_r",colnames(master))
+    master<-master[,c("barcode_name","sample_id", "ss_sample_id","primer_set","primer_f","primer_r","min_length","max_length","target_gene")]
+    message("Switching primer_r to reverse complement")
+    master$primer_r<-insect::rc(z=master$primer_r)
   }
   
   if(for.post.illscript2==T){
@@ -6185,6 +6198,12 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
   
   if(TaxlevelTest!="F" & TaxlevelTest!="G") stop("TaxlevelTest must be F or G")
   
+  quiet <- function(x) { 
+    sink(tempfile()) 
+    on.exit(sink()) 
+    invisible(force(x)) 
+  } 
+  
   colnames(df)<-gsub(qseqidcol,"qseqid",colnames(df))
   colnames(df)<-gsub(qseqcol,"seq.text",colnames(df))
   colnames(df)<-gsub(taxidcol,"taxids",colnames(df))
@@ -6222,14 +6241,25 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
   #make blastdb using metabinkit
   system2("metabinkit_blastgendb",c("-f","temp.db.fasta","-o", "temp.db","-c"),wait = T)
   a<-Sys.time()
+  
+  dblength<-nrow(db)
+  
+  check.integer <- function(N){
+    !grepl("[^[:digit:]]", format(N,  digits = 20, scientific = FALSE))
+  }
+  
+  loopcheck<-round(dblength/10,digits = 0)
+  
   for(i in 1:length(unique(df$qseqid))){
     
-    #message("loop ",i)
+    if(check.integer(i/loopcheck)) message("loop ",i, " of ", dblength)
+    
+    if(i == dblength) message("final loop")
     
     #make query fasta
     b<-df[df$qseqid==unique(df$qseqid)[i],]
     b<-b[1,]
-    phylotools::dat2fasta(b[,c("seq.name","seq.text")],"temp.seq.fasta")
+    quiet(phylotools::dat2fasta(b[,c("seq.name","seq.text")],"temp.seq.fasta"))
     
     #get seqids of query group
     ex.seqids<-unique(df[df[,ex.seqid.group]==b[,ex.seqid.group],"qseqid"])  
@@ -6246,11 +6276,11 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
                    "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", 
                    #  "-negative_seqidlist", "ex.seqids.out.txt", 
                    "-out",
-                   "temp.seq.blast.txt"), wait = T)
+                   "temp.seq.blast.txt"), wait = T,stderr = NULL)
     #could exclude evalue and qcovs, might save a bit of time
     
     #store blast results
-    lblast<-system2("wc",c("-l","temp.seq.blast.txt"),wait=T)
+    lblast<-system2("wc",c("-l","temp.seq.blast.txt"),wait=T,stderr = T,stdout = T)
     
     #if(lblast>0) {
     blastResults<-data.table::fread("temp.seq.blast.txt",sep = "\t",data.table = F)
@@ -6565,5 +6595,11 @@ bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
   print(incorrectsdf)
   
   write.table(final.table,final.table.out,quote = F,sep = "\t",row.names = F)
+}
+
+bas.dat2fasta<-function(dat, outfile = "out.fasta") {
+  writeLines(paste(">", as.character(dat$seq.name), "\n", as.character(dat$seq.text), 
+                   sep = ""), outfile)
+  #cat(paste(outfile, "has been saved to ", getwd(), "\n"))
 }
 
