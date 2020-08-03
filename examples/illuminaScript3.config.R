@@ -19,7 +19,7 @@
 ###################
 #SETTINGS
 #change settings below as necessary (this directory works on emg1 and emg2)
-bastoolsDir<-"/home/bastian.egeter/git-bastools/bastools/" #change to your bastools directory, must have trailing "/"
+bastoolsDir<-"/home/bastian.egeter/git_bastools/bastools/" #change to your bastools directory, must have trailing "/"
 #full path to outDir (containing input fasta and otutabs)
 outDir<-"/mnt/Disk1/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/test/" # must have trailing "/"
 #full path to ncbi taxonomy directory
