@@ -19,14 +19,14 @@ A bunch of scripts for processing read and primer data
    - See [the example config file](examples/illuminaScript3.config.R) for more info 
 2. TAXATABLE_REPORT.Rmd
    - A detailed html report which takes a taxa table and master sheet as input. Options include heatmaps, removing specific taxa, various filters, a function for reporting and removing contaminations from relevant batches/sites, PCoA plots, grouping taxa by taxonomic levels & mergeing taxatables. 
-2. barcode_gap_report.Rmd
+3. barcode_gap_report.Rmd
    - A subset of illumina_post_MBC_script3.R, used for checking database taxonomic errors, plotting barcode gap reports, testing multiple binning thresholds by self-blasting and loop-blasting the inputs. Produces html.
    - See [the example config file](examples/barcode_gap_report.Rmd) for more info 
-3. inspecting.thresher_blast.output.R
+4. inspecting.thresher_blast.output.R
    - A small script for re-running a small portion of above script
-4. bas.minion.pipeline2.R
+5. bas.minion.pipeline2.R
    - A script for processing minion data, largely defunkt since development of [msi](https://github.com/nunofonseca/msi) 
-5. ENA_prep_script.R    
+6. ENA_prep_script.R    
    - A script for preparing files for upload to ENA
    - See [the example config file](examples/preparing_ENA_files2.R) for more info 
-5. primer_script_FULLGB_Feb_2020.R
+7. primer_script_FULLGB_Feb_2020.R
