@@ -3676,7 +3676,9 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,for.msi=F,tokenDir
   #subset
   if(!is.null(subsetList)){
     message("subsetting mastersheet")
+    message("libraries before subsetting: ", nrow(master))
     master<-subset_mastersheet(master_sheet = master,subsetList)
+    message("libraries after subsetting: ", nrow(master))
     message("checking subset, including sample type by default")
     #check
     print(master_xtabs(master,c("sample_type",names(subsetList))))

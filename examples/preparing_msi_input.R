@@ -11,3 +11,5 @@ source("/home/bastian.egeter/git_bastools/bastools/master_functions.R")
 a<-google.overlord(url,for.post.illscript2 = F,for.msi = T,subsetList = subsetList)
 
 write.table(a,METADATAFILE,quote = F,sep = "\t",row.names = F)
+
+message("metadatafile written to ", METADATAFILE)
