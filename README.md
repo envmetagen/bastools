@@ -9,9 +9,9 @@ A bunch of scripts for processing read and primer data
 
 ## Other dependencies (not part of install file)
 1. [krona tools](https://github.com/marbl/Krona/wiki)
-2. [metabinkit] (https://github.com/envmetagen/metabinkit)
-3. [taxonkit] (https://bioinf.shenwei.me/taxonkit/usage/) #installed by metabinkit
-4. [blastn] (https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download)
+2. [metabinkit](https://github.com/envmetagen/metabinkit)
+3. [taxonkit](https://bioinf.shenwei.me/taxonkit/usage/) #installed by metabinkit
+4. [blastn](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download)
 
 ## Bigger scripts
 1. illumina_post_MBC_script3.R
