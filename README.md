@@ -19,6 +19,7 @@ A bunch of scripts for processing read and primer data
    - See [the example config file](examples/illuminaScript3.config.R) for more info 
 2. TAXATABLE_REPORT.Rmd
    - A detailed html report which takes a taxa table and master sheet as input. Options include heatmaps, removing specific taxa, various filters, a function for reporting and removing contaminations from relevant batches/sites, PCoA plots, grouping taxa by taxonomic levels & mergeing taxatables. 
+   - See [the example config file](examples/taxatable.report.config.R) for more info 
 3. barcode_gap_report.Rmd
    - A subset of illumina_post_MBC_script3.R, used for checking database taxonomic errors, plotting barcode gap reports, testing multiple binning thresholds by self-blasting and loop-blasting the inputs. Produces html.
    - See [the example config file](examples/barcode_gap_report.Rmd) for more info 
