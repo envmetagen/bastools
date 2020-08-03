@@ -2,7 +2,7 @@
 A bunch of scripts for processing read and primer data
 
 ## Main layout
-1. all the main functions are stored in master_functions.R This contains almost 200 functions for manipulating, plotting and processing metabarcoding data
+1. all the main functions are stored in master_functions.R This contains almost 200 functions for manipulating, plotting and processing metabarcoding data, downloading data, building blast databases, blasting, testing primers etc.
 2. bigger scripts are in bastools/scripts
 3. example config files for bigger scripts are in bastools/examples
 4. a (rough) install file is located at /bastools/install/install.rlibs.and.robitools.R
