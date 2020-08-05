@@ -3735,8 +3735,8 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,for.msi=F,tokenDir
     colnames(master)<-gsub("Primer_F","primer_f",colnames(master))
     colnames(master)<-gsub("Primer_R","primer_r",colnames(master))
     master<-master[,c("barcode_name","sample_id", "ss_sample_id","primer_set","primer_f","primer_r","min_length","max_length","target_gene")]
-    message("Switching primer_r to reverse complement")
-    master$primer_r<-insect::rc(z=master$primer_r)
+    # message("Switching primer_r to reverse complement")
+    # master$primer_r<-insect::rc(z=master$primer_r)
   }
   
   if(for.post.illscript2==T){
