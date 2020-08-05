@@ -32,7 +32,7 @@ refdb = "/mnt/Disk1/Tools/BLAST+/DBs/nt_v5/nt"
 KronaPath="/home/bastian.egeter/Tools/Krona.install/bin/ktImportText" #(or your path to krona/bin/ktImportText)
 #Options for blasting. I recommend keeping the qcov_hsp_perc, gapopen, gapextend, reward, penalty as they are (forces full length alignments)
 opts=c("-task","megablast","-outfmt", "6 qseqid pident qcovs saccver staxid ssciname sseq","-num_threads", 64,
-       "-max_target_seqs", 50, "-max_hsps",1,"-word_size", 20, "-perc_identity", 70,
+       "-max_target_seqs", 100, "-max_hsps",1,"-word_size", 20, "-perc_identity", 70,
        "-qcov_hsp_perc", 98, "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1,"-dust","no")
 
 #starting fastas
