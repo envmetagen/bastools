@@ -1,7 +1,7 @@
-TL_DIR="path/to/fastq/files"         # path to the toplevel folder containing the fastq files to be processed
-OUT_FOLDER="results"                 # path to the folder where the files produced by MSI will be stored
+TL_DIR="/media/LongTermStorage/Minion_data/2020_July_NM/Run28V0"         # path to the toplevel folder containing the fastq files to be processed
+OUT_FOLDER="/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/MINION/2020_July_NM"                 # path to the folder where the files produced by MSI will be stored
 THREADS=5                            # maximum number of threads
-METADATAFILE="samplesheet.tsv"       # metadata about each fastq file
+METADATAFILE="/mnt/Disk1/BASTIAN_POST_MBC_MISEQS/MINION/2020_July_NM/master_sheet.txt"       # metadata about each fastq file
 SKIP_BLAST="N"                       # Stop MSI before blast? Yes/No
 TAXONOMY_DATA_DIR="$MSI_DIR/db"      # path to the taxonomy database 
 CLUSTER_MIN_READS=1                  # minimum number of reads per cluster
@@ -22,17 +22,17 @@ CLUST_ALIGNED_THRESHOLD=0.40
 
 
 ### binning options (passed to metabinkit, check metabinkit manual for details)
-#mbk_Species=
-#mbk_Genus=
-#mbk_Family=
-#mabk_AboveF=
-#mbk_TopSpecies=
-#mbk_TopGenus=
-#mbk_TopFamily=
-#mbk_TopAF=
-#mbk_sp_discard_sp=              
-#mbk_sp_discard_mt2w=
-#mbk_sp_discard_num=
+mbk_Species=99
+mbk_Genus=97
+mbk_Family=93
+mabk_AboveF=80
+mbk_TopSpecies=0
+mbk_TopGenus=0
+mbk_TopFamily=0
+mbk_TopAF=0
+mbk_sp_discard_sp=T              
+mbk_sp_discard_mt2w=T
+mbk_sp_discard_num=T
 #mbk_minimal_cols=
 #mbk_no_mbk=
 #mbk_FilterFile=
@@ -43,16 +43,16 @@ CLUST_ALIGNED_THRESHOLD=0.40
 #mbk_SpeciesNegFilter=
 
 ### blast options (passed to blast, check blast manual for details)
-blast_refdb="local_db"            # path to a blast database
-#blast_max_hsps= 
-#blast_word_size=
-#blast_perc_identity=
-#blast_qcov_hsp_perc= 
-#blast_gapopen= 
-#blast_gapextend=
-#blast_reward=
+blast_refdb="/mnt/Disk1/Tools/BLAST+/DBs/nt_v5/nt"            # path to a blast database
+blast_max_hsps=1 
+blast_word_size=20
+blast_perc_identity=70
+blast_qcov_hsp_perc=98 
+blast_gapopen=0 
+blast_gapextend=2
+blast_reward=1
 #blast_evalue=
-#blast_penalty=
-#blast_max_target_seqs=
+blast_penalty=-1
+blast_max_target_seqs=100
 #blast_taxids_blacklist_files=
 #blast_taxids_poslist_files=
