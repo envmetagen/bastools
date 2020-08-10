@@ -27,15 +27,16 @@ steps<-c("selfblast", "find_db_errors", "calc_bar_gap","thresher") #options: "se
 threshersteps<-c("threshblast","threshbin","threshplots") #"threshblast","threshbin","threshplots"
 
 plot.limit.taxon<-c(";Mammalia;") # this is a grep, can be NULL #(step3) #can be multiple #suggest including ;xxx;
-known_flags<-"/media/sf_Documents/WORK/CIBIO/temp/known_flags_downloaded_22-7-20.txt" #"/home/tutorial/SCRIPTS/PB_tests/known_flags.txt" #full path, can be NULL
+known_flags<-NULL #"/media/sf_Documents/WORK/CIBIO/temp/known_flags_downloaded_22-7-20.txt" #"/home/tutorial/SCRIPTS/PB_tests/known_flags.txt" #full path, can be NULL
 
 TaxlevelTestall<-c("K","P","C","O","F") # not required for step3
 
 divergence<-rep(5,length(TaxlevelTestall)) # not required for step3
 use_flagged_accessions_bcg=F
-use_flagged_accessions_mbk=T
+use_flagged_accessions_mbk=F #T (applies to both final binning and mbk portion of barcode gap report)
 
 #if not NULL these will be used for bcg plots and will be removed prior to bin threshing (but sb file will not be altered)
+#(applies to both final binning barcode gap report)
 SpeciesBL = "/home/tutorial/temp/disabled.sp.iran.txt"
 GenusBL = "/home/tutorial/temp/disabled.g.iran.txt"
 FamilyBL = "/home/tutorial/temp/disabled.f.iran.txt"
@@ -46,7 +47,6 @@ FamilyBL = "/home/tutorial/temp/disabled.f.iran.txt"
 #thresher
 plot.at.level<-"F" #for thresher
 limit.plot.to.taxon<-c("Mammalia","C") #for thresher, the taxon name and level can be NULL
-counts.out<-"16S_PBthresh_counts.tsv"#for thresher
 final.table.out<-"16S_PBthresh_final.table.tsv" #for thresher
 
 #binning settings to loop through

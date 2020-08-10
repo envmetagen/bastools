@@ -116,7 +116,9 @@ if("selfblast" %in% steps) {
     message("Defaulting to divergence of 5 for all levels")
   }
   
-  perc_identity<-98-max(divergence)-5 #adding the minus 5 just to catch a few more hits, 98 because this is what I use later to say there were "high" hits
+  #perc_identity<-98-max(divergence)-5 #adding the minus 5 just to catch a few more hits, 98 because this is what I use later to say there were "high" hits
+  perc_identity<-70
+  #changing to blanket 70, to match that used by threshold.bin.blast2
   
   message("word_size set to 20. This was tested for a fragment of c. 105bp and did not result in many fewer hits than word_size of 11 (word_size 28 did), but if testing a shorter fragment consider revising")
   
@@ -850,8 +852,8 @@ sb2<-rbind(sb.splS,sb.tbbG,sb.tbbF)
 
 write.table(sb2,gsub(".tempBLASTDB.tsv$",".tempBLASTDBALL.tsv",paste0(outDir,selfblastout)),quote = F,row.names = F,sep = "\t")
 
-file.remove("tempBLASTDB.F.tsv")
-file.remove("tempBLASTDB.G.tsv")
+if(file.exists("tempBLASTDB.F.tsv")) file.remove("tempBLASTDB.F.tsv")
+if(file.exists("tempBLASTDB.G.tsv")) file.remove("tempBLASTDB.G.tsv")
 file.remove(list.files(pattern="temp.db.*"))
 file.remove(list.files(pattern="temp.seq.*"))
 file.remove("ex.seqids.txt")
@@ -880,46 +882,11 @@ t1<-Sys.time()
     bin.thresh(blast.thresh.input=gsub(".tempBLASTDB.tsv$",".tempBLASTDBALL.tsv",paste0(outDir,selfblastout))
                 ,tops=tops,pidents.list=pidents.list,known_flags = known_flags,final.table.out = paste0(outDir,final.table.out),
                SpeciesBL = SpeciesBL,GenusBL = GenusBL,FamilyBL = FamilyBL,ncbiTaxDir = ncbiTaxDir)
-    
-
-#print incorrects
-# incorrects<-list()
-# incorrects2<-list()
-# require(tidyverse)
-# for(i in 1:length(unique(final.table$level))){
-#   levelincor<-unique(final.table$level)[i]
-#   finalincor<-final.table[final.table$level==levelincor,]
-#   #remove failed
-#   finalincor<-finalincor[!is.na(finalincor$correctS),]
-#   
-#   for(j in 1:length(unique(finalincor$settings))){
-#     finalsets<-unique(finalincor$settings)[j]
-#     finalincorset<-finalincor[(finalincor$settings==finalsets & finalincor[,paste0("incorrect",levelincor)]==TRUE),]
-#     if(nrow(finalincorset)>0) incorrects[[j]]<-finalincorset[,c(paste0("origpath",levelincor),paste0("binpath",levelincor),"qseqid")]
-#     incorrects<-incorrects %>% discard(is.null)
-#   }
-#   
-#   if(length(incorrects)>0) {
-#     incorrects2[[i]]<-do.call(rbind,incorrects)
-#     colnames(incorrects2[[i]])<-c("origpath","binpath","qseqid")
-#   } else incorrects2[[i]]<-NULL
-#   
-# }
-# 
-# incorrects2<-incorrects2 %>% discard(is.null)
-# incorrectsdf<-do.call(rbind,incorrects2)
-# incorrectsdf<-incorrectsdf[!duplicated(incorrectsdf$qseqid),]
-#message("Results incorrectly binned:")
-#print(incorrectsdf)
-
-#too long for rmd often, save to file? maybe enough to have final table 
-
-
-  } #threshbin fin
+  } 
   
 if("threshplots" %in% threshersteps) {
   
-  plot.thresh(paste0(outDir,final.table.out),limit.plot.to.taxon = limit.plot.to.taxon,plot.at.level = plot.at.level)
+  plot.thresh(thresher.final.table = paste0(outDir,final.table.out),limit.plot.to.taxon = limit.plot.to.taxon,plot.at.level = plot.at.level)
 
   t2<-Sys.time()
   
