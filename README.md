@@ -22,7 +22,7 @@ A bunch of scripts for processing read and primer data
    - See [the example config file](examples/taxatable.report.config.R) for more info 
 3. barcode_gap_report.Rmd
    - A subset of illumina_post_MBC_script3.R, used for checking database taxonomic errors, plotting barcode gap reports, testing multiple binning thresholds by self-blasting and loop-blasting the inputs. Produces html.
-   - See [the example config file](examples/barcode_gap_report.Rmd) for more info 
+   - See [the example config file](examples/barcode_gap_report_config.R) for more info
 4. inspecting.thresher_blast.output.R
    - A small script for re-running a small portion of above script
 5. bas.minion.pipeline2.R
