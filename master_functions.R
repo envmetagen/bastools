@@ -6672,41 +6672,43 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   print(incorrectsdf)
   
   #add no hits
-  sb2.no.hits$binpath<-NA
-  sb2.no.hits$settings<-NA
-  sb2.no.hits$level<-substr(sb2.no.hits$qseqid,nchar(sb2.no.hits$qseqid),nchar(sb2.no.hits$qseqid))
-  sb2.no.hits$binpathS<-NA
-  sb2.no.hits$binpathG<-NA
-  sb2.no.hits$binpathF<-NA
-  sb2.no.hits$"origpathS"<-sb2.no.hits$origpath
-  sb2.no.hits$"origpathG"<-path.at.level(sb2.no.hits$origpath,level = "G")
-  sb2.no.hits$"origpathF"<-path.at.level(sb2.no.hits$origpath,level = "F")
-  sb2.no.hits$failedS<-NA
-  sb2.no.hits$failedG<-NA
-  sb2.no.hits$failedF<-NA
-  sb2.no.hits$incorrectS<-NA
-  sb2.no.hits$incorrectG<-NA
-  sb2.no.hits$incorrectF<-NA
-  sb2.no.hits$correctS<-NA
-  sb2.no.hits$correctG<-NA
-  sb2.no.hits$correctF<-NA
-  sb2.no.hits$aboveS<-NA
-  sb2.no.hits$aboveG<-NA
-  sb2.no.hits$aboveF<-NA
-  
-  sb2.no.hits<-sb2.no.hits[,c("qseqid","origpath","binpath","settings", "level","binpathS","binpathG","binpathF", "origpathS","origpathG",
-                              "origpathF", "correctS", "correctG","correctF", "aboveS", "aboveG", "aboveF","incorrectS",
-                              "incorrectG", "incorrectF", "failedS","failedG","failedF" )]
-  
-  #need to replicate no hits for each settings
-  no.hits.list<-list()
-  for(i in 1:length(unique(final.table$settings))){
-    no.hits.list[[i]]<-sb2.no.hits  
-    no.hits.list[[i]]$settings<-unique(final.table$settings)[i]
+  if(nrow(sb2.no.hits)>0){
+    sb2.no.hits$binpath<-NA
+    sb2.no.hits$settings<-NA
+    sb2.no.hits$level<-substr(sb2.no.hits$qseqid,nchar(sb2.no.hits$qseqid),nchar(sb2.no.hits$qseqid))
+    sb2.no.hits$binpathS<-NA
+    sb2.no.hits$binpathG<-NA
+    sb2.no.hits$binpathF<-NA
+    sb2.no.hits$"origpathS"<-sb2.no.hits$origpath
+    sb2.no.hits$"origpathG"<-path.at.level(sb2.no.hits$origpath,level = "G")
+    sb2.no.hits$"origpathF"<-path.at.level(sb2.no.hits$origpath,level = "F")
+    sb2.no.hits$failedS<-NA
+    sb2.no.hits$failedG<-NA
+    sb2.no.hits$failedF<-NA
+    sb2.no.hits$incorrectS<-NA
+    sb2.no.hits$incorrectG<-NA
+    sb2.no.hits$incorrectF<-NA
+    sb2.no.hits$correctS<-NA
+    sb2.no.hits$correctG<-NA
+    sb2.no.hits$correctF<-NA
+    sb2.no.hits$aboveS<-NA
+    sb2.no.hits$aboveG<-NA
+    sb2.no.hits$aboveF<-NA
+    
+    sb2.no.hits<-sb2.no.hits[,c("qseqid","origpath","binpath","settings", "level","binpathS","binpathG","binpathF", "origpathS","origpathG",
+                                "origpathF", "correctS", "correctG","correctF", "aboveS", "aboveG", "aboveF","incorrectS",
+                                "incorrectG", "incorrectF", "failedS","failedG","failedF" )]
+    
+    #need to replicate no hits for each settings
+    no.hits.list<-list()
+    for(i in 1:length(unique(final.table$settings))){
+      no.hits.list[[i]]<-sb2.no.hits  
+      no.hits.list[[i]]$settings<-unique(final.table$settings)[i]
+    }
+    
+    sb2.no.hits.repped<-do.call(rbind,no.hits.list)
   }
-  
-  sb2.no.hits.repped<-do.call(rbind,no.hits.list)
-  
+    
   #add disabled taxa -not doing
   #add no hits
   if(!is.null(all.disabled)){
@@ -6749,8 +6751,8 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
     
     all.disabled.repped$no.hits<-F
   }
-    
-  final.table<-rbind(final.table,sb2.no.hits.repped)
+  
+  if(exists("sb2.no.hits.repped"))final.table<-rbind(final.table,sb2.no.hits.repped)
   
   final.table$no.hits<-is.na(final.table$binpath)
   

@@ -515,6 +515,7 @@ if("calc_bar_gap" %in% steps) {
     
   remove.taxa.from.list<-function(BL,sbo,ncbiTaxDir = ncbiTaxDir){
     species_bl<-data.table::fread(BL,data.table = F, header = F)
+    species_bl<-species_bl[!is.na(species_bl$V1),,drop=F]
     exclude<-get.children.taxonkit(df = species_bl,column = "V1",ncbiTaxDir = ncbiTaxDir)
     sbo<-sbo[!sbo$hittaxid %in% exclude,]
     sbo<-sbo[!sbo$origtaxid %in% exclude,]
@@ -527,7 +528,7 @@ if("calc_bar_gap" %in% steps) {
   
   if(!is.null(GenusBL)) {
     message("Disabling genera")
-    sbo<-remove.taxa.from.list(GenusBL,sbo,ncbiTaxDir = ncbiTaxDir)
+    sbo<-remove.taxa.from.list(BL = GenusBL,sbo = sbo,ncbiTaxDir = ncbiTaxDir)
   }
   
   if(!is.null(FamilyBL)) {
