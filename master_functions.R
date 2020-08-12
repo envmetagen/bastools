@@ -6503,35 +6503,35 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   
   if(!is.null(FamilyBL)) {
     message("Disabling families")
-    message(nrow(sb2))
+    #message(nrow(sb2))
     sb2.dis<-remove.taxa.from.list(BL = FamilyBL,sbdf = sb2)
     sb2<-sb2.dis[[1]]
     sb.dis.F<-sb2.dis[[2]]
-    message(nrow(sb2))
-    message(nrow(sb.dis.F))
-    message(sum(nrow(sb2)+nrow(sb.dis.F)))
+    #message(nrow(sb2))
+    #message(nrow(sb.dis.F))
+    #message(sum(nrow(sb2)+nrow(sb.dis.F)))
   }   else (sb.dis.F<-NULL)
   
   if(!is.null(GenusBL)) {
     message("Disabling genera")
-    message(nrow(sb2))
+    #message(nrow(sb2))
     sb2.dis<-remove.taxa.from.list(BL = GenusBL,sbdf = sb2)
     sb2<-sb2.dis[[1]]
     sb.dis.G<-sb2.dis[[2]]
-    message(nrow(sb2))
-    message(nrow(sb.dis.G))
-    message(sum(nrow(sb2)+nrow(sb.dis.G)))
+    #message(nrow(sb2))
+    #message(nrow(sb.dis.G))
+    #message(sum(nrow(sb2)+nrow(sb.dis.G)))
   } else (sb.dis.G<-NULL)
   
   if(!is.null(SpeciesBL)) {
     message("Disabling species")
-    message(nrow(sb2))
+    #message(nrow(sb2))
     sb2.dis<-remove.taxa.from.list(BL = SpeciesBL,sbdf = sb2)
     sb2<-sb2.dis[[1]]
     sb.dis.S<-sb2.dis[[2]]
-    message(nrow(sb2))
-    message(nrow(sb.dis.S))
-    message(sum(nrow(sb2)+nrow(sb.dis.S)))
+    #message(nrow(sb2))
+    #message(nrow(sb.dis.S))
+    #message(sum(nrow(sb2)+nrow(sb.dis.S)))
   } else (sb.dis.S<-NULL)
   
   
