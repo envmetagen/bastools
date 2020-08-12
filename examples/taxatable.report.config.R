@@ -30,7 +30,7 @@ subsetlist<-list(Replicate_Name="A")
 config="/home/tutorial/TOOLS/bastools/examples/taxatable.report.config.R"
 
 #where do you want to save output? full path to target out html
-out_html<-"/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/REPTILE/REPTILE_RUN/test.html"
+out_html<-"/media/sf_Documents/WORK/G-DRIVE/G-WORK/SHARED_FOLDERS/REPTILE/RESULTS_AUG2020/test.html"
 
 #full path to output the final taxatab, put to NULL if not desired
 taxatab.out<-NULL
@@ -95,7 +95,7 @@ taxa.to.group<-NULL
 plotting.vars<-c("biomaterial","predator_species") #these will be the x-axes, for each plotting.var a different plot is made
 #the taxonomic levels to use for plotting. Set to NULL to use the taxatable as is (which will be printed regardless)
 #for each plotting_level a different plot is made
-plotting_levels<-c("species","genus","family")
+plotting_levels<-c("species","genus","family") #applied only to barplots and pca plots, not heatmaps
 #hide legend (for barplots, to avoid cowplot errors set to FALSE)
 hidelegend=T
 #hide legend for pca plots
