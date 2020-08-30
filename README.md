@@ -1,5 +1,8 @@
 # bastools
-A bunch of scripts for processing read and primer data
+A bunch of scripts for processing read and primer data.
+To install do
+`git clone https://github.com/envmetagen/bastools`
+this will create the directory "bastools" in the current directory
 
 ## Main layout
 1. all the main functions are stored in master_functions.R This contains almost 200 functions for manipulating, plotting and processing metabarcoding data, downloading data, building blast databases, blasting, testing primers etc.
