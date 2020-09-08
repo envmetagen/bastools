@@ -542,8 +542,10 @@ if("calc_bar_gap" %in% steps) {
       message("Removing newly flagged accessions")
     
       flagged<-data.table::fread(paste0(outDir,flagged_accessions),data.table = F,header = F)
-      sbo<-sbo[!sbo$origseqid %in% flagged$V1,]
-      sbo<-sbo[!sbo$hitseqid %in% flagged$V1,]
+      if(nrow(flagged)>0) {
+        sbo<-sbo[!sbo$origseqid %in% flagged$V1,]
+        sbo<-sbo[!sbo$hitseqid %in% flagged$V1,]
+      } else message("No newly flagged accessions")
     } else message("Not removing newly flagged accessions")
       
     #remove known flags
@@ -693,23 +695,25 @@ if("calc_bar_gap" %in% steps) {
   } #end h-loop
   
   #gather all potential errors and save in file
-  potential.errors.out<- do.call(rbind,potential.errors.out)
-  potential.errors.out<-potential.errors.out[,c("origseqid","hitseqid", "pident" ,"origpath","hitpath","level","origseq","hitseq")]
-  
-  #remove multiple entries at different taxonomic levels
-  ##Assumes heirarchy is followed top down
-  potential.errors.out.list<-list()
-  for(i in 1:length(unique(potential.errors.out$origseqid))){
-    current<-unique(potential.errors.out$origseqid)[i]
-    potential.errors.out.temp<-potential.errors.out[potential.errors.out$origseqid==current,]
-    if(length(unique(potential.errors.out.temp$level))>1) {
-      potential.errors.out.list[[i]]<-potential.errors.out.temp[potential.errors.out.temp$level==unique(potential.errors.out.temp$level)[1],]
-    } else potential.errors.out.list[[i]]<-potential.errors.out.temp
+  if(length(potential.errors.out)>0){
+    potential.errors.out<- do.call(rbind,potential.errors.out)
+    potential.errors.out<-potential.errors.out[,c("origseqid","hitseqid", "pident" ,"origpath","hitpath","level","origseq","hitseq")]
+    
+    #remove multiple entries at different taxonomic levels
+    ##Assumes heirarchy is followed top down
+    potential.errors.out.list<-list()
+    for(i in 1:length(unique(potential.errors.out$origseqid))){
+      current<-unique(potential.errors.out$origseqid)[i]
+      potential.errors.out.temp<-potential.errors.out[potential.errors.out$origseqid==current,]
+      if(length(unique(potential.errors.out.temp$level))>1) {
+        potential.errors.out.list[[i]]<-potential.errors.out.temp[potential.errors.out.temp$level==unique(potential.errors.out.temp$level)[1],]
+      } else potential.errors.out.list[[i]]<-potential.errors.out.temp
+    }
+    
+    potential.errors.out<-do.call(rbind,potential.errors.out.list)
+    
+    write.table(potential.errors.out,paste0(outDir,further_potential_errors),row.names=F,quote=F,sep="\t")
   }
-  
-  potential.errors.out<-do.call(rbind,potential.errors.out.list)
-  
-  write.table(potential.errors.out,paste0(outDir,further_potential_errors),row.names=F,quote=F,sep="\t")
   
   #plots
   for(h in 1:length(hierarchy)){
