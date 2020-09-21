@@ -747,7 +747,7 @@ if("calc_bar_gap" %in% steps) {
 #### incorrect (the bin taxon was at the correct taxonomic level but was assigned to a different taxon that the original tacon path)
 #### failed (did not pass binning thresholds / lowest common ancestor was above kingdom)
 ### The plots can be limited to specific taxa of interest and can be summarised at any desired taxonomic level 
-```{r thresherblast, eval=TRUE,echo=F,fig.height=12,fig.width=10,results='hide'}
+```{r thresherblast, eval=TRUE,echo=F,fig.height=24,fig.width=10,results='hide'}
  #STEP4 thresher
 if("thresher" %in% steps) {
   t1<-Sys.time()

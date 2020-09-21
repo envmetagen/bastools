@@ -229,7 +229,7 @@ if("step11" %in% stepstotake){
 
 if("step12" %in% stepstotake){  
   
-  message("STEP12 - splice tables and produce OTU.per.bin file")
+  message("STEP12 - splice tables and produce OTU.per.bin and OTU.per.sample files")
   #message("CHANGE SCRIPT TO ONLY TAKE RELEVANT FILES")
   
   files<-gsub(".fasta$",".taxatable.tf.txt",startingfastas)
@@ -257,10 +257,20 @@ if("step12" %in% stepstotake){
     
     bins2<-bins[bins$OTU_name %in% otutab$OTU_name,]
     
+    #make n.otu table
+    otutab_binary<-otutab
+    otutab_binary[,-1][otutab_binary[,-1]>0]<-1
+    otumap<-merge(otutab_binary,bins2[,c("path","OTU_name")],by = "OTU_name")
+    otumap<-otumap[,-1]
+    otumap<-aggregate(otumap[,-ncol(otumap)],by = list(otumap$path),FUN = sum)
+    colnames(otumap)<-gsub("Group.1","taxon",colnames(otumap))
+    write.table(otumap,gsub(".taxatable.tf.spliced.txt",".otus.per.sample.tsv",files[i]),sep="\t",row.names=F,quote = F)
+    
     otus.per.bin<-as.data.frame(table(bins2$path))
     colnames(otus.per.bin)<-c("path","nOTUs")
     write.table(otus.per.bin,gsub(".taxatable.tf.spliced.txt",".otus.per.bin.tsv",files[i]),sep="\t",row.names=F,quote = F)
   }
+  
   
   message("STEP12 complete")
   

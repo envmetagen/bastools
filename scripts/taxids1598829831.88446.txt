@@ -1,0 +1,4 @@
+1	1	root	no rank
+2	2	cellular organisms;Bacteria	superkingdom
+3	0		
+4	0		
