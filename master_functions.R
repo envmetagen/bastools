@@ -398,15 +398,13 @@ adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratu
   taxatab2<-binarise.taxatab(taxatab)
   distance_matrix<-taxatab2bray(taxatab2)
   
-  if(samLevel=="ss_sample_id") {
-    if(!"ss_sample_id" %in% colnames(master_sheet)) stop("No column called ss_sample_id")
-    master_sheet2<-master_sheet[master_sheet$ss_sample_id  %in% colnames(taxatab),]
-  }
+  if(!samLevel %in% colnames(master_sheet)) stop("No column called ",samLevel)
   
-  if(samLevel=="Sample_Name") {
-    if(!"Sample_Name" %in% colnames(master_sheet)) stop("No column called ss_sample_id")
-    master_sheet2<-master_sheet[master_sheet$Sample_Name  %in% colnames(taxatab),]
-    master_sheet2<-master_sheet2[!duplicated(master_sheet2$Sample_Name),]
+  if(samLevel=="ss_sample_id") master_sheet2<-master_sheet[master_sheet$ss_sample_id  %in% colnames(taxatab),]
+  
+  if(samLevel!="ss_sample_id") {
+    master_sheet2<-master_sheet[master_sheet[,samLevel] %in% colnames(taxatab),,drop=F]
+    master_sheet2<-master_sheet2[!duplicated(master_sheet2[,samLevel]),,drop=F]
   }
   
   
@@ -3691,6 +3689,16 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,for.msi=F,tokenDir
              
              "Primer_set","experiment_id") #only required by illumina script
   
+  #remove "I" from primers
+  if(length(grep("I",master$Primer_F))>0) {
+    message("Replacing 'I' with 'N' for Primer_F")
+    master$Primer_F<-gsub("I","N",master$Primer_F)
+  }
+  if(length(grep("I",master$Primer_R))>0) {
+    message("Replacing 'I' with 'N' for Primer_R")
+    master$Primer_R<-gsub("I","N",master$Primer_R)
+  }
+
   #format for MBC option
   if(for.MBC==T){
     headers<-headers[1:(length(headers)-2)]
@@ -6711,7 +6719,7 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
     
   #add disabled taxa -not doing
   #add no hits
-  if(!is.null(all.disabled)){
+  if(!is.null(all.disabled) & nrow(all.disabled)>0){
     all.disabled$binpath<-NA
     all.disabled$settings<-NA
     all.disabled$level<-substr(all.disabled$qseqid,nchar(all.disabled$qseqid),nchar(all.disabled$qseqid))
@@ -6752,11 +6760,11 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
     all.disabled.repped$no.hits<-F
   }
   
-  if(exists("sb2.no.hits.repped"))final.table<-rbind(final.table,sb2.no.hits.repped)
+  if(exists("sb2.no.hits.repped")) final.table<-rbind(final.table,sb2.no.hits.repped)
   
   final.table$no.hits<-is.na(final.table$binpath)
   
-  if(!is.null(all.disabled)) final.table<-rbind(final.table,all.disabled.repped)
+  if(!is.null(all.disabled) & nrow(all.disabled)>0) final.table<-rbind(final.table,all.disabled.repped)
   
   final.table$disabled<-is.na(final.table$binpath) & final.table$no.hits==F
   

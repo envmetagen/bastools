@@ -33,13 +33,15 @@ if(is.null(master_sheet_file)){
 }
 
 ##subset master sheet for this study 
-message("Subsetting datasheet")
-ms_ss<-subset_mastersheet(master_sheet, subsetlist)
-#check again to see the subset made sense
-master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
+if(!is.null(subsetlist)) {
+  message("Subsetting datasheet")
+  ms_ss<-subset_mastersheet(master_sheet, subsetlist)
+  #check again to see the subset made sense
+  master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
+} else ms_ss<-master_sheet
 
 #show included/excluded
-message("fix this")
+#message("fix this")
 # message("Samples in final dataset")
 # colnames(all.taxatabs.ss[,-1])
 # message("Samples excluded from final dataset")
@@ -439,11 +441,12 @@ if(plot.bars) if(!is.null(plotting.vars)){
 
 
 ## heatmaps 
-```{r heatmaps, eval=TRUE,echo=F,fig.height=7,fig.width=20}
+```{r heatmaps, eval=TRUE,echo=F,fig.height=14,fig.width=20}
 if(plot.heatmaps) if(!is.null(plotting.vars)){
   
   message("Making heatmaps")
   message("Note: Heatmaps will be larger in this html than if plotted alone")
+  message("Secondary colour bars may not make sense if factors are overlapping, please check")
     
   values.to.plot<-c("nreads","ndxns","dxn")
     
@@ -464,6 +467,8 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
 #just an example, not interesting in this case
 if(plot.pca) if(!is.null(plotting.vars)){
   message("Plotting pca plot with lines")
+  
+  taxatabs.multilevels<-list()
   
   if(!is.null(plotting_levels)){
     for(i in 1:length(plotting_levels)){
