@@ -446,6 +446,7 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
   
   message("Making heatmaps")
   message("Note: Heatmaps will be larger in this html than if plotted alone")
+  message("Secondary colour bars may not make sense if factors are overlapping, please check")
     
   values.to.plot<-c("nreads","ndxns","dxn")
     

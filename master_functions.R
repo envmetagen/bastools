@@ -3689,6 +3689,16 @@ google.overlord<-function(url,for.MBC=F,for.post.illscript2=T,for.msi=F,tokenDir
              
              "Primer_set","experiment_id") #only required by illumina script
   
+  #remove "I" from primers
+  if(length(grep("I",master$Primer_F))>0) {
+    message("Replacing 'I' with 'N' for Primer_F")
+    master$Primer_F<-gsub("I","N",master$Primer_F)
+  }
+  if(length(grep("I",master$Primer_R))>0) {
+    message("Replacing 'I' with 'N' for Primer_R")
+    master$Primer_R<-gsub("I","N",master$Primer_R)
+  }
+
   #format for MBC option
   if(for.MBC==T){
     headers<-headers[1:(length(headers)-2)]
