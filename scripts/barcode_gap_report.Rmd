@@ -234,7 +234,7 @@ if("find_db_errors" %in% steps) {
   #could vastly speed this up bydoing species first and onyl testing those that failed at genus and family
   #now that Iḿ going to kpco levels, this is more nb
   for(h in 1:length(TaxlevelTestall)){
-    
+    #for(h in 1:3){
     if(h>1) sb<-sbtemp
     
     TaxlevelTest<-TaxlevelTestall[h]
@@ -273,6 +273,9 @@ if("find_db_errors" %in% steps) {
          if(length(grep(crap[i],sb$hittaxid,ignore.case = T))>0) sb<-sb[-grep(crap[i],sb$hittaxid,ignore.case = T),]
        }
     }
+    
+    if(nrow(sb)!=0) {
+      
    
     #order
     sb<-sb[order(sb$pident,decreasing = T),]
@@ -446,6 +449,14 @@ if("find_db_errors" %in% steps) {
       errorsB<-NULL
     }
     
+    } else { #coming from if nrow(sb)!=0
+      message("No hits remaining after removing unknowns and sp. and crappy hits, skipping this level")
+      flaggedB<-NULL
+      errorsB<-NULL
+      errors<-NULL
+      flagged<-NULL
+    }
+    
     #combine filter results within h loop
     allerrors[[h]]<-rbind(errors,errorsB)
     allflagged[[h]]<-c(flagged, flaggedB)
@@ -566,7 +577,7 @@ if("calc_bar_gap" %in% steps) {
   hierarchy<-c("K","P","C","O","F","G","S")
   
   for(h in 1:length(hierarchy)){
-    
+
     sb<-sbo
   
     TaxlevelTest<-hierarchy[h]
@@ -576,6 +587,8 @@ if("calc_bar_gap" %in% steps) {
     sb$hittax<-stringr::str_split(sb$hitpath,";",simplify = T)[,match(TaxlevelTest,hierarchy)]
     sb<-sb[sb$origtax!="unknown",]
     sb<-sb[sb$hittax!="unknown",]
+    
+    if(nrow(sb)!=0){
     
     sb$origleveltest<-path.at.level(sb$origpath,TaxlevelTest)
     sb$hitleveltest<-path.at.level(sb$hitpath,TaxlevelTest)
@@ -692,6 +705,12 @@ if("calc_bar_gap" %in% steps) {
     plot.list.loop[[2]]<-plotb
     plot.list.loop[[3]]<-plotc
     plot.list.all[[h]]<-plot.list.loop
+    
+    } else  {
+      message("No entries remaning after removing unknown, skipping this level") #coming from nrow(sb)!=0
+      potential.errors.out[[h]]<-NULL 
+      plot.list.all[[h]]<-NULL
+    }
   } #end h-loop
   
   #gather all potential errors and save in file

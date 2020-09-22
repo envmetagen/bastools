@@ -6583,8 +6583,6 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   
   outfiles<-do.call(c,binfile.list)
   
-  #set metabin args
-  
   #read metabin results and merge with sb
   results<-list()
   sb3<-sb2[!duplicated(sb2$qseqid),]
@@ -6719,7 +6717,7 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
     
   #add disabled taxa -not doing
   #add no hits
-  if(!is.null(all.disabled) & nrow(all.disabled)>0){
+  if(!is.null(all.disabled)) if(nrow(all.disabled)>0){
     all.disabled$binpath<-NA
     all.disabled$settings<-NA
     all.disabled$level<-substr(all.disabled$qseqid,nchar(all.disabled$qseqid),nchar(all.disabled$qseqid))
@@ -6764,7 +6762,7 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   
   final.table$no.hits<-is.na(final.table$binpath)
   
-  if(!is.null(all.disabled) & nrow(all.disabled)>0) final.table<-rbind(final.table,all.disabled.repped)
+  if(!is.null(all.disabled)) if(nrow(all.disabled)>0) final.table<-rbind(final.table,all.disabled.repped)
   
   final.table$disabled<-is.na(final.table$binpath) & final.table$no.hits==F
   
