@@ -6483,7 +6483,8 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
 
 bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
                      pidents.list=list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)),
-                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir){
+                     known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir,
+                     print.incorrects=F){
   
   sb2<-data.table::fread(blast.thresh.input,data.table = F)
   
@@ -6675,7 +6676,8 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   incorrectsdf<-do.call(rbind,incorrects2)
   #incorrectsdf<-incorrectsdf[!duplicated(incorrectsdf$qseqid),]
   message("Results incorrectly binned:")
-  print(incorrectsdf)
+  print(nrow(incorrectsdf))
+  if(print.incorrects) print(incorrectsdf)
   
   #add no hits
   if(nrow(sb2.no.hits)>0){

@@ -74,7 +74,7 @@ if("step8a" %in% stepstotake){
     
     divergence<-rep(5,length(TaxlevelTestall))
     use_flagged_accessions_bcg=T
-    plot.limit.taxon=NULL
+    plot.limit.taxon=plot.limit.taxon
     
     #thresher
     use_flagged_accessions_mbk=T

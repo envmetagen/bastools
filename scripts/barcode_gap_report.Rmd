@@ -219,7 +219,7 @@ if("find_db_errors" %in% steps) {
     sb<-sb[!sb$origseqid %in% kf$V1,]
     sb<-sb[!sb$hitseqid %in% kf$V1,]
     message("Known flagged sequences removed:",before-length(unique(sb$origseqid)))
-    print(kf$V1)
+    #print(kf$V1)
   }
   
   #loop by taxa level (FGS), fnding errors for each level
@@ -624,7 +624,7 @@ if("calc_bar_gap" %in% steps) {
             Inspect ",further_potential_errors," for further details and to manually flag accessions")
     
     if(length(overlaps[[h]])>0){
-      print(overlaps[[h]])
+      print(length(overlaps[[h]]))
       
       potential.errors<-list()
         for(j in 1:length(overlaps[[h]])){
@@ -904,7 +904,8 @@ t1<-Sys.time()
     setwd(outDir)
     
     bin.thresh(blast.thresh.input=gsub(".tempBLASTDB.tsv$",".tempBLASTDBALL.tsv",paste0(outDir,selfblastout))
-                ,tops=tops,pidents.list=pidents.list,known_flags = known_flags,final.table.out = paste0(outDir,final.table.out),
+                ,tops=tops,pidents.list=pidents.list,known_flags = known_flags,
+               final.table.out = paste0(outDir,final.table.out),
                SpeciesBL = SpeciesBL,GenusBL = GenusBL,FamilyBL = FamilyBL,ncbiTaxDir = ncbiTaxDir)
   } 
   

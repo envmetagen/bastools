@@ -102,9 +102,12 @@ use_flagged_accessions_mbk=T
 
 #Settings for step 8a, only change these settings if you want to run parts of this script alone (havent written user notes on this yet)
 steps<-c("selfblast", "find_db_errors", "calc_bar_gap","thresher") #options: "selfblast", "find_db_errors", "calc_bar_gap","thresher"
+#limit plots for calc_bar_gap
+plot.limit.taxon=NULL #";Streptophyta;"
+
+#thresher settings
 threshersteps<-c("threshblast","threshbin","threshplots") #"threshblast","threshbin","threshplots"
 TaxlevelTestall<-c("K","P","C","O","F") #TaxlevelTestall<-c("K","P","C","O","F","G","S") 
-#thresher settings
 plot.at.level<-"O" 
 limit.plot.to.taxon<-NULL #c("Mammalia","C") #the taxon name and level can be NULL
 #binning settings to loop through
