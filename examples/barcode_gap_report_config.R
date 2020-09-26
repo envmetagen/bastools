@@ -18,7 +18,7 @@
 #however, using metabin, neither should give wrong results
 
 bastoolsDir<-"/home/tutorial/TOOLS/bastools/"
-input<-"/home/tutorial/temp/16S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.blast.filt.txt" #example
+input<-"/home/tutorial/TOOLS/bastools/test_files/16S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.blast.filt.txt" #example
 #input not required for step3, just selfblastout
 ncbiTaxDir<-"/home/tutorial/TOOLS/metabinkit.install/db/"
 KronaPath<-"/home/tutorial/TOOLS/Krona.install/bin/ktImportText"

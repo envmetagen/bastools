@@ -120,11 +120,9 @@ if("selfblast" %in% steps) {
   perc_identity<-70
   #changing to blanket 70, to match that used by threshold.bin.blast2
   
-  message("word_size set to 20. This was tested for a fragment of c. 105bp and did not result in many fewer hits than word_size of 11 (word_size 28 did), but if testing a shorter fragment consider revising")
-  
   argsblast=c("-task","megablast", "-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
                  "'6 qseqid saccver staxid pident sseq'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
-                 500, "-max_hsps",1,"-word_size", 20,"-perc_identity", perc_identity,"-qcov_hsp_perc",98,
+                 500, "-max_hsps",1,"-word_size", 11,"-perc_identity", perc_identity,"-qcov_hsp_perc",98,
                  "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", 
                  paste0(outDir,selfblastout))
   
@@ -157,9 +155,9 @@ if("selfblast" %in% steps) {
   write.table(sb,paste0(outDir,selfblastout),quote = F,row.names = F,sep = "\t")
   
   #remove tempdb
-  file.remove(list.files(pattern = "tempBLASTDB.n.*"))
-  file.remove("tempBLASTDB.fasta")
-  file.remove("tempBLASTDB.taxid_map.tsv")
+  file.remove(gsub("//","/",list.files(path = outDir,pattern = "tempBLASTDB.n.*",full.names = T)))
+  file.remove(paste0(outDir,"tempBLASTDB.fasta"))
+  file.remove(paste0(outDir,"tempBLASTDB.taxid_map.tsv"))
   
   t2<-Sys.time()
   
@@ -838,11 +836,23 @@ sb$qseqid<-paste0(sb$qseqid,"_S")
 
 sbforpaths<-sb[!duplicated(sb$qseqid),c("qseqid","origpath")]
   
-TaxlevelTest=c("S","G","F")
+TaxlevelTest=c("S","G","F","O")
 setwd(outDir)
 for(h in 1:length(TaxlevelTest)){
   #genus should be, for each query remove the hits to the same species
   #family should be, for each query remove hits to same genus
+  
+  if(TaxlevelTest[h]=="O") {
+    threshold.bin.blast2(df = sb,TaxlevelTest = "O",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "origtaxid")
+    sb.tbbO<-data.table::fread("tempBLASTDB.O.tsv",data.table = F)
+    sb.tbbO<-add.lineage.df(sb.tbbO,ncbiTaxDir = ncbiTaxDir) #for metabin
+    sb.tbbO<-merge(sb.tbbO,sbforpaths,all.x=T,all.y = F,by = "qseqid")
+    sb.tbbO$origgenus<-stringr::str_split(sb.tbbO$origpath,";",simplify = T)[,6]
+    sb.tbbO$origspecies<-stringr::str_split(sb.tbbO$origpath,";",simplify = T)[,7]
+    sb.tbbO$origseq<-sb.tbbO$qseq
+    sb.tbbO<-sb.tbbO[,c("qseqid","saccver","pident","taxids", "origpath","origseq", "K","P","C" ,"O","F","G","S","origgenus","origspecies")]
+    sb.tbbO$qseqid<-gsub("_S$","_O",sb.tbbO$qseqid)
+  }
   
   if(TaxlevelTest[h]=="G") {
     threshold.bin.blast2(df = sb,TaxlevelTest = "G",qseqidcol = "qseqid",qseqcol = "origseq",taxidcol = "origtaxid")
@@ -872,15 +882,17 @@ for(h in 1:length(TaxlevelTest)){
   
 }
 
-sb2<-rbind(sb.splS,sb.tbbG,sb.tbbF)
+sb2<-rbind(sb.splS,sb.tbbG,sb.tbbF,sb.tbbO)
 
 write.table(sb2,gsub(".tempBLASTDB.tsv$",".tempBLASTDBALL.tsv",paste0(outDir,selfblastout)),quote = F,row.names = F,sep = "\t")
 
+if(file.exists("tempBLASTDB.O.tsv")) file.remove("tempBLASTDB.O.tsv")
 if(file.exists("tempBLASTDB.F.tsv")) file.remove("tempBLASTDB.F.tsv")
 if(file.exists("tempBLASTDB.G.tsv")) file.remove("tempBLASTDB.G.tsv")
 file.remove(list.files(pattern="temp.db.*"))
 file.remove(list.files(pattern="temp.seq.*"))
 file.remove("ex.seqids.txt")
+rm(list = c("sb","sb2","sb.splS","sb.tbbG","sb.tbbF","sb.tbbO"))
 
 t2<-Sys.time()
   
@@ -921,4 +933,6 @@ if("threshplots" %in% threshersteps) {
 }
   
 } else message("This step was not set to run")
+
+##todo - create trace history function to trace reason why an outcome was incorrect
 ```

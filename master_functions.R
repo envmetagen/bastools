@@ -6199,14 +6199,15 @@ bas.get.flagged.ids.google<-function(out){
   write.table(ss_info$UNIQUE,file = out,row.names = F,quote=F,col.names = F)
 }
 
-threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",TaxlevelTest="G",taxidcol="origtaxid",qpath="origpath"){
-  #TaxlevelTest can be G or F
+threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",TaxlevelTest="G",taxidcol="origtaxid",
+                               qpath="origpath"){
+  #TaxlevelTest can be O, F or G
   if(!qseqidcol %in% colnames(df)) stop(qseqidcol," missing")
   if(!qseqcol %in% colnames(df)) stop(qseqcol," missing")
   if(!taxidcol %in% colnames(df)) stop(taxidcol," missing")
   if(!qpath %in% colnames(df)) stop(qpath," missing")
   
-  if(TaxlevelTest!="F" & TaxlevelTest!="G") stop("TaxlevelTest must be F or G")
+  if(TaxlevelTest!="O" & TaxlevelTest!="F" & TaxlevelTest!="G") stop("TaxlevelTest must be O, F or G")
   
   quiet <- function(x) { 
     sink(tempfile()) 
@@ -6233,6 +6234,12 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
   #   out<-paste0("tempBLASTDB.",TaxlevelTest,".tsv")
   #   if(file.exists(out)) file.remove(out)
   # }
+  
+  if(TaxlevelTest=="O") {
+    ex.seqid.group<-"F"
+    out<-paste0("tempBLASTDB.",TaxlevelTest,".tsv")
+    if(file.exists(out)) file.remove(out)
+  }
   
   if(TaxlevelTest=="G") {
     ex.seqid.group<-"S"
@@ -6286,7 +6293,7 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
     system2(command = "blastn",
             args=c("-task", "megablast", "-query", "temp.seq.fasta", "-db","temp.db","-outfmt",
                    "'6 qseqid saccver ssciname evalue staxid pident qcovs qseq'","-evalue",1,"-num_threads", 16, "-max_target_seqs", 
-                   100, "-max_hsps",1,"-word_size", 20,"-perc_identity", 70,"-qcov_hsp_perc",98,
+                   100, "-max_hsps",1,"-word_size", 11,"-perc_identity", 70,"-qcov_hsp_perc",98,
                    "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", 
                     "-negative_seqidlist", "ex.seqids.txt", 
                    "-out",
@@ -6320,7 +6327,7 @@ threshold.bin.blast2<-function(df,qseqidcol="origseqid",qseqcol="origseq",Taxlev
   
   system2("sed",c("-i", headers, out),wait = T)
   
-  message("Ouput saved to ",out)
+  message("Output saved to ",out)
 }
 
 plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.level="O"){
@@ -6378,8 +6385,11 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
   #PLOTTING 
   allcounts$settings<-paste0(allcounts$settings,allcounts$level)
   
-  longcount<-reshape2::melt(allcounts[,c("no_hits","disabled","correct","above","incorrect","failed","settings")],id.vars="settings")
+  longcount<-reshape2::melt(allcounts[,c("no_hits","disabled","correct","above","incorrect","failed","settings")],
+                            id.vars="settings")
   longcount$level<-substr(longcount$settings,nchar(longcount$settings),nchar(longcount$settings))
+  longcount$level<-as.factor(longcount$level)
+  longcount$level<-factor(longcount$level,levels = c("O","F","G","S"))
   longcount$settings<-substr(longcount$settings,1,nchar(longcount$settings)-1)
   longcount$settings<-gsub("top_","",longcount$settings)
   longcount$settings<-gsub("pidents_","",longcount$settings)
@@ -6390,7 +6400,7 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
     theme(legend.title = element_text(size=10), legend.text=element_text(size=10),
           axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical") +
     scale_fill_manual(values = plot.cols) + 
-    ggtitle("Overview",subtitle="Outcomes at species level if species in db, at genus level if species not in db, at family level if genus not in db")+
+    ggtitle("Overview",subtitle="Outcomes at species level if species in db, at genus level if species not in db, at family level if genus not in db,at order level if family not in db")+
     ylab("Number of queries") + xlab("Settings (top, S, G, F, AF)")+
     facet_wrap(~level,scales = "free_x",)
   
@@ -6401,19 +6411,22 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
   
   out.plot.list<-list()
   
-  #adding a plot for genus level and family level if species in db
+  #adding a plot for genus, family,order level if species in db
   final.table.g<-final.table[final.table$level=="S",]
   final.table.g$level="g"
   
   final.table.f<-final.table[final.table$level=="S",]
   final.table.f$level="f"
   
-  final.table<-rbind(final.table,final.table.g,final.table.f)
+  final.table.o<-final.table[final.table$level=="S",]
+  final.table.o$level="o"
+  
+  final.table<-rbind(final.table,final.table.g,final.table.f,final.table.o)
   
   final.table.list<-split(final.table,final.table$level)
   
-  if(!is.null(limit.plot.to.taxon))   message("Limiting plots to ",limit.plot.to.taxon[1],": taxonomic level ",limit.plot.to.taxon[2],
-                                              ". Overview plot will not be affected")
+  if(!is.null(limit.plot.to.taxon))   message("Limiting taxon plots to ",limit.plot.to.taxon[1],": taxonomic level ",limit.plot.to.taxon[2],
+                                              ". Overview plot is not be limited")
   message("Plotting at level ",plot.at.level)
   
   for(i in 1:length(final.table.list)){
@@ -6426,13 +6439,25 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
     if(levelxx=="S") sublabel<-"Binning outcomes at species level if species IS in database"
     if(levelxx=="G") sublabel<-"Binning outcomes at genus level if species IS NOT in database"
     if(levelxx=="F") sublabel<-"Binning outcomes at family level if genus IS NOT in database"
+    if(levelxx=="O") sublabel<-"Binning outcomes at order level if family IS NOT in database"
     if(levelxx=="g") sublabel<-"Binning outcomes at genus level if species IS database"
     if(levelxx=="f") sublabel<-"Binning outcomes at family level if species IS in database"
+    if(levelxx=="o") sublabel<-"Binning outcomes at order level if species IS in database"
+    
+    #trial
+    ##if(levelxx=="l") sublabel<-"Binning outcomes at family level if genus IS in database (testing)"
+    ##if(levelxx=="m") sublabel<-"Binning outcomes at family level if species IS NOT in database" #need new blast thresh
+    ##if(levelxx=="n") sublabel<-"Binning outcomes at order level if species IS NOT in database"#need new blast thresh
+    ##if(levelxx=="p") sublabel<-"Binning outcomes at order level if genus IS NOT in database" #need new blast thresh
+    ##if(levelxx=="q") sublabel<-"Binning outcomes at order level if genus IS in database"
+    ##if(levelxx=="r") sublabel<-"Binning outcomes at order level if family IS in database"
     
     if(levelxx=="f") levelxx<-"F"
     if(levelxx=="g") levelxx<-"G"
+    if(levelxx=="o") levelxx<-"O"
     
-    longcount<-reshape2::melt(xx[,c("no.hits","disabled", paste0("correct",levelxx),paste0("above",levelxx),paste0("incorrect",levelxx),
+    longcount<-reshape2::melt(xx[,c("no.hits","disabled", paste0("correct",levelxx),paste0("above",levelxx),
+                                    paste0("incorrect",levelxx),
                                     paste0("failed",levelxx)
                                     ,"settings",paste0("origpath",levelxx))],
                               id.vars=c("settings",paste0("origpath",levelxx)))
@@ -6452,8 +6477,6 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
       indexn<-match(levelxx,table = c("K","P","C","O","F","G","S"))
     }
     longcount$plotpath<-do.call(rbind,stringr::str_split(longcount$origpathS,";"))[,indexn]
-    
-   
     
     longcount$settings<-gsub("top_","",longcount$settings)
     longcount$settings<-gsub("pidents_","",longcount$settings)
@@ -6481,10 +6504,10 @@ plot.thresh<-function(thresher.final.table,limit.plot.to.taxon=NULL,plot.at.leve
   print(out.plot.list[[2]])
 }
 
-bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
+bin.thresh<-function(blast.thresh.input,tops=c(0,1,100),
                      pidents.list=list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)),
                      known_flags=NULL,final.table.out,SpeciesBL=NULL,GenusBL=NULL,FamilyBL=NULL,ncbiTaxDir,
-                     print.incorrects=F){
+                     save.incorrects=NULL){
   
   sb2<-data.table::fread(blast.thresh.input,data.table = F)
   
@@ -6605,9 +6628,11 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   results$binpathS<-results$binpath
   results$binpathG<-path.at.level(results$binpathS,level = "G")
   results$binpathF<-path.at.level(results$binpathS,level = "F")
+  results$binpathO<-path.at.level(results$binpathS,level = "O")
   results$origpathS<-results$origpath
   results$origpathG<-path.at.level(results$origpathS,level = "G")
   results$origpathF<-path.at.level(results$origpathS,level = "F")
+  results$origpathO<-path.at.level(results$origpathS,level = "O")
   
   final.table<-results
   
@@ -6615,40 +6640,57 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   final.table$correctS<-final.table$binpathS==final.table$origpathS
   final.table$correctG<-final.table$binpathG==final.table$origpathG
   final.table$correctF<-final.table$binpathF==final.table$origpathF
+  final.table$correctO<-final.table$binpathO==final.table$origpathO
   
   #above desired rank (doesnt check if above rank is correct...)
-  final.table$aboveS<-bas.get.ranks(data.frame(taxon=final.table$binpathS))
-  final.table$aboveG<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathG,";NA")))
-  final.table$aboveF<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathF,";NA;NA")))
+  final.table$aboveS<-bas.get.ranks(taxatab = data.frame(taxon=final.table$binpathS),grouphtf = F)
+  final.table$aboveG<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathG,";NA")),grouphtf = F)
+  final.table$aboveF<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathF,";NA;NA")),grouphtf = F)
+  final.table$aboveO<-bas.get.ranks(data.frame(taxon=paste0(final.table$binpathO,";NA;NA;NA")),grouphtf = F)
   
-  final.table[(final.table$aboveF=="htf") & final.table$level=="F","aboveF"]<-"above"
-  final.table[(final.table$aboveG=="htf" | final.table$aboveG=="family") & final.table$level=="G","aboveG"]<-"above"
-  final.table[(final.table$aboveS=="htf" | final.table$aboveS=="family" | final.table$aboveS=="genus") & 
-                final.table$level=="S","aboveS"]<-"above"
+  #change idea from htf to hto
+  above_cols<-c("aboveS","aboveG","aboveF","aboveO")
+  for(i in 1:4){
+   final.table[,above_cols[i]][final.table[,above_cols[i]]=="class"]<-"hto"
+   final.table[,above_cols[i]][final.table[,above_cols[i]]=="phylum"]<-"hto"
+   final.table[,above_cols[i]][final.table[,above_cols[i]]=="kingdom"]<-"hto"
+   final.table[,above_cols[i]][final.table[,above_cols[i]]=="above_kingdom"]<-"hto"
+  }
+  
+  final.table[(final.table$aboveO=="hto") & final.table$level=="O","aboveO"]<-"above"
+  final.table[(final.table$aboveF=="hto" | final.table$aboveF=="order") & final.table$level=="F","aboveF"]<-"above"
+  final.table[(final.table$aboveG=="hto" | final.table$aboveG=="order" | final.table$aboveG=="family") 
+              & final.table$level=="G","aboveG"]<-"above"
+  final.table[(final.table$aboveS=="hto" | final.table$aboveS=="order" | final.table$aboveS=="family" | 
+                 final.table$aboveS=="genus") & final.table$level=="S","aboveS"]<-"above"
   
   #incorrect
   final.table$incorrectS<-(!final.table$correctS) & final.table$aboveS=="species"
   final.table$incorrectG<-(!final.table$correctG) & final.table$aboveG=="genus"
   final.table$incorrectF<-(!final.table$correctF) & final.table$aboveF=="family"
+  final.table$incorrectO<-(!final.table$correctO) & final.table$aboveO=="order"
   
   #change above from "above" to T/F
   final.table$aboveS<-final.table$aboveS!="species"
   final.table$aboveG<-final.table$aboveG!="genus"
   final.table$aboveF<-final.table$aboveF!="family"
+  final.table$aboveO<-final.table$aboveO!="order"
   
   #failed
   final.table$failedS<-final.table$binpathS=="NA;NA;NA;NA;NA;NA;NA"
   final.table$failedG<-final.table$binpathG=="NA;NA;NA;NA;NA;NA"
   final.table$failedF<-final.table$binpathF=="NA;NA;NA;NA;NA"
+  final.table$failedO<-final.table$binpathO=="NA;NA;NA;NA"
   
   #if failed, other outcomes are NA
   final.table[final.table$failedS==TRUE,c("correctS","aboveS","incorrectS")]<-NA
   final.table[final.table$failedG==TRUE,c("correctG","aboveG","incorrectG")]<-NA
   final.table[final.table$failedF==TRUE,c("correctF","aboveF","incorrectF")]<-NA
+  final.table[final.table$failedO==TRUE,c("correctO","aboveO","incorrectO")]<-NA
   
   #final.table$settings<-paste0(final.table$Spident,"_",final.table$Gpident,"_",final.table$Fpident,"_top",final.table$top)
   
-  #print incorrects
+  #save incorrects
   incorrects2<-list()
   require(tidyverse)
   for(i in 1:length(unique(final.table$level))){
@@ -6677,7 +6719,7 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   #incorrectsdf<-incorrectsdf[!duplicated(incorrectsdf$qseqid),]
   message("Results incorrectly binned:")
   print(nrow(incorrectsdf))
-  if(print.incorrects) print(incorrectsdf)
+  if(!is.null(save.incorrects)) write.table(incorrectsdf,save.incorrects,sep = "\t",row.names = F,quote = F)
   
   #add no hits
   if(nrow(sb2.no.hits)>0){
@@ -6687,25 +6729,32 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
     sb2.no.hits$binpathS<-NA
     sb2.no.hits$binpathG<-NA
     sb2.no.hits$binpathF<-NA
+    sb2.no.hits$binpathO<-NA
     sb2.no.hits$"origpathS"<-sb2.no.hits$origpath
     sb2.no.hits$"origpathG"<-path.at.level(sb2.no.hits$origpath,level = "G")
     sb2.no.hits$"origpathF"<-path.at.level(sb2.no.hits$origpath,level = "F")
+    sb2.no.hits$"origpathO"<-path.at.level(sb2.no.hits$origpath,level = "O")
     sb2.no.hits$failedS<-NA
     sb2.no.hits$failedG<-NA
     sb2.no.hits$failedF<-NA
+    sb2.no.hits$failedO<-NA
     sb2.no.hits$incorrectS<-NA
     sb2.no.hits$incorrectG<-NA
     sb2.no.hits$incorrectF<-NA
+    sb2.no.hits$incorrectO<-NA
     sb2.no.hits$correctS<-NA
     sb2.no.hits$correctG<-NA
     sb2.no.hits$correctF<-NA
+    sb2.no.hits$correctO<-NA
     sb2.no.hits$aboveS<-NA
     sb2.no.hits$aboveG<-NA
     sb2.no.hits$aboveF<-NA
+    sb2.no.hits$aboveO<-NA
     
-    sb2.no.hits<-sb2.no.hits[,c("qseqid","origpath","binpath","settings", "level","binpathS","binpathG","binpathF", "origpathS","origpathG",
-                                "origpathF", "correctS", "correctG","correctF", "aboveS", "aboveG", "aboveF","incorrectS",
-                                "incorrectG", "incorrectF", "failedS","failedG","failedF" )]
+    sb2.no.hits<-sb2.no.hits[,c("qseqid","origpath","binpath","settings", "level","binpathS","binpathG","binpathF","binpathO", 
+                                "origpathS","origpathG","origpathF","origpathO", "correctS", "correctG","correctF","correctO",
+                                "aboveS", "aboveG", "aboveF","aboveO","incorrectS",
+                                "incorrectG", "incorrectF","incorrectO", "failedS","failedG","failedF","failedO" )]
     
     #need to replicate no hits for each settings
     no.hits.list<-list()
@@ -6718,7 +6767,6 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
   }
     
   #add disabled taxa -not doing
-  #add no hits
   if(!is.null(all.disabled)) if(nrow(all.disabled)>0){
     all.disabled$binpath<-NA
     all.disabled$settings<-NA
@@ -6726,25 +6774,32 @@ bin.thresh<-function(blast.thresh.input,no.hits.file,tops=c(0,1,100),
     all.disabled$binpathS<-NA
     all.disabled$binpathG<-NA
     all.disabled$binpathF<-NA
+    all.disabled$binpathO<-NA
     all.disabled$"origpathS"<-all.disabled$origpath
     all.disabled$"origpathG"<-path.at.level(all.disabled$origpath,level = "G")
     all.disabled$"origpathF"<-path.at.level(all.disabled$origpath,level = "F")
+    all.disabled$"origpathO"<-path.at.level(all.disabled$origpath,level = "O")
     all.disabled$failedS<-NA
     all.disabled$failedG<-NA
     all.disabled$failedF<-NA
+    all.disabled$failedO<-NA
     all.disabled$incorrectS<-NA
     all.disabled$incorrectG<-NA
     all.disabled$incorrectF<-NA
+    all.disabled$incorrectO<-NA
     all.disabled$correctS<-NA
     all.disabled$correctG<-NA
     all.disabled$correctF<-NA
+    all.disabled$correctO<-NA
     all.disabled$aboveS<-NA
     all.disabled$aboveG<-NA
     all.disabled$aboveF<-NA
+    all.disabled$aboveO<-NA
     
-    all.disabled<-all.disabled[,c("qseqid","origpath","binpath","settings", "level","binpathS","binpathG","binpathF", "origpathS","origpathG",
-                                "origpathF", "correctS", "correctG","correctF", "aboveS", "aboveG", "aboveF","incorrectS",
-                                "incorrectG", "incorrectF", "failedS","failedG","failedF" )]
+    all.disabled<-all.disabled[,c("qseqid","origpath","binpath","settings", "level","binpathS","binpathG","binpathF","binpathO", 
+                                  "origpathS","origpathG","origpathF","origpathO", "correctS", "correctG","correctF","correctO",
+                                  "aboveS", "aboveG", "aboveF","aboveO","incorrectS",
+                                  "incorrectG", "incorrectF","incorrectO", "failedS","failedG","failedF","failedO" )]
     
     #need to replicate no hits for each settings
     all.disabled.list<-list()
