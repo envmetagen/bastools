@@ -39,14 +39,6 @@ if(!is.null(subsetlist)) {
   #check again to see the subset made sense
   master_xtabs(master_sheet = ms_ss,columns=c("sample_type",names(subsetlist)))
 } else ms_ss<-master_sheet
-
-#show included/excluded
-#message("fix this")
-# message("Samples in final dataset")
-# colnames(all.taxatabs.ss[,-1])
-# message("Samples excluded from final dataset")
-# colnames(all.taxatabs[,-1])[!colnames(all.taxatabs[,-1]) %in% colnames(all.taxatabs.ss[,-1])]
-
 ```
 
 ## import taxatabs
@@ -67,6 +59,13 @@ all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = 
 
 #rank stats
 print(stats.by.rank(taxatab = all.taxatabs.ss))
+
+#show included/excluded
+#message("fix this")
+ message("Samples in final dataset")
+ print(colnames(all.taxatabs.ss[,-1]))
+ message("Samples excluded from final dataset")
+ master_sheet$ss_sample_id[! master_sheet$ss_sample_id %in% colnames(all.taxatabs.ss[,-1])] 
 ```
 
 # qplots
@@ -464,9 +463,8 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
 
 ## pca plot 
 ```{r pca plots, eval=TRUE,echo=F}
-#just an example, not interesting in this case
 if(plot.pca) if(!is.null(plotting.vars)){
-  message("Plotting pca plot with lines")
+  message("Plotting PCoA plot with lines")
   
   taxatabs.multilevels<-list()
   
@@ -475,9 +473,13 @@ if(plot.pca) if(!is.null(plotting.vars)){
       message("Plotting at ",plotting_levels[i]," level")
       if(plotting_levels[i]=="species") {
         taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = F)
-      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=F)
+        names(taxatabs.multilevels)[i]<-"species"
+      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,
+                                         xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=F)
+      names(taxatabs.multilevels)[i]<-plotting_levels[i]
     }
     taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
+    names(taxatabs.multilevels)[length(plotting_levels)+1]<-"combined"
     
     message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
     
@@ -485,10 +487,15 @@ if(plot.pca) if(!is.null(plotting.vars)){
   
   
   for(j in 1:length(taxatabs.multilevels)){
+    
+    if(ncol(taxatabs.multilevels[[j]])>3) {
+      
     for(i in 1:length(plotting.vars)){
-      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,lines = show.pca.lines,longnames = F,
+      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,
+                                 lines = show.pca.lines,longnames = F,
                                  shortnames = T,ellipse = T,factors = plotting.vars[i],hidelegend = hidelegend.pca))
     }
+    } else message("Only two samples at ", names(taxatabs.multilevels)[j]," level, skipping PCoA plot")
   }
   
  
@@ -498,8 +505,9 @@ if(plot.pca) if(!is.null(plotting.vars)){
 ## species accumulation curve 
 ```{r species accumulation curve, eval=TRUE,echo=F}
 print(bas.plot.specaccum(taxatab = all.taxatabs.ss,xlabel = sumrepsby))
-
-print(bas.plot.specrich(taxatab = all.taxatabs.ss))
+if(ncol(taxatabs.multilevels[[j]])>3) {
+  print(bas.plot.specrich(taxatab = all.taxatabs.ss))
+} else message("Only two samples in taxa table, skipping species richness plot")
 ```
 
 ## final table stats
