@@ -35,6 +35,9 @@ divergence<-rep(5,length(TaxlevelTestall)) # not required for step3
 use_flagged_accessions_bcg=F
 use_flagged_accessions_mbk=F #T (applies to both final binning and mbk portion of barcode gap report)
 
+#dont analyse queries with low read counts?
+rm.low.read.queries=NULL #0.1-0.9
+
 #if not NULL these will be used for bcg plots and will be removed prior to bin threshing (but sb file will not be altered)
 #(applies to both final binning barcode gap report)
 SpeciesBL = "/home/tutorial/temp/disabled.sp.iran.txt"

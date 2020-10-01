@@ -95,7 +95,7 @@ if("selfblast" %in% steps) {
   
   t1<-Sys.time()
   
-  fullblast<-read.and.format.full.blast(input) 
+  fullblast<-read.and.format.full.blast(input,rm.low.read.queries = rm.low.read.queries) 
   
   #MAKE KRONA OF DB
   x<-as.data.frame(table(fullblast$origpath))
