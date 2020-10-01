@@ -83,7 +83,7 @@ if(!is.null(subsetlist)) {
 ```
 
 ## import taxatabs
-```{r import taxatabs, eval=TRUE,echo=F, results='hide'}
+```{r import taxatabs, eval=TRUE,echo=F,}
 #import taxtabs
 
 all.taxatabs<-bas.merge.taxatabs(taxatabs)
@@ -106,7 +106,7 @@ print(stats.by.rank(taxatab = all.taxatabs.ss))
  message("Samples in final dataset")
  print(colnames(all.taxatabs.ss[,-1]))
  message("Samples excluded from final dataset")
- master_sheet$ss_sample_id[! master_sheet$ss_sample_id %in% colnames(all.taxatabs.ss[,-1])] 
+ print(master_sheet$ss_sample_id[! master_sheet$ss_sample_id %in% colnames(all.taxatabs.ss[,-1])])
 ```
 
 # qplots
@@ -176,7 +176,7 @@ if(group.taxa.before.filtering==T){
 
 ## apply taxon and sample filters
 ```{r apply taxon and sample filters, eval=TRUE,echo=F}
-if(taxonpc>0 && samplepc>0) {
+if(taxonpc>0 | samplepc>0) {
     all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
     
     stepcounter<-stepcounter+1
@@ -427,22 +427,30 @@ if(aggregate.pre.grouping==F){
 
 ## some barplots
 ```{r barplots, eval=TRUE,echo=F,fig.height=7,fig.width=20}
-
-if(plot.bars) if(!is.null(plotting.vars)){
-  
-  taxatabs.multilevels<-list()
+if(!is.null(plotting.vars)){
+#this multilevel list used for subsequent plots also
+taxatabs.multilevels<-list()
   
   if(!is.null(plotting_levels)){
     for(i in 1:length(plotting_levels)){
+      message("Plotting at ",plotting_levels[i]," level")
       if(plotting_levels[i]=="species") {
-        taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = T)
-      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=T)
+        taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = F)
+        names(taxatabs.multilevels)[i]<-"species"
+      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,
+                                         xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=F)
+      names(taxatabs.multilevels)[i]<-plotting_levels[i]
     }
-    taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
+    #taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
+    #names(taxatabs.multilevels)[length(plotting_levels)+1]<-"combined"
     
     message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
     
   } else taxatabs.multilevels[[1]]<-all.taxatabs.ss
+}
+
+
+if(plot.bars) if(!is.null(plotting.vars)){
 
   message("Making barplots")
     
@@ -479,6 +487,38 @@ if(plot.bars) if(!is.null(plotting.vars)){
 } else message("plotting.vars=F...skipping barplots")
 ```
 
+## ordered barplots
+```{r ordered_barplots, eval=TRUE,echo=F,fig.height=7,fig.width=20}
+  #ordered by reads
+  all.read.count<-data.frame(taxon=all.taxatabs.ss$taxon,reads=rowSums(all.taxatabs.ss[,-1,drop=F]))
+  all.read.count<-all.read.count[order(all.read.count$reads,decreasing = T),]
+  all.read.count<-all.read.count[1:50,]
+  # all.read.count$taxon<-factor(all.read.count$taxon,ordered = T)
+  ggplot(data=all.read.count,aes(x=reorder(taxon,-reads),y=reads))+geom_bar(stat = "identity")+
+  theme(legend.title = element_text(size=8), legend.text=element_text(size=8),
+          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical",
+          title = element_text(size=6),axis.title = element_text(size=8),panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+    #ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol),subtitle = )+
+    xlab("Read counts for top 50 taxa") + scale_y_continuous(labels = scales::comma) +
+    ylab("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nreads")
+  
+  #ordered by samples
+  all.sample.count<-binarise.taxatab(all.taxatabs.ss,t = T)
+  all.sample.count<-data.frame(taxon=all.sample.count$taxon,samples=rowSums(all.sample.count[,-1,drop=F]))
+  all.sample.count<-all.sample.count[order(all.sample.count$samples,decreasing = T),]
+  all.sample.count<-all.sample.count[1:50,]
+  ggplot(data=all.sample.count,aes(x=reorder(taxon,-samples),y=samples))+geom_bar(stat = "identity")+
+  theme(legend.title = element_text(size=8), legend.text=element_text(size=8),
+          axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical",
+          title = element_text(size=6),axis.title = element_text(size=8),panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+    #ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol),subtitle = )+
+    xlab(paste("No. of samples that top 50 taxa occurred in. Total no. samples (with reads remaining)=",
+         ncol(all.taxatabs.ss)-1)) + ylab("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nsamples")
+  
+```
+  
 ## set heatmap size 
 ```{r heatmap_size, eval=TRUE,echo=F,fig.height=14,fig.width=20}
 if(plot.heatmaps) if(!is.null(plotting.vars)){
@@ -528,26 +568,6 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
 if(plot.pca) if(!is.null(plotting.vars)){
   message("Plotting PCoA plot with lines")
   
-  taxatabs.multilevels<-list()
-  
-  if(!is.null(plotting_levels)){
-    for(i in 1:length(plotting_levels)){
-      message("Plotting at ",plotting_levels[i]," level")
-      if(plotting_levels[i]=="species") {
-        taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = F)
-        names(taxatabs.multilevels)[i]<-"species"
-      } else  taxatabs.multilevels[[i]]<-aggregate.at.xLevel(taxatab = all.taxatabs.ss,
-                                         xLevel = plotting_levels[i],rm.above = T,rm.trailing.NA=F)
-      names(taxatabs.multilevels)[i]<-plotting_levels[i]
-    }
-    taxatabs.multilevels[[length(plotting_levels)+1]]<-all.taxatabs.ss
-    names(taxatabs.multilevels)[length(plotting_levels)+1]<-"combined"
-    
-    message("Note that taxa paths in plots will be collapsed based on the plotting_level selected. E.g. 'Euk.Cho.Ave.Pro.col.col.col_NA'")
-    
-  } else taxatabs.multilevels[[1]]<-all.taxatabs.ss
-  
-  
   for(j in 1:length(taxatabs.multilevels)){
     
     if(ncol(taxatabs.multilevels[[j]])>3) {
@@ -567,7 +587,7 @@ if(plot.pca) if(!is.null(plotting.vars)){
 ## species accumulation curve 
 ```{r species accumulation curve, eval=TRUE,echo=F}
 print(bas.plot.specaccum(taxatab = all.taxatabs.ss,xlabel = sumrepsby))
-if(ncol(taxatabs.multilevels[[j]])>3) {
+if(ncol(all.taxatabs.ss)>3) {
   print(bas.plot.specrich(taxatab = all.taxatabs.ss))
 } else message("Only two samples in taxa table, skipping species richness plot")
 ```
@@ -577,11 +597,25 @@ if(ncol(taxatabs.multilevels[[j]])>3) {
 #rank stats
 print(stats.by.rank(taxatab = all.taxatabs.ss))
 
+message("Reads total: ",(sum(colSums(all.taxatabs.ss[,-1,drop=F]))))
+
+message("Reads per sample: 
+        ")
+print(summary(colSums(all.taxatabs.ss[,-1,drop=F])))
+
+message("Mean reads per sample: 
+        ")
+print(mean(colSums(all.taxatabs.ss[,-1,drop=F])))
+
+message("Standard deviation of mean reads per sample: 
+        ")
+print(sd(colSums(all.taxatabs.ss[,-1,drop=F])))
+
 #summary
 DT::datatable(summary.dxns.by.taxon(all.taxatabs.ss), rownames = FALSE, options = list(pageLength = 50, scrollX=T))
 
 # final taxa list
-print(all.taxatabs.ss$taxon)
+#print(all.taxatabs.ss$taxon)
 ```
 
 ## qplot of % of detections that have x reads
@@ -633,6 +667,8 @@ message("Note that detections/samples after sumreps will be fewer because reps a
 
 all.counts$step <- factor(all.counts$step,levels = all.counts$step)
 
+print(all.counts)
+
 stepPlot<-function(all.counts,type="reads"){
   ggplot(all.counts,aes(x=step,y=all.counts[,type],label = all.counts[,type]))+geom_bar(stat = "identity") +
    theme(axis.text.x = element_text(angle = 45,hjust=1))+
@@ -666,10 +702,10 @@ print(ggplot(all.stats.df,aes(x=step,y=total.reads,fill=rank))+geom_bar(stat = "
 
 ## write final table
 ```{r write table, eval=TRUE,echo=F}
-if(!is.null(taxatab.out)) write.table(all.taxatabs.ss,taxatab.out,quote = F, row.names = F,col.names = T,sep = "\t")
+if(!is.null(taxatab.out)) write.table(all.taxatabs.ss,taxatab.out,quote = F, row.names = F,sep = "\t")
 ```
 
 ## make final krona plot
 ```{r write krona plot, eval=TRUE,echo=F}
-if(!is.null(taxatab.out)) if(krona.out==T) bas.krona.plot(taxatab.out)
+if(!is.null(krona.out)) bas.krona.plot(taxatable = all.taxatabs.ss,out = krona.out)
 ```

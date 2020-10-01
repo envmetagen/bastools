@@ -18,7 +18,7 @@ taxon.filter.solo<-function(files,filterpc=0.1){
 
 taxon.filter.solo.df<-function(taxatab,taxonpc=0.1){
   message("Applying taxon_pc filter.")
-  taxatab2<-taxatab[,-1]
+  taxatab2<-taxatab[,-1,drop=F]
   a<-sum(taxatab2)
   dxns1<-sum(taxatab2>0)
   taxatab.PCS<-sweep(taxatab2, MARGIN = 1, STATS = rowSums(taxatab2), FUN = "/")*100
@@ -1255,7 +1255,8 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
     theme(legend.title = element_text(size=8), legend.text=element_text(size=8),
           axis.text.x=element_text(size=8,angle=45, hjust=1),legend.position="right",legend.direction="vertical",
           title = element_text(size=6),axis.title = element_text(size=8),panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+          panel.grid.minor = element_blank(), panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))+
     ggtitle(paste("x axis=",column,"; as.percent=",as.percent,"; as.dxns=",as.dxns, ";facetcol=",facetcol),subtitle = )+
     xlab("") + scale_y_continuous(labels = scales::comma) 
     
