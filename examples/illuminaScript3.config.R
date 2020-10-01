@@ -102,7 +102,7 @@ use_flagged_accessions_mbk=T
 
 #Settings for step 8a, only change these settings if you want to run parts of this script alone (havent written user notes on this yet)
 steps<-c("selfblast", "find_db_errors", "calc_bar_gap","thresher") #options: "selfblast", "find_db_errors", "calc_bar_gap","thresher"
-#limit plots for calc_bar_gap
+#limit plots for calc_bar_gap, can be multiple. these are greps suggest including semi-colons
 plot.limit.taxon=NULL #";Streptophyta;"
 
 #thresher settings

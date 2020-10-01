@@ -75,6 +75,8 @@ if("step8a" %in% stepstotake){
     divergence<-rep(5,length(TaxlevelTestall))
     use_flagged_accessions_bcg=T
     rm.low.read.queries=NULL
+    #limit plots for calc_bar_gap
+    plot.limit.taxon=NULL #";Streptophyta;"
     
     #thresher
     use_flagged_accessions_mbk=T
@@ -86,7 +88,7 @@ if("step8a" %in% stepstotake){
     if(!exists("limit.plot.to.taxon")) {
       limit.plot.to.taxon<-NULL #for thresher
       message("Not limiting plots by taxon")
-    } else plot.limit.taxon=limit.plot.to.taxon
+    } 
     
     #saving main results (can be fed to plotting chunk)
     counts.out<-gsub(".blast.filt.txt",".blast.filt.thresher.counts.tsv",files[i])

@@ -20,6 +20,39 @@ library(tidyverse)
 options(httr_oob_default = TRUE)
 all.stats<-list()
 
+message("Settings:
+        ")
+message("bastoolsDir: ",bastoolsDir)
+message("input: ",input)
+message("ncbiTaxDir: ",ncbiTaxDir)
+message("KronaPath: ",KronaPath)
+message("outDir: ",outDir)
+message("steps: ",steps)
+message("threshersteps: ",threshersteps)
+message("plot.limit.taxon: ",plot.limit.taxon)
+message("known_flags: ",known_flags)
+message("TaxlevelTestall: ",TaxlevelTestall)
+message("divergence: ",divergence)
+message("use_flagged_accessions_bcg: ",use_flagged_accessions_bcg)
+message("use_flagged_accessions_mbk: ",use_flagged_accessions_mbk)
+message("rm.low.read.queries: ",rm.low.read.queries)
+message("SpeciesBL: ",SpeciesBL)
+message("GenusBL: ",GenusBL)
+message("FamilyBL: ",FamilyBL)
+message("thresher settings: 
+        ")
+message("plot.at.level: ",plot.at.level)
+message("limit.plot.to.taxon: ",limit.plot.to.taxon)
+message("final.table.out: ",final.table.out)
+message("tops: ",tops)
+message("pidents.list: ",pidents.list)
+message("krona_html_db",krona_html_db)
+message("selfblastout",selfblastout)
+message("flagged_accessions",flagged_accessions)
+message("flagged_error_detailed_table",flagged_error_detailed_table)
+message("out_html",out_html)
+message("further_potential_errors",further_potential_errors)
+
 read.and.format.full.blast<-function(input,known_flags=NULL,rm.low.read.queries=0.90){
   #rm.low.read.queries means remove queries where size (in qseqid) < quantile 90% e.g. 90% of reads might have 35 reads or more
   
@@ -84,7 +117,9 @@ read.and.format.full.blast<-function(input,known_flags=NULL,rm.low.read.queries=
   colnames(fullblast)<-c("origseqid","origtaxid","seq.name","seq.text","origpath")
   
   return(fullblast)
-} 
+}
+
+
 ```
 
 ## STEP1 SELF BLAST
@@ -102,7 +137,7 @@ if("selfblast" %in% steps) {
   colnames(x)<-c("taxon","count")
   bas.krona.plot(taxatable = x,out = paste0(outDir,krona_html_db),KronaPath = KronaPath)
   message("krona plot for self-blast database saved to ", paste0(outDir,krona_html_db))
-  
+    
   #make fasta of DB
   phylotools::dat2fasta(fullblast[,c("seq.name","seq.text")],paste0(outDir,"tempBLASTDB.fasta"))
   
