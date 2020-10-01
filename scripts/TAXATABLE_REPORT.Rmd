@@ -11,7 +11,48 @@ output: html_document
 
 message("settings:
         ")
-print(ls.str())
+message("bastoolsDir: ",bastoolsDir)
+message("taxatabs: ",taxatabs)
+message("master_sheet_file: ",master_sheet_file)
+message("subsetlist: ",subsetlist)
+message("config: ",config)
+message("out_html: ",out_html)
+message("taxatab.out: ",taxatab.out)
+message("problemTaxa: ",problemTaxa)
+message("taxonpc: ",taxonpc)
+message("samplepc: ",samplepc)
+message("filter_dxn: ",filter_dxn)
+message("filter_dxn2: ",filter_dxn2)
+message("real: ",real)
+message("neg.types: ",neg.types)
+message("neg.groups: ",neg.groups)
+message("do.first.negative.inspection: ",do.first.negative.inspection)
+message("use.contamination.filter: ",use.contamination.filter)
+message("remove.entire.dataset: ",remove.entire.dataset)
+message("rm.only.less.than: ",rm.only.less.than)
+message("rep.rm: ",rep.rm)
+message("rep.rm.first: ",rep.rm.first)
+message("rep.rm.second: ",rep.rm.second)
+message("xLevel: ",xLevel)
+message("zLevel: ",zLevel)
+message("aggregate.pre.grouping: ",aggregate.pre.grouping)
+message("group.taxa.before.filtering: ",group.taxa.before.filtering)
+message("sumrepsby: ",sumrepsby)
+message("unwantedTaxa: ",unwantedTaxa)
+message("taxa.to.group: ",taxa.to.group)
+message("plotting.vars: ",plotting.vars)
+message("plotting_levels: ",plotting_levels)
+message("hidelegend: ",hidelegend)
+message("hidelegend.pca: ",hidelegend.pca)
+message("facetcol: ",facetcol)
+message("colour.bar: ",colour.bar)
+message("krona.out: ",krona.out)
+message("plot.bars: ",plot.bars)
+message("plot.pca: ",plot.pca)
+message("show.pca.lines: ",show.pca.lines)
+message("plot.heatmaps: ",plot.heatmaps)
+
+#print(ls.str())
 ```
 
 
@@ -260,7 +301,7 @@ if (rep.rm.second==T){
 all.taxatabs.ss<-sumreps(taxatab = all.taxatabs.ss,ms_ss = ms_ss,grouping = sumrepsby,discard = F)
 
 stepcounter<-stepcounter+1
-all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "sumreps")
+all.stats[[stepcounter]]<-taxatab.sumStats(taxatab = all.taxatabs.ss,stepname = "sumreps")
 
 #rank stats
   print(stats.by.rank(taxatab = all.taxatabs.ss))
@@ -438,9 +479,25 @@ if(plot.bars) if(!is.null(plotting.vars)){
 } else message("plotting.vars=F...skipping barplots")
 ```
 
+## set heatmap size 
+```{r heatmap_size, eval=TRUE,echo=F,fig.height=14,fig.width=20}
+if(plot.heatmaps) if(!is.null(plotting.vars)){
+  heatmap.h<-5
+  if(nrow(all.taxatabs.ss)>10) heatmap.h<-10
+  if(nrow(all.taxatabs.ss)>100) heatmap.h<-50
+  if(nrow(all.taxatabs.ss)>300) heatmap.h<-68
+  
+  
+  heatmap.w<-5
+  if(ncol(all.taxatabs.ss)>10) heatmap.w<-10
+  if(ncol(all.taxatabs.ss)>70) heatmap.w<-30
+  if(ncol(all.taxatabs.ss)>100) heatmap.w<-50
+  
+}
+```
 
 ## heatmaps 
-```{r heatmaps, eval=TRUE,echo=F,fig.height=14,fig.width=20}
+```{r heatmaps, eval=TRUE,echo=F,fig.height=heatmap.h,fig.width=heatmap.w}
 if(plot.heatmaps) if(!is.null(plotting.vars)){
   
   message("Making heatmaps")
@@ -448,11 +505,16 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
   message("Secondary colour bars may not make sense if factors are overlapping, please check")
     
   values.to.plot<-c("nreads","ndxns","dxn")
-    
-      for(i in 1:length(plotting.vars)){
+  
+    for(i in 1:length(plotting.vars)){
           for(h in 1:length(values.to.plot)){
+            
+            plot.vals=T
+            if(values.to.plot[h]=="dxn") plot.vals=F
+            
             taxatab.heatmap(taxatab = all.taxatabs.ss,master_sheet = ms_ss,group.by=plotting.vars[i],
-                values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,inc.values = T,current.grouping = sumrepsby)
+                values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,inc.values = plot.vals,
+                current.grouping = sumrepsby)
         }
       }
 }

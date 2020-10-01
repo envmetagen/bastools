@@ -112,18 +112,18 @@ filter.dxns<-function(taxatab,filter_dxn=50,rm.empty.taxsam=T){
 }
 
 count.dxns.by.taxon<-function(taxatab){
-  taxatab2<-taxatab[,-1]
+  taxatab2<-taxatab[,-1,drop=F]
   return(data.frame(taxon=taxatab$taxon,n.samples=as.numeric(apply(taxatab2,1,function(x) sum(x>0)))))
 }
 
 sum.reads.by.taxon<-function(taxatab){
-  taxatab2<-taxatab[,-1]
+  taxatab2<-taxatab[,-1,drop=F]
   return(data.frame(taxon=taxatab$taxon,total.reads=as.numeric(apply(taxatab2,1,function(x) sum(x)))))
 }
 
 
 range.dxns.by.taxon<-function(taxatab){
-  taxatab2<-taxatab[,-1]
+  taxatab2<-taxatab[,-1,drop=F]
   taxatab2[taxatab2==0]<-NA
   rangetab<-suppressWarnings(apply(taxatab2,1,function(x) range(x,na.rm = T)))
   return(data.frame(taxon=taxatab$taxon,low=rangetab[1,],high=rangetab[2,]))
@@ -381,7 +381,7 @@ aggregate.at.xLevel<-function(taxatab,xLevel,rm.above=F,rm.trailing.NA=F){
     leftover<-c(";collapsed;collapsed;collapsed;collapsed;collapsed")
   }
   
-  taxatab<-aggregate(taxatab[,-1],by = list(xPath),FUN=sum)
+  taxatab<-aggregate(taxatab[,-1,drop=F],by = list(xPath),FUN=sum)
   
   colnames(taxatab)[1]<-"taxon"
   
@@ -1286,8 +1286,9 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
 }
 
 #Plotting bray distance matrix PCA
-taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lines=F,longnames=F,shortnames=F,ellipse=T,hidelegend=F){
-  message("Assuming grouping has already been done")
+taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lines=F,longnames=F,shortnames=F,
+                               ellipse=T,hidelegend=F){
+  #message("Assuming grouping has already been done")
   
   taxatab2<-taxatab
   taxatab2<-rm.0readtaxSam(taxatab2)
