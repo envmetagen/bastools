@@ -5657,8 +5657,10 @@ plot.taxatab.rank.props<-function(taxatab.list,y="reads",grayscale=F){
   
 }
 
-taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="nreads",current.grouping = "ss_sample_id",colour.bar=NULL,
-                          facetcol=NULL,inc.values=T,tidy.taxon.names="order",taxafontsize=10,colfontsize=10){
+taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="nreads",
+                          current.grouping = "ss_sample_id",colour.bar=NULL,
+                          facetcol=NULL,inc.values=T,tidy.taxon.names="order",
+                          taxafontsize=10,colfontsize=10,no_log=F){
   
   if(!is.data.frame(master_sheet)) stop("master_sheet should be a data frame")
   
@@ -5819,7 +5821,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     
     if(length(colour.bar)==3) {
       
-      ha = ComplexHeatmap::HeatmapAnnotation(bar=outgroups[[1]],foo=outgroups[[2]],tang=outgroups[[3]],show_annotation_name = F,
+      ha = ComplexHeatmap::HeatmapAnnotation(bar=outgroups[[1]],foo=outgroups[[2]],tang=outgroups[[3]],
+                                             show_annotation_name = F,
                                              col = c(outcols[[1]],outcols[[2]],outcols[[3]]),
                                              annotation_legend_param = list(bar = list(title = colour.bar[1])
                                                                             ,foo=list(title=colour.bar[2])
@@ -5834,7 +5837,9 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   hm.list<-list()
   for(i in 1:length(taxatab.list)){
     
-    if(values=="dxn") taxatab.list2[[i]]<-binarise.taxatab(taxatab.list[[i]],t=T) else taxatab.list2[[i]]<-taxatab.list[[i]]
+    if(values=="dxn") {
+      taxatab.list2[[i]]<-binarise.taxatab(taxatab.list[[i]],t=T) 
+      } else taxatab.list2[[i]]<-taxatab.list[[i]]
     
     if(!is.null(tidy.taxon.names)) taxatab.list2[[i]]<-tidy.taxon(taxatab=taxatab.list2[[i]],rm.trailing.NA=T,
                                                                   rm.preceeding.above=tidy.taxon.names)
@@ -5844,9 +5849,7 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     taxatab.list2[[i]]$taxon=NULL
     taxatab.list2[[i]]<-as.matrix(taxatab.list2[[i]])
   }
-   
   
-    
     if(values=="dxn"){
       
       for(i in 1:length(taxatab.list2)){
@@ -5940,35 +5943,55 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     
     if(values=="nreads")  {
       
-      for(i in 1:length(taxatab.list2)){
+      if(no_log){
+        legtit <- "Counts"
         
-      #log scale
-      taxatab.list2[[i]][taxatab.list2[[i]]==0] = NaN
-      taxatab.list2[[i]][taxatab.list2[[i]]==1] = 1.01
-      taxatab.list2[[i]]<-log(taxatab.list2[[i]],10)  
-      taxatab.list2[[i]][is.nan(taxatab.list2[[i]])] = 0
+      } else {
       
+        for(i in 1:length(taxatab.list2)){
+          
+          legtit <- "Reads (log10)"
+          
+          #log scale
+          taxatab.list2[[i]][taxatab.list2[[i]]==0] = NaN
+          taxatab.list2[[i]][taxatab.list2[[i]]==1] = 1.01
+          taxatab.list2[[i]]<-log(taxatab.list2[[i]],10)  
+          taxatab.list2[[i]][is.nan(taxatab.list2[[i]])] = 0
+        
+        }
       }
       
       for(i in 1:length(taxatab.list2)){
       
       CurrentData<-round(taxatab.list2[[i]],digits = 7)
       
-      if(inc.values) {values_func<-local({
-        CurrentData = CurrentData
-        function(a, b, x, y, width, height, fill) {
-          if(CurrentData[b, a] > 0) grid.text(sprintf("%.1f", CurrentData[b,a]), x, y, gp = gpar(fontsize = 8),rot = 90)}})
-      } else values_func<-NULL
+      if(inc.values) {
+        if(no_log) {
+          values_func<-local({
+            CurrentData = CurrentData
+            function(a, b, x, y, width, height, fill) {
+              if(CurrentData[b, a] > 0) grid.text(sprintf("%d", CurrentData[b,a]), x, y, 
+                                                  gp = gpar(fontsize = 6),rot = 0)}})
+          
+        } else {
+          
+          values_func<-local({
+          CurrentData = CurrentData
+          function(a, b, x, y, width, height, fill) {
+          if(CurrentData[b, a] > 0) grid.text(sprintf("%.1f", CurrentData[b,a]), x, y, 
+                                              gp = gpar(fontsize = 8),rot = 90)}})
+      }} else values_func<-NULL
       
       if(!is.null(colour.bar)) {
-        ordercols<-with(as.data.frame(colnames(taxatab.list2[[i]])),order(colour.bar.groups,as.factor(colour.bar.groups)))
+        ordercols<-with(as.data.frame(colnames(taxatab.list2[[i]])),
+                        order(colour.bar.groups,as.factor(colour.bar.groups)))
       } else ordercols<-NULL
       
       hm.list[[i]]<-ComplexHeatmap::Heatmap(taxatab.list2[[i]],
                                             bottom_annotation=ha, 
                                             col=circlize::colorRamp2(c(0, max(unlist(lapply(taxatab.list2,FUN=max)))), 
                                                                      c("grey90", "red")),
-                                            name = "Reads (log10)",
+                                            name = legtit,
                                             #column_title = plot_title,
                                             rect_gp = grid::gpar(col = "white", lwd = 2),
                                             border = FALSE,
