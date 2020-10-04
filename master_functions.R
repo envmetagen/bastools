@@ -675,34 +675,37 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   return(h)
 }
 
-count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_script_taxatab_tf){
+count.MBC<-function(MBCOutDir,ms_ss,otutab,illumina_script_taxatab,illumina_script_taxatab_tf){
   ##########################################
   message("Currently set up for one run, one primer, modify later if needed")
+  
+  ms_ss<-data.table::fread(ms_ss,data.table = F)
+  
   if(!"ss_sample_id" %in% colnames(ms_ss)) stop("No column in ms_ss called ss_sample_id")
   #import counts step1
-  step1<-data.table::fread(paste0(MBCtsvDir,"step1_stats.tsv"),data.table = F)
+  step1<-data.table::fread(paste0(MBCOutDir,"step1_stats.tsv"),data.table = F)
   step1$ss_sample_id<-gsub(".none.*$","",step1$Stats)
   demuliplexed_files<-sum(step1[step1$ss_sample_id %in% ms_ss$ss_sample_id,"Number of reads"])/2
   
   #import counts step2
-  step2<-data.table::fread(paste0(MBCtsvDir,"step2_stats.tsv"),data.table = F)
+  step2<-data.table::fread(paste0(MBCOutDir,"step2_stats.tsv"),data.table = F)
   step2$ss_sample_id<-gsub(".none.*$","",step2$Stats)
   after_paired_end<-sum(step2[step2$ss_sample_id %in% ms_ss$ss_sample_id,"Number of reads"])
   
   #import counts step3
-  step3<-data.table::fread(paste0(MBCtsvDir,"step3_stats.tsv"),data.table = F)
+  step3<-data.table::fread(paste0(MBCOutDir,"step3_stats.tsv"),data.table = F)
   step3$ss_sample_id<-gsub(".none.*$","",step3$Stats)
   after_cutadapt<-sum(step3[step3$ss_sample_id %in% ms_ss$ss_sample_id,"nseqs"])
   
   # #import counts step4 
   #cant figure out how to do this in R!
   current<-getwd()
-  setwd(MBCtsvDir)
+  setwd(MBCOutDir)
   tempname<-paste0(as.numeric(Sys.time()),".txt")
   writeLines(c("#!/bin/bash\nfind . -name *none.flash2_merged.vsearch_qfilt.cutadapt.vsearch_uniq.fasta.gz -print0 | xargs -0 zgrep '>' | sed 's/\\.\\///;s/.*\\///;s/.none.*size=/ /'")
-             ,paste0(MBCtsvDir,tempname))
-  step4<-as.data.frame(system2(command = "sh",args = paste0(MBCtsvDir,tempname),stdout = T,wait = T))
-  unlink(paste0(MBCtsvDir,tempname))
+             ,paste0(MBCOutDir,tempname))
+  step4<-as.data.frame(system2(command = "sh",args = paste0(MBCOutDir,tempname),stdout = T,wait = T))
+  unlink(paste0(MBCOutDir,tempname))
   setwd(current)
   colnames(step4)<-"V1"
   step4$counts<-as.numeric(do.call(rbind,stringr::str_split(step4$V1," "))[,2])
@@ -711,7 +714,7 @@ count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
   colnames(step4)<-c("ss_sample_id","nseqs")
   after_rm.singletons<-sum(step4[step4$ss_sample_id %in% ms_ss$ss_sample_id,"nseqs"])
   
-  # step5<-data.table::fread(paste0(MBCtsvDir,"step5_stats_BAS.tsv"),data.table = F)
+  # step5<-data.table::fread(paste0(MBCOutDir,"step5_stats_BAS.tsv"),data.table = F)
   # step5_A<-step5[step5$V1 %in% ms_ss$ss_sample_id,]
   # sum(step5_A$V2)
   #huh, well after all that, this is the same read count as in otutab, so can skip it
@@ -751,7 +754,7 @@ count.MBC<-function(MBCtsvDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
   after.taxon.filter<-sum(taxatab_D[,-1])
   
   
-  out<-data.frame("Demuliplexed files"=demuliplexed_files,
+  out<-data.frame("Demultiplexed files"=demuliplexed_files,
                   "After paired end alignment"=after_paired_end,
                   "After primer trimming"=after_cutadapt,
                   "After singleton removal"=after_rm.singletons,

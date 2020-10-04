@@ -155,10 +155,11 @@ if("selfblast" %in% steps) {
   perc_identity<-70
   #changing to blanket 70, to match that used by threshold.bin.blast2
   #blnket 20 word size...should modify for shorter frags
+  #blanket 100 results/query, maybe not ok...but files getting too large
   
   argsblast=c("-task","megablast", "-query", paste0(outDir,"tempBLASTDB.fasta"), "-db",paste0(outDir,"tempBLASTDB"),"-outfmt",
                  "'6 qseqid saccver staxid pident sseq'","-evalue",1,"-num_threads", 64, "-max_target_seqs", 
-                 300, "-max_hsps",1,"-word_size", 20,"-perc_identity", perc_identity,"-qcov_hsp_perc",98,
+                 100, "-max_hsps",1,"-word_size", 20,"-perc_identity", perc_identity,"-qcov_hsp_perc",98,
                  "-gapopen", 0, "-gapextend", 2, "-reward", 1, "-penalty", -1, "-dust","no", "-out", 
                  paste0(outDir,selfblastout))
   
