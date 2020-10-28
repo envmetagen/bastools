@@ -39,8 +39,8 @@ opts=c("-task","megablast","-outfmt", "6 qseqid pident qcovs saccver staxid ssci
 startingfastas<-c("12S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.fasta",
                   "16S.none.flash2.vsearch_qfilt.cutadapt.vsearch_uniq.vsearch_afilt.allsamples_step5.ALL_vsearch_uniq.nodenoise.noclust.fasta")
 
-#set a taxonomic limit to search blast database, one per fasta (here 7742 is vertebrates)
-taxidlimit<-c("7742","7742") #To blast entire nt just use taxidlimit=NULL
+#set a taxonomic limit to search blast database, one vector per fasta (here 7742 is vertebrates), stored as a list
+taxidlimit<-list(one=c(7742,5655),two=c(7742)) #To blast entire nt just use taxidlimit=NULL
 
 #which steps do you want to take, see below, remove any you do not want to include
 stepstotake<-c("step7","step8","step8a","step9","step10","step11","step12","step13","step14","step15")
