@@ -54,7 +54,7 @@ message("out_html: ",out_html)
 message("further_potential_errors: ",further_potential_errors)
 
 read.and.format.full.blast<-function(input,known_flags=NULL,rm.low.read.queries=0.90){
-  #rm.low.read.queries means remove queries where size (in qseqid) < quantile 90% e.g. 90% of reads might have 35 reads or more
+  #rm.low.read.queries means remove queries where size (in qseqid) < quantile 90% e.g. 90% of otus might have 35 reads or more
   
   require(stringr)
   

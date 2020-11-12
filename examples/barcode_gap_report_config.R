@@ -40,9 +40,9 @@ rm.low.read.queries=NULL #0.1-0.9
 
 #if not NULL these will be used for bcg plots and will be removed prior to bin threshing (but sb file will not be altered)
 #(applies to both final binning barcode gap report)
-SpeciesBL = "/home/tutorial/temp/disabled.sp.iran.txt"
-GenusBL = "/home/tutorial/temp/disabled.g.iran.txt"
-FamilyBL = "/home/tutorial/temp/disabled.f.iran.txt"
+SpeciesBL = NULL #"/home/tutorial/temp/disabled.sp.iran.txt"
+GenusBL = NULL #"/home/tutorial/temp/disabled.g.iran.txt"
+FamilyBL = NULL #"/home/tutorial/temp/disabled.f.iran.txt"
 #SpeciesBL = NULL
 #GenusBL = NULL
 #FamilyBL = NULL
@@ -53,9 +53,9 @@ limit.plot.to.taxon<-c("Mammalia","C") #for thresher, the taxon name and level c
 final.table.out<-"16S_PBthresh_final.table.tsv" #for thresher
 
 #binning settings to loop through
-tops<-c(0,1,100)
+tops<-c(0,10)
 #order=S,G,F,AF
-pidents.list<-list(one=c(99,97,95,90),two=c(98,94,92,88),three=c(93,85,75,60)) #can be more than three
+pidents.list<-list(one=c(99,97,95,90),two=c(98,94,92,88)) #can be more than three
 
 #outfiles
 krona_html_db="database.html" #(step1)

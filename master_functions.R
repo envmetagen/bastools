@@ -1932,6 +1932,10 @@ stats.by.rank<-function(taxatab,grouphtf=T){
 
 sumreps<-function(taxatab,ms_ss,grouping="Sample_Name",discard=T,current.grouping="ss_sample_id"){
   
+  #check groupings in colnames
+  if(!grouping %in% colnames(ms_ss)) stop("grouping variable not in ms_ss colnames")
+  if(!current.grouping %in% colnames(ms_ss)) stop("current.grouping variable not in ms_ss colnames")
+  
   require(tidyverse)
   
   if(discard) { 

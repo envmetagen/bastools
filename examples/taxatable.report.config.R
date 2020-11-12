@@ -105,7 +105,7 @@ facetcol=NULL
 #add a colour bar to heatmap plots (only makes sense if "above" plotting.vars). 
 #can be NULL, can be up to three - samples will be ordered according to the last one
 colour.bar=c("predator_species")
-#make krona plot of final taxatab, put to F if not desired
+#make krona plot of final taxatab, full path, put to F if not desired
 krona.out<-F
 
 plot.bars=F
