@@ -5084,7 +5084,7 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
     #get children of all disabled species
     disabledSpecies$taxids<-disabledSpecies$S
     if(nrow(disabledSpecies)>0)  {
-      childrenS<-get.children.taxonkit(disabledSpecies) 
+      childrenS<-get.children.taxonkit(disabledSpecies,ncbiTaxDir = ncbiTaxDir) 
     } else {
       childrenS<-NULL
     } 
@@ -5094,7 +5094,7 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
     #get children of all disabled genera
     disabledGenus$taxids<-disabledGenus$G
     if(nrow(disabledGenus)>0)  {
-      childrenG<-get.children.taxonkit(disabledGenus) 
+      childrenG<-get.children.taxonkit(disabledGenus,ncbiTaxDir = ncbiTaxDir) 
     } else {
       childrenG<-NULL
     }
@@ -5105,7 +5105,7 @@ bin.blast3<-function(filtered_blastfile,ncbiTaxDir,
     #get children of all disabled families
     disabledFamily$taxids<-disabledFamily$F
     if(nrow(disabledFamily)>0)  {
-      childrenF<-get.children.taxonkit(disabledFamily) 
+      childrenF<-get.children.taxonkit(disabledFamily,ncbiTaxDir = ncbiTaxDir) 
     } else {
       childrenF<-NULL
     }
