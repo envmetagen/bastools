@@ -1,5 +1,9 @@
 # bastools
-A bunch of scripts for processing read and primer data.
+A set of scripts for processing read and primer data.
+These were developed as part of the [H2020 EnvMetaGen project](https://inbio-envmetagen.pt/).
+While usable, these scripts may contain bugs and it is unlikely that this repo will continue to be maintained. 
+
+
 To install do
 `git clone https://github.com/envmetagen/bastools`
 this will create the directory "bastools" in the current directory
