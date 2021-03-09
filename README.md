@@ -1,7 +1,7 @@
 # bastools
 A set of scripts for processing read and primer data.
 These were developed as part of the [H2020 EnvMetaGen project](https://inbio-envmetagen.pt/).
-These scripts are usable but d not come with warranty and it is possible that this repo will not continue to be maintained. 
+These scripts are usable but do not come with warranty and it is possible that this repo will not continue to be maintained. 
 
 
 To install do
