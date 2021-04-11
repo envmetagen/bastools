@@ -29,7 +29,21 @@ taxon.filter.solo.df<-function(taxatab,taxonpc=0.1){
   taxatab3<-cbind(taxon=taxatab$taxon,taxatab2)
   message(paste("Using filter of", taxonpc, "%. reads removed:",a-b,"from",a,"; detections removed:",dxns1-dxns2,"from",dxns1))
   taxatab4<-rm.0readtaxSam(taxatab3)
-  }
+}
+
+taxatab.filter.full<-function(taxatab,pc=0.003){
+  message("Applying full taxatab filter.")
+  taxatab2<-taxatab[,-1,drop=F]
+  a<-sum(taxatab2)
+  thresh<-a*pc/100
+  dxns1<-sum(taxatab2>0)
+  taxatab2[taxatab2<thresh]<-0 
+  b<-sum(taxatab2)
+  dxns2<-sum(taxatab2>0)
+  taxatab3<-cbind(taxon=taxatab$taxon,taxatab2)
+  message(paste("Using filter of", pc, "%, (",thresh,"read threshold). reads removed:",a-b,"from",a,"; detections removed:",dxns1-dxns2,"from",dxns1))
+  taxatab4<-rm.0readtaxSam(taxatab3)
+}
 
 sample.filter.solo<-function(taxatab,samplepc=0.1){
   message("Applying sample_pc filter. Note: this removes samples with no reads")
@@ -3511,7 +3525,7 @@ plot.negs.vs.real<-function(taxatab,ms_ss,real){
       ylab("reads") +
       xlab("labels indicate % of reads in each sample of total reads for taxon")
     } 
-  } else message("No taxa appearing in both negatives and positives")
+  } else message("No taxa appearing in both negatives and unknowns")
    
   plotlist
 }
@@ -3618,6 +3632,7 @@ plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
   
   splitdf3<-splitdf3 %>% discard(is.null)
   
+  plotlist<-list()
   if(length(splitdf3)!=0) {
   
     #get negatives that had a taxon in themselves and real samples
@@ -3662,7 +3677,7 @@ plot.negs.vs.taxa<-function(taxatab,ms_ss,real){
         ylab("reads") +
         xlab("labels indicate % of reads in each taxon of total reads for sample")
     }
-  } else message("No taxa appearing in both negatives and positives")
+  } else message("No taxa appearing in both negatives and unknowns")
   
   plotlist
 }

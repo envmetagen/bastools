@@ -42,6 +42,8 @@ taxatab.out<-NULL
 #form the taxa path accordingly and make sure you are only removing what you want (by checking output). 
 #use problemTaxa<-c("NothingToAdd") to turn this off 
 problemTaxa<-c("NothingToAdd") 
+#Detection below fullpc % of overall taxatab read count will be removed (0.003=0.003%)
+fullpc=0.003
 #Detection below taxonpc % of taxon read count will be removed (0.1=0.1%)
 taxonpc = 0
 #Detection below samplepc % of sample read count will be removed (0.1=0.1%)
