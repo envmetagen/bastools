@@ -52,6 +52,8 @@ message("plot.pca: ",plot.pca)
 message("show.pca.lines: ",show.pca.lines)
 message("plot.heatmaps: ",plot.heatmaps)
 
+message("Note that 'htf'= higher-than-family throughout")
+
 #print(ls.str())
 ```
 
@@ -116,7 +118,7 @@ print(stats.by.rank(taxatab = all.taxatabs.ss))
 ```
 
 ## remove problem taxa - usually human, predator, NAs and no_hits
-```{r remove problem taxa, eval=TRUE,echo=F}
+```{r remove problem taxa, eval=TRUE,echo=F,fig.height=8}
 message("Removing no_hits")
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 
@@ -124,6 +126,13 @@ stepcounter<-stepcounter+1
 all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "rm.nohits")
 
 message("Removing NAs - sequences that had blast hits but were not assigned to any taxon")
+#replace "unknown" with NA (these come from database entries being "unknown" at certain level) 
+all.taxatabs.ss$taxon<-gsub(";unknown;",";NA;",all.taxatabs.ss$taxon)
+all.taxatabs.ss$taxon<-gsub(";unknown;",";NA;",all.taxatabs.ss$taxon) #need to repeat to find all patterns
+
+#sum taxa that are now duplicates
+all.taxatabs.ss<-aggregate(all.taxatabs.ss[,-1,drop=F],by = list(taxon=all.taxatabs.ss$taxon),FUN=sum)
+
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="NA;NA;NA;NA;NA;NA;NA",]
 all.taxatabs.ss<-all.taxatabs.ss[all.taxatabs.ss$taxon!="unknown;unknown;unknown;unknown;NA;NA;NA",]
 
@@ -396,7 +405,7 @@ if(group.taxa.before.filtering==F){
 }
 ```
 
-## aggregate at chosen level and keep only that-level taxa 
+## aggregate at chosen xlevel and keep only zlevel taxa 
 ```{r aggregate at chosen level and keep only that-level taxa Post-grouping, eval=TRUE,echo=F}
 if(aggregate.pre.grouping==F){
   if(is.null(xLevel)) {
@@ -433,7 +442,7 @@ taxatabs.multilevels<-list()
   
   if(!is.null(plotting_levels)){
     for(i in 1:length(plotting_levels)){
-      message("Plotting at ",plotting_levels[i]," level")
+      #message("Plotting at ",plotting_levels[i]," level")
       if(plotting_levels[i]=="species") {
         taxatabs.multilevels[[i]]<-keep.below.xLevel.assigns(all.taxatabs.ss,xLevel = "species",rm.trailing.NA = F)
         names(taxatabs.multilevels)[i]<-"species"
@@ -454,8 +463,8 @@ if(plot.bars) if(!is.null(plotting.vars)){
 
   message("Making barplots")
     
-  plot.as.percent<-c(F,T)
-  plot.as.dxns<-c(F,T)
+  if(!exists("plot.as.percent")) plot.as.percent<-c(F,T)
+  if(!exists("plot.as.dxns")) plot.as.dxns<-c(F,T)
   
   if(is.null(facetcol)){
     
@@ -464,7 +473,8 @@ if(plot.bars) if(!is.null(plotting.vars)){
         for(j in 1:length(taxatabs.multilevels)){
           for(i in 1:length(plotting.vars)){
             print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],
-                                   as.percent = plot.as.percent[k],as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby))
+                                   as.percent = plot.as.percent[k],as.dxns = plot.as.dxns[h], 
+                                   hidelegend = hidelegend,grouping = sumrepsby))
                                   
          }
        }
@@ -475,8 +485,12 @@ if(plot.bars) if(!is.null(plotting.vars)){
         for(k in 1:length(plot.as.percent)){
           for(j in 1:length(taxatabs.multilevels)){
             for(i in 1:length(plotting.vars)){
-              print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,column = plotting.vars[i],as.percent = plot.as.percent[k],
-                                  as.dxns = plot.as.dxns[h], hidelegend = hidelegend,grouping = sumrepsby,facetcol = facetcol))
+              if(plotting.vars[i]!=facetcol){
+                print(taxatab.stackplot(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,
+                                      column = plotting.vars[i],as.percent = plot.as.percent[k],
+                                  as.dxns = plot.as.dxns[h], hidelegend = hidelegend,
+                                  grouping = sumrepsby,facetcol = facetcol))
+              }
             
           }
         }
@@ -521,19 +535,24 @@ if(plot.bars) if(!is.null(plotting.vars)){
   
 ## set heatmap size 
 ```{r heatmap_size, eval=TRUE,echo=F,fig.height=14,fig.width=20}
-if(plot.heatmaps) if(!is.null(plotting.vars)){
   heatmap.h<-5
   if(nrow(all.taxatabs.ss)>10) heatmap.h<-10
   if(nrow(all.taxatabs.ss)>100) heatmap.h<-50
   if(nrow(all.taxatabs.ss)>300) heatmap.h<-68
+  if(nrow(all.taxatabs.ss)>400) heatmap.h<-88
+  if(nrow(all.taxatabs.ss)>600) heatmap.h<-100
+  if(nrow(all.taxatabs.ss)>700) heatmap.h<-120
   
+  message("heatmap height=",heatmap.h," based on ",nrow(all.taxatabs.ss)," taxa")
   
-  heatmap.w<-5
-  if(ncol(all.taxatabs.ss)>10) heatmap.w<-10
+  heatmap.w<-20
+  #if(ncol(all.taxatabs.ss)>10) heatmap.w<-20
+  #if(ncol(all.taxatabs.ss)>20) heatmap.w<-20
   if(ncol(all.taxatabs.ss)>70) heatmap.w<-30
   if(ncol(all.taxatabs.ss)>100) heatmap.w<-50
   
-}
+  message("heatmap width=",heatmap.w," based on ",ncol(all.taxatabs.ss)," samples")
+
 ```
 
 ## heatmaps 
@@ -544,7 +563,9 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
   message("Note: Heatmaps will be larger in this html than if plotted alone")
   message("Secondary colour bars may not make sense if factors are overlapping, please check")
     
-  values.to.plot<-c("nreads","ndxns","dxn")
+  if(!exists("values.to.plot")) values.to.plot<-c("nreads","ndxns","dxn")
+  
+  if(!exists("tidy.taxon.names")) tidy.taxon.names="order"
   
     for(i in 1:length(plotting.vars)){
           for(h in 1:length(values.to.plot)){
@@ -554,7 +575,7 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
             
             taxatab.heatmap(taxatab = all.taxatabs.ss,master_sheet = ms_ss,group.by=plotting.vars[i],
                 values=values.to.plot[h],colour.bar=colour.bar,facetcol=facetcol,inc.values = plot.vals,
-                current.grouping = sumrepsby)
+                current.grouping = sumrepsby,tidy.taxon.names = tidy.taxon.names)
         }
       }
 }
@@ -562,20 +583,49 @@ if(plot.heatmaps) if(!is.null(plotting.vars)){
 
 ```
 
+## facet comparison 
+```{r facet comparison, eval=TRUE,echo=F,fig.height=heatmap.h,fig.width=heatmap.w}
 
-## pca plot 
+if(plot.heatmaps) if(!is.null(plotting.vars)){
+
+
+if(is.null(facetcol)) {
+  message("No facets, skipping facet comparison")} else {
+    if(length(unique(ms_ss[,facetcol]))>2) {
+      message("More than 2 facets, skipping facet comparison")} else {
+        
+        for(i in 1:length(plotting.vars)){
+
+            plot.vals=F
+            
+            taxatab.heatmap(taxatab = all.taxatabs.ss,master_sheet = ms_ss,group.by=plotting.vars[i],
+                values="dxn",colour.bar=colour.bar,facetcol=facetcol,inc.values = plot.vals,
+                current.grouping = sumrepsby,tidy.taxon.names = tidy.taxon.names,comparison=T)
+        }
+      }
+      }
+    
+  }
+
+```
+
+## PCoA plots 
 ```{r pca plots, eval=TRUE,echo=F}
 if(plot.pca) if(!is.null(plotting.vars)){
   message("Plotting PCoA plot with lines")
+  
+  if(!exists("plotting.vars.pca")) plotting.vars.pca<-plotting.vars
   
   for(j in 1:length(taxatabs.multilevels)){
     
     if(ncol(taxatabs.multilevels[[j]])>3) {
       
-    for(i in 1:length(plotting.vars)){
+      message("The following plots are comparisons at ",names(taxatabs.multilevels)[j]," level")
+      
+    for(i in 1:length(plotting.vars.pca)){
       print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,
                                  lines = show.pca.lines,longnames = F,
-                                 shortnames = T,ellipse = T,factors = plotting.vars[i],hidelegend = hidelegend.pca))
+                                 shortnames = T,ellipse = T,factors = plotting.vars.pca[i],hidelegend = hidelegend.pca))
     }
     } else message("Only two samples at ", names(taxatabs.multilevels)[j]," level, skipping PCoA plot")
   }

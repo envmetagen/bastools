@@ -245,8 +245,10 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
           
           #put taxon counts to 0
           contaminations<-cbind(taxon=taxatabX$taxon[taxatabX$taxon %in% negtaxa],
-                                              taxatabX[taxatabX$taxon %in% negtaxa,colnames(taxatabX) %in% group.samples,drop=F])
-          contaminations<-cbind(taxon=contaminations[,1],contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
+                                              taxatabX[taxatabX$taxon %in% negtaxa,
+                                                       colnames(taxatabX) %in% group.samples,drop=F])
+          contaminations<-cbind(taxon=contaminations[,1],
+                                contaminations[,-1,drop=F][,colSums(contaminations[,-1,drop=F])>0,drop=F])
           
             if(rm.only.less.than==T){
         
@@ -256,6 +258,8 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
                   taxatab2<-taxatabX[taxatabX$taxon==negtaxa[h],colnames(taxatabX) %in% group.samples,drop=F]
                   taxatab2[taxatab2<(negX[h]+1)]<-0
                   taxatab3<-cbind(taxon=taxatabX[taxatabX$taxon==negtaxa[h],]$taxon,taxatab2)
+                  taxatabX$taxon<-as.character(taxatabX$taxon)
+                  taxatab3$taxon<-as.character(taxatab3$taxon)
                   taxatabX[taxatabX$taxon==negtaxa[h],colnames(taxatabX) %in% colnames(taxatab3)]<-taxatab3[1,] 
                 }
             } else { taxatabX[taxatabX$taxon %in% negtaxa,colnames(taxatabX) %in% group.samples]<-0 }
@@ -675,7 +679,9 @@ blast.min.bas<-function(infastas,refdb,blast_exec="blastn",wait=T,taxidlimit=NUL
   return(h)
 }
 
-count.MBC<-function(MBCOutDir,ms_ss,otutab,illumina_script_taxatab,illumina_script_taxatab_tf){
+count.MBC<-function(MBCOutDir,ms_ss,otutab
+                    #,illumina_script_taxatab,illumina_script_taxatab_tf
+                    ){
   ##########################################
   message("Currently set up for one run, one primer, modify later if needed")
   
@@ -728,30 +734,32 @@ count.MBC<-function(MBCOutDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
   #OTUs.in.otutab<-length(otutab_C$OTU) #NOT REALLY NECESSARY
   after_size_select<-sum(otutab_C[,-1])
   
-  #import first taxa tab
-  taxatab_A<-data.table::fread(illumina_script_taxatab,data.table = F)
-  #subset
-  taxatab_B<-cbind(taxon=taxatab_A$taxon,taxatab_A[,colnames(taxatab_A) %in% ms_ss$ss_sample_id])
-  #remove 0-read OTUs and samples
-  taxatab_C<-rm.0readtaxSam(taxatab = taxatab_B)
-  ##this is the same as otutab
-  
-  after_blast<-sum(taxatab_C[taxatab_C$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",-1])
-  if("NA;NA;NA;NA;NA;NA;NA" %in% taxatab_C$taxon){
-    sumNAs<-sum(taxatab_C[taxatab_C$taxon=="NA;NA;NA;NA;NA;NA;NA",-1])
-  } else {sumNAs<-0}
-  after_blast_filt<-after_blast-sumNAs
-  
-  #import filtered taxa tab
-  taxatab_A<-data.table::fread(illumina_script_taxatab_tf,data.table = F)
-  #subset 
-  taxatab_B<-cbind(taxon=taxatab_A$taxon,taxatab_A[,colnames(taxatab_A) %in% ms_ss$ss_sample_id])
-  #remove 0-read OTUs and samples
-  taxatab_C<-rm.0readtaxSam(taxatab = taxatab_B)
-  #remove no hits and NA
-  taxatab_D<-taxatab_C[taxatab_C$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
-  taxatab_D<-taxatab_D[taxatab_D$taxon!="NA;NA;NA;NA;NA;NA;NA",]
-  after.taxon.filter<-sum(taxatab_D[,-1])
+  # #import first taxa tab
+  # taxatab_A<-data.table::fread(illumina_script_taxatab,data.table = F)
+  # #subset
+  # taxatab_B<-cbind(taxon=taxatab_A$taxon,taxatab_A[,colnames(taxatab_A) %in% ms_ss$ss_sample_id])
+  # #remove 0-read OTUs and samples
+  # taxatab_C<-rm.0readtaxSam(taxatab = taxatab_B)
+  # ##this is the same as otutab
+  # 
+  # after_blast<-sum(taxatab_C[taxatab_C$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",-1])
+  # 
+  # if("NA;NA;NA;NA;NA;NA;NA" %in% taxatab_C$taxon){
+  #   sumNAs<-sum(taxatab_C[taxatab_C$taxon=="NA;NA;NA;NA;NA;NA;NA",-1])
+  # } else {sumNAs<-0}
+  # 
+  # after_blast_filt<-after_blast-sumNAs
+  # 
+  # #import filtered taxa tab
+  # taxatab_A<-data.table::fread(illumina_script_taxatab_tf,data.table = F)
+  # #subset 
+  # taxatab_B<-cbind(taxon=taxatab_A$taxon,taxatab_A[,colnames(taxatab_A) %in% ms_ss$ss_sample_id])
+  # #remove 0-read OTUs and samples
+  # taxatab_C<-rm.0readtaxSam(taxatab = taxatab_B)
+  # #remove no hits and NA
+  # taxatab_D<-taxatab_C[taxatab_C$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
+  # taxatab_D<-taxatab_D[taxatab_D$taxon!="NA;NA;NA;NA;NA;NA;NA",]
+  # after.taxon.filter<-sum(taxatab_D[,-1])
   
   
   out<-data.frame("Demultiplexed files"=demuliplexed_files,
@@ -759,9 +767,10 @@ count.MBC<-function(MBCOutDir,ms_ss,otutab,illumina_script_taxatab,illumina_scri
                   "After primer trimming"=after_cutadapt,
                   "After singleton removal"=after_rm.singletons,
                   "After size selection"=after_size_select,
-                  "After blast"=after_blast,
-                  "After blast filters"=after_blast_filt,
-                  "After initial taxon filter"=after.taxon.filter)
+                  #"After blast"=after_blast,
+                  #"After blast filters"=after_blast_filt,
+                  #"After initial taxon filter"=after.taxon.filter
+                  )
   
   colnames(out)<-gsub("\\."," ",colnames(out))
   
@@ -1330,7 +1339,7 @@ taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lin
   # if(!is.null(facetcol))  if(length(facetcol)==1) p<-p+facet_wrap(vars(cmdspoints[,match(facetcol[1],colnames(cmdspoints))]),scales = "fixed")
   # if(!is.null(facetcol))  if(length(facetcol)>1) p<-p+facet_wrap(facetcol,scales = "fixed")
   
-  message("Principal Coordinates Analysis plot of community simmilarity using Bray-Curtis distances")
+  message("Principal Coordinates Analysis plot of community disimmilarity using Jaccard distances based on presence-absence data")
   
   if(ellipse){
     message("Note: Ellipses will not be calculated if there are groups with too few data points")
@@ -5663,9 +5672,11 @@ plot.taxatab.rank.props<-function(taxatab.list,y="reads",grayscale=F){
 taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="nreads",
                           current.grouping = "ss_sample_id",colour.bar=NULL,
                           facetcol=NULL,inc.values=T,tidy.taxon.names="order",
-                          taxafontsize=10,colfontsize=10,no_log=F){
+                          taxafontsize=10,colfontsize=10,no_log=F, comparison=F){
   
   if(!is.data.frame(master_sheet)) stop("master_sheet should be a data frame")
+  
+  if(values!="dxn" & comparison==T) stop("Comparison can only be done when values=dxn")
   
   if(values!="ndxns" & values!="nreads" & values!="dxn") stop("values must be one of nreads, ndxns, dxn")
   
@@ -5751,6 +5762,32 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     }
   }
   
+  #comparison
+  if(comparison){
+    if(length(unique(ms_ss[,facetcol]))>2) message("More than 2 facets, not implemented yet")
+    
+    taxatab.list[[1]]<-binarise.taxatab(taxatab.list[[1]],t=T)
+    taxatab.list[[2]]<-binarise.taxatab(taxatab.list[[2]],t=T)
+    temptaxa<-taxatab.list[[1]][,1,drop=F]
+    taxatab.list[[1]][taxatab.list[[1]]==1]<-10
+    taxatab.list[[1]]<-cbind(temptaxa,taxatab.list[[1]][,-1]-taxatab.list[[2]][,-1])
+    if(ncol(taxatab.list[[1]])==2) colnames(taxatab.list[[1]])<-c("taxon","comparison")
+    #0=neither #10=T1 #9=both #-1=T2
+    taxatab.list[[2]]<-NULL
+    
+    #calculate agreements (not for hetamap)
+    #count identical detections for each sample
+    pAgree<-list()
+    for(i in 2:ncol(taxatab.list[[1]])){
+      pAgree[[i]]<-length(which(taxatab.list[[1]][,i,drop=F]==9)) /
+        length(which(taxatab.list[[1]][,i,drop=F]!=0))
+    }
+    pAgree<-round(unlist(pAgree),digits = 3)
+    message("Agreement=no. both/no. taxa [each sample]")
+    print(data.frame(group=colnames(taxatab.list[[1]][,-1,drop=F]),Agreement=pAgree))
+    message("Mean agreement=",round(mean(pAgree),digits = 3)," grouping=",group.by)
+  }
+  
   #colour bar
   if(!is.null(colour.bar)) {
     
@@ -5761,7 +5798,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
     
     for(i in 1:length(colour.bar)){
     
-      colour.bar.groups<-master_sheet[match(colnames(taxatab.list[[1]][,-1,drop=F]),master_sheet[,group.by]),colour.bar[i]]
+      colour.bar.groups<-master_sheet[match(colnames(taxatab.list[[1]][,-1,drop=F]),master_sheet[,group.by]),
+                                      colour.bar[i]]
       
       if(sum(is.na(colour.bar.groups))>0) {
         message("some colour bar groups were NA, changing to unknown")
@@ -5841,22 +5879,41 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   for(i in 1:length(taxatab.list)){
     
     if(values=="dxn") {
-      taxatab.list2[[i]]<-binarise.taxatab(taxatab.list[[i]],t=T) 
+      if(comparison==F) {
+        taxatab.list2[[i]]<-binarise.taxatab(taxatab.list[[i]],t=T) 
+      } else taxatab.list2[[i]]<-taxatab.list[[i]]
       } else taxatab.list2[[i]]<-taxatab.list[[i]]
     
     if(!is.null(tidy.taxon.names)) taxatab.list2[[i]]<-tidy.taxon(taxatab=taxatab.list2[[i]],rm.trailing.NA=T,
                                                                   rm.preceeding.above=tidy.taxon.names)
     
     #convert to matrix
-    rownames(taxatab.list2[[i]])<-make.unique(taxatab.list2[[i]]$taxon)
+    rownames(taxatab.list2[[i]])<-make.unique(as.character(taxatab.list2[[i]]$taxon))
     taxatab.list2[[i]]$taxon=NULL
     taxatab.list2[[i]]<-as.matrix(taxatab.list2[[i]])
-  }
+    }
   
     if(values=="dxn"){
       
       for(i in 1:length(taxatab.list2)){
       
+      #adding a comparison option
+      if(comparison) {
+        #if detected in all samples, need to change a little. 
+        if(length(taxatab.list2[[1]][taxatab.list2[[1]]==0])==0) {
+          
+          coldxns=c("red","green","black")
+          levels=c(9,10,-1)
+          labels=c("Both",unique(ms_ss[,facetcol])[2],unique(ms_ss[,facetcol])[1]) 
+        } else {
+          
+        coldxns=c("red","grey90","green","black")
+        levels=c(0,9,10,-1)
+        labels=c("Neither","Both",unique(ms_ss[,facetcol])[2],unique(ms_ss[,facetcol])[1]) 
+        #0=neither #10=T1 #9=both #-1=T2
+        } 
+        }else {
+        
       #if detected in all samples, need to change a little. 
       if(mean(taxatab.list2[[i]])==1) {
         coldxns="black"
@@ -5867,18 +5924,23 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
         levels=c(1,0)
         labels=c("Detected","Not Detected") 
       }
+        }
       
       CurrentData<-round(taxatab.list2[[i]],digits = 0)
       
       if(inc.values) {values_func<-local({
         CurrentData = CurrentData
         function(a, b, x, y, width, height, fill) {
-          if(CurrentData[b, a] > 0) grid.text(sprintf("%.0f", CurrentData[b,a]), x, y, gp = gpar(fontsize = 8,col="red"))}})
+          if(CurrentData[b, a] > 0) grid.text(sprintf("%.0f", CurrentData[b,a]), x, y, 
+                                              gp = gpar(fontsize = 8,col="red"))}})
       } else values_func<-NULL
       
       if(!is.null(colour.bar)) {
-        ordercols<-with(as.data.frame(colnames(taxatab.list2[[i]])),order(colour.bar.groups,as.factor(colour.bar.groups)))
+        ordercols<-with(as.data.frame(colnames(taxatab.list2[[i]])),order(colour.bar.groups,
+                                                                          as.factor(colour.bar.groups)))
       } else ordercols<-NULL
+      
+      if(comparison) titles<-"comparison"  else titles<-names(ms.split)[i]
       
       hm.list[[i]]<-ComplexHeatmap::Heatmap(taxatab.list2[[i]],
                                             bottom_annotation=ha, 
@@ -5895,7 +5957,7 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
                                             column_names_gp = gpar(fontsize = colfontsize),
                                             column_order = ordercols,
                                             heatmap_legend_param = list(at=levels,labels = labels),
-                                            column_title = names(ms.split)[i],
+                                            column_title = titles,
                                             column_title_gp = gpar(fontsize = 10),
                                             cell_fun = values_func,
                                             row_split = ranks,
