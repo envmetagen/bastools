@@ -19,6 +19,7 @@ message("config: ",config)
 message("out_html: ",out_html)
 message("taxatab.out: ",taxatab.out)
 message("problemTaxa: ",problemTaxa)
+message("fullpc: ",fullpc)
 message("taxonpc: ",taxonpc)
 message("samplepc: ",samplepc)
 message("filter_dxn: ",filter_dxn)
@@ -89,6 +90,9 @@ if(!is.null(subsetlist)) {
 #import taxtabs
 
 all.taxatabs<-bas.merge.taxatabs(taxatabs)
+
+#change mbk codes
+all.taxatabs$taxon<-gsub("mbk:nb-thr","NA",all.taxatabs$taxon)
 
 #make new taxa table based on subsetted master sheet
 all.taxatabs.ss<-cbind(taxon=all.taxatabs$taxon,all.taxatabs[colnames(all.taxatabs) %in% ms_ss$ss_sample_id])
@@ -185,7 +189,13 @@ if(group.taxa.before.filtering==T){
 
 ## apply taxon and sample filters
 ```{r apply taxon and sample filters, eval=TRUE,echo=F}
-if(taxonpc>0 | samplepc>0) {
+if(taxonpc>0 | samplepc>0 | fullpc>0) {
+  
+  #apply overall filter
+  all.taxatabs.ss<-taxatab.filter.full(all.taxatabs.ss,pc=fullpc)
+  stepcounter<-stepcounter+1
+    all.stats[[stepcounter]]<-taxatab.sumStats(all.taxatabs.ss,stepname = "fullpc")
+  
     all.taxatabs.ss<-taxon.filter.solo.df(taxatab = all.taxatabs.ss,taxonpc = taxonpc)
     
     stepcounter<-stepcounter+1
@@ -202,6 +212,9 @@ if(taxonpc>0 | samplepc>0) {
     print(stats.by.rank(taxatab = all.taxatabs.ss))
   
 }else message("taxonpc and samplepc set to 0...skipping taxon and sample filters")
+
+
+
 ```
 
 

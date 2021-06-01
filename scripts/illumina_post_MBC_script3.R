@@ -19,7 +19,7 @@ if("step7" %in% stepstotake){
   } else{
     for(i in 1:length(startingfastas)){
     blast.status<-blast.min.bas2(infasta = startingfastas[i],refdb = refdb,blast_exec = blast_exec, wait = T,
-                               taxidlimit = taxidlimit[i], ncbiTaxDir = ncbiTaxDir,opts = opts,overWrite = T)
+                               taxidlimit = taxidlimit[[i]], ncbiTaxDir = ncbiTaxDir,opts = opts,overWrite = T)
     }
   }
   

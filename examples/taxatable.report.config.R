@@ -42,6 +42,8 @@ taxatab.out<-NULL
 #form the taxa path accordingly and make sure you are only removing what you want (by checking output). 
 #use problemTaxa<-c("NothingToAdd") to turn this off 
 problemTaxa<-c("NothingToAdd") 
+#Detection below fullpc % of overall taxatab read count will be removed (0.003=0.003%)
+fullpc=0.003
 #Detection below taxonpc % of taxon read count will be removed (0.1=0.1%)
 taxonpc = 0
 #Detection below samplepc % of sample read count will be removed (0.1=0.1%)
@@ -105,7 +107,7 @@ facetcol=NULL
 #add a colour bar to heatmap plots (only makes sense if "above" plotting.vars). 
 #can be NULL, can be up to three - samples will be ordered according to the last one
 colour.bar=c("predator_species")
-#make krona plot of final taxatab, put to F if not desired
+#make krona plot of final taxatab, full path, put to F if not desired
 krona.out<-F
 
 plot.bars=F
