@@ -80,14 +80,13 @@ bas.merge.taxatabs<-function(taxatabs){
   
   require(tidyverse)
   
-  
   taxatabs.list<-list()
   counts<-data.frame(file=taxatabs,reads=0,taxa=0,samples=0)
   
   for(i in 1:length(taxatabs)){
     taxatabs.list[[i]]<-data.table::fread(taxatabs[i],sep = "\t",data.table = F)
     colnames(taxatabs.list[[i]])[1]<-"taxon" #this is for handling OTUtabs
-    counts[i,2]<-sum(taxatabs.list[[i]][,-1])
+    counts[i,2]<-sum(taxatabs.list[[i]][,-1],na.rm = T)
     counts[i,3]<-length(taxatabs.list[[i]][,1])
     counts[i,4]<-length(colnames(taxatabs.list[[i]][,-1]))
     
@@ -1957,7 +1956,7 @@ sumreps<-function(taxatab,ms_ss,grouping="Sample_Name",discard=T,current.groupin
   } else { message("If only one rep, will keep that rep") }
   
   #get group ids
-  mapping<-ms_ss[match(colnames(taxatab[,-1]),ms_ss[,current.grouping]),grouping]
+  mapping<-ms_ss[match(colnames(taxatab[,-1,drop=F]),ms_ss[,current.grouping]),grouping]
   
   clean<-list()
   for(i in 1:length(unique(mapping))){
