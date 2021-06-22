@@ -5764,9 +5764,9 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   }
   
   #ditto for samples
-  all.samples<-unique(unlist(lapply(taxatab.list,function(x) colnames(x[,-1]))))
+  all.samples<-unique(unlist(lapply(taxatab.list,function(x) colnames(x[,-1,drop=F]))))
   for(i in 1:length(taxatab.list)){
-    missing.samples<-all.samples[!all.samples %in% colnames(taxatab.list[[i]][,-1])]
+    missing.samples<-all.samples[!all.samples %in% colnames(taxatab.list[[i]][,-1,drop=F])]
     if(length(missing.samples)>0){
       a<-data.frame(matrix(ncol=length(missing.samples),nrow = nrow(taxatab.list[[i]])))
       colnames(a)<-missing.samples
@@ -5859,6 +5859,7 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
       if(i==1) names(colours.list)<-"bar"
       if(i==2) names(colours.list)<-"foo"
       if(i==3) names(colours.list)<-"tang"
+      if(i==4) names(colours.list)<-"zoop"
       
       outgroups[[i]]<-colour.bar.groups
       outcols[[i]]<-colours.list
@@ -5886,6 +5887,18 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
                                              annotation_legend_param = list(bar = list(title = colour.bar[1])
                                                                             ,foo=list(title=colour.bar[2])
                                                                             ,tang=list(title=colour.bar[3])))
+    }
+    
+    if(length(colour.bar)==4) {
+      
+      ha = ComplexHeatmap::HeatmapAnnotation(bar=outgroups[[1]],foo=outgroups[[2]],tang=outgroups[[3]],
+                                             zoop=outgroups[[4]],
+                                             show_annotation_name = F,
+                                             col = c(outcols[[1]],outcols[[2]],outcols[[3]],outcols[[4]]),
+                                             annotation_legend_param = list(bar = list(title = colour.bar[1])
+                                                                            ,foo=list(title=colour.bar[2])
+                                                                            ,tang=list(title=colour.bar[3])
+                                                                            ,zoop=list(title=colour.bar[4])))
     }
     
     

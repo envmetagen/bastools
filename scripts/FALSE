@@ -6661,23 +6661,113 @@ function zoomOut()
  <magnitude><val>852788</val><val>546</val><val>43956</val><val>2302</val><val>4262</val><val>53171</val><val>5059</val><val>27</val><val>4099</val><val>4936</val><val>19503</val><val>32438</val><val>2725</val><val>2955</val><val>15611</val><val>10798</val><val>7703</val><val>46050</val><val>42445</val><val>9939</val><val>5945</val><val>33992</val><val>28532</val><val>3362</val><val>64253</val><val>35089</val><val>45563</val><val>14851</val><val>48881</val><val>3380</val><val>15760</val><val>4462</val><val>2922</val><val>100581</val><val>29538</val><val>1150</val><val>69956</val><val>2892</val><val>25012</val><val>8070</val><val>72</val></magnitude>
  <node name="Eukaryota">
   <magnitude><val>852788</val><val>546</val><val>43956</val><val>2302</val><val>4262</val><val>53171</val><val>5059</val><val>27</val><val>4099</val><val>4936</val><val>19503</val><val>32438</val><val>2725</val><val>2955</val><val>15611</val><val>10798</val><val>7703</val><val>46050</val><val>42445</val><val>9939</val><val>5945</val><val>33992</val><val>28532</val><val>3362</val><val>64253</val><val>35089</val><val>45563</val><val>14851</val><val>48881</val><val>3380</val><val>15760</val><val>4462</val><val>2922</val><val>100581</val><val>29538</val><val>1150</val><val>69956</val><val>2892</val><val>25012</val><val>8070</val><val>72</val></magnitude>
-  <node name="Basidiomycota">
-   <magnitude><val>165</val><val>0</val><val>0</val><val>0</val><val>2</val><val>18</val><val>49</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>15</val><val>6</val><val>0</val><val>26</val><val>2</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>2</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>32</val><val>0</val><val>0</val></magnitude>
-   <node name="Microbotryomycetes">
-    <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-    <node name="Sporidiobolales">
-     <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Sporidiobolaceae">
-      <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+  <node name="Chordata">
+   <magnitude><val>836</val><val>524</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>39</val><val>0</val><val>0</val><val>34</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+   <node name="Lepidosauria">
+    <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+    <node name="Squamata">
+     <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Phyllodactylidae">
+      <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
       <node name="NA">
-       <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
        <node name="NA">
-        <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+        <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
        </node>
       </node>
      </node>
     </node>
    </node>
+   <node name="Aves">
+    <magnitude><val>426</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>30</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+    <node name="Passeriformes">
+     <magnitude><val>426</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>30</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+     <node name="Aegithalidae">
+      <magnitude><val>128</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>128</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>128</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Paridae">
+      <magnitude><val>257</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>257</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>257</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Phylloscopidae">
+      <magnitude><val>41</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>30</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>41</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>30</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>41</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>30</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Mammalia">
+    <magnitude><val>383</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>13</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+    <node name="Lagomorpha">
+     <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Leporidae">
+      <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Chiroptera">
+     <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Vespertilionidae">
+      <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Artiodactyla">
+     <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Suidae">
+      <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Actinopteri">
+    <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+    <node name="Blenniiformes">
+     <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Blenniidae">
+      <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+  <node name="Basidiomycota">
+   <magnitude><val>165</val><val>0</val><val>0</val><val>0</val><val>2</val><val>18</val><val>49</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>15</val><val>6</val><val>0</val><val>26</val><val>2</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>2</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>32</val><val>0</val><val>0</val></magnitude>
    <node name="Malasseziomycetes">
     <magnitude><val>154</val><val>0</val><val>0</val><val>0</val><val>2</val><val>7</val><val>49</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>15</val><val>6</val><val>0</val><val>26</val><val>2</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>2</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>32</val><val>0</val><val>0</val></magnitude>
     <node name="Malasseziales">
@@ -6693,304 +6783,16 @@ function zoomOut()
      </node>
     </node>
    </node>
-  </node>
-  <node name="Arthropoda">
-   <magnitude><val>851604</val><val>19</val><val>43956</val><val>2302</val><val>4260</val><val>53123</val><val>5010</val><val>27</val><val>4099</val><val>4936</val><val>19491</val><val>32438</val><val>2701</val><val>2955</val><val>15592</val><val>10792</val><val>7703</val><val>46015</val><val>42443</val><val>9934</val><val>5941</val><val>33986</val><val>28459</val><val>3302</val><val>64251</val><val>35089</val><val>45503</val><val>14849</val><val>48779</val><val>3377</val><val>15760</val><val>4460</val><val>2922</val><val>100562</val><val>29538</val><val>1150</val><val>69927</val><val>2892</val><val>24921</val><val>8068</val><val>72</val></magnitude>
-   <node name="Arachnida">
-    <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
-    <node name="Scorpiones">
-     <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
-     <node name="Scorpionidae">
-      <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
+   <node name="Microbotryomycetes">
+    <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+    <node name="Sporidiobolales">
+     <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Sporidiobolaceae">
+      <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
       <node name="NA">
-       <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
+       <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
        <node name="NA">
-        <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-   <node name="Hexanauplia">
-    <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-    <node name="Cyclopoida">
-     <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-     <node name="Cyclopidae">
-      <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-   <node name="Malacostraca">
-    <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-    <node name="Isopoda">
-     <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Porcellionidae">
-      <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-   <node name="Diplopoda">
-    <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-    <node name="Julida">
-     <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Julidae">
-      <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-   <node name="Insecta">
-    <magnitude><val>46474</val><val>19</val><val>6</val><val>0</val><val>29</val><val>6</val><val>28</val><val>27</val><val>0</val><val>23</val><val>84</val><val>22</val><val>7</val><val>349</val><val>6045</val><val>224</val><val>827</val><val>660</val><val>209</val><val>213</val><val>4280</val><val>31204</val><val>15</val><val>6</val><val>0</val><val>0</val><val>37</val><val>27</val><val>229</val><val>0</val><val>2</val><val>14</val><val>34</val><val>135</val><val>52</val><val>14</val><val>5</val><val>3</val><val>1527</val><val>40</val><val>72</val></magnitude>
-    <node name="Psocoptera">
-     <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
-     <node name="Liposcelididae">
-      <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Blattodea">
-     <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
-     <node name="Blaberidae">
-      <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
-      <node name="NA">
-       <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
-       <node name="NA">
-        <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Hemiptera">
-     <magnitude><val>61</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>5</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
-     <node name="Lachnidae">
-      <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Miridae">
-      <magnitude><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Aphididae">
-      <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Cicadellidae">
-      <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Liviidae">
-      <magnitude><val>26</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>26</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>26</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Lygaeidae">
-      <magnitude><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Neuroptera">
-     <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
-     <node name="Chrysopidae">
-      <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Diptera">
-     <magnitude><val>145</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>113</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
-     <node name="Culicidae">
-      <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Cecidomyiidae">
-      <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Chironomidae">
-      <magnitude><val>109</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>105</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>109</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>105</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>109</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>105</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Tipulidae">
-      <magnitude><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Ephemeroptera">
-     <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Polymitarcyidae">
-      <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Lepidoptera">
-     <magnitude><val>180</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>4</val><val>15</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>116</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Gelechiidae">
-      <magnitude><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Gracillariidae">
-      <magnitude><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Blastobasidae">
-      <magnitude><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Noctuidae">
-      <magnitude><val>88</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>15</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>62</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>88</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>15</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>62</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>88</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>15</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>62</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Orthoptera">
-     <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
-     <node name="Gryllidae">
-      <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
-      <node name="NA">
-       <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
-       <node name="NA">
-        <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Hymenoptera">
-     <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Formicidae">
-      <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Coleoptera">
-     <magnitude><val>37122</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
-     <node name="Tenebrionidae">
-      <magnitude><val>37086</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>37086</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>37086</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Coccinellidae">
-      <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Carabidae">
-      <magnitude><val>34</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>34</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>34</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+        <magnitude><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
        </node>
       </node>
      </node>
@@ -7033,111 +6835,6 @@ function zoomOut()
     </node>
    </node>
   </node>
-  <node name="Chordata">
-   <magnitude><val>836</val><val>524</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>39</val><val>0</val><val>0</val><val>34</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-   <node name="Lepidosauria">
-    <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-    <node name="Squamata">
-     <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Phyllodactylidae">
-      <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>24</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-   <node name="Mammalia">
-    <magnitude><val>383</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>13</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-    <node name="Artiodactyla">
-     <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Suidae">
-      <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Lagomorpha">
-     <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Leporidae">
-      <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-    <node name="Chiroptera">
-     <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Vespertilionidae">
-      <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>366</val><val>264</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>73</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-   <node name="Aves">
-    <magnitude><val>426</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>30</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-    <node name="Passeriformes">
-     <magnitude><val>426</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>30</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-     <node name="Aegithalidae">
-      <magnitude><val>128</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>128</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>128</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>102</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Phylloscopidae">
-      <magnitude><val>41</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>30</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>41</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>30</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>41</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>30</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-     <node name="Paridae">
-      <magnitude><val>257</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>257</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>257</val><val>257</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-   <node name="Actinopteri">
-    <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-    <node name="Blenniiformes">
-     <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-     <node name="Blenniidae">
-      <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-      <node name="NA">
-       <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       <node name="NA">
-        <magnitude><val>3</val><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
-       </node>
-      </node>
-     </node>
-    </node>
-   </node>
-  </node>
   <node name="Ascomycota">
    <magnitude><val>121</val><val>0</val><val>0</val><val>0</val><val>0</val><val>30</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>6</val><val>0</val><val>21</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>15</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
    <node name="Dothideomycetes">
@@ -7165,6 +6862,309 @@ function zoomOut()
        <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
        <node name="NA">
         <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+  <node name="Arthropoda">
+   <magnitude><val>851604</val><val>19</val><val>43956</val><val>2302</val><val>4260</val><val>53123</val><val>5010</val><val>27</val><val>4099</val><val>4936</val><val>19491</val><val>32438</val><val>2701</val><val>2955</val><val>15592</val><val>10792</val><val>7703</val><val>46015</val><val>42443</val><val>9934</val><val>5941</val><val>33986</val><val>28459</val><val>3302</val><val>64251</val><val>35089</val><val>45503</val><val>14849</val><val>48779</val><val>3377</val><val>15760</val><val>4460</val><val>2922</val><val>100562</val><val>29538</val><val>1150</val><val>69927</val><val>2892</val><val>24921</val><val>8068</val><val>72</val></magnitude>
+   <node name="Insecta">
+    <magnitude><val>46474</val><val>19</val><val>6</val><val>0</val><val>29</val><val>6</val><val>28</val><val>27</val><val>0</val><val>23</val><val>84</val><val>22</val><val>7</val><val>349</val><val>6045</val><val>224</val><val>827</val><val>660</val><val>209</val><val>213</val><val>4280</val><val>31204</val><val>15</val><val>6</val><val>0</val><val>0</val><val>37</val><val>27</val><val>229</val><val>0</val><val>2</val><val>14</val><val>34</val><val>135</val><val>52</val><val>14</val><val>5</val><val>3</val><val>1527</val><val>40</val><val>72</val></magnitude>
+    <node name="Psocoptera">
+     <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
+     <node name="Liposcelididae">
+      <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>72</val><val>19</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>26</val><val>2</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Ephemeroptera">
+     <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Polymitarcyidae">
+      <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Orthoptera">
+     <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
+     <node name="Gryllidae">
+      <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
+      <node name="NA">
+       <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
+       <node name="NA">
+        <magnitude><val>7671</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>23</val><val>84</val><val>22</val><val>0</val><val>349</val><val>5958</val><val>36</val><val>9</val><val>13</val><val>0</val><val>0</val><val>58</val><val>540</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>81</val><val>0</val><val>0</val><val>0</val><val>0</val><val>461</val><val>11</val><val>26</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Lepidoptera">
+     <magnitude><val>180</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>4</val><val>15</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>116</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Gracillariidae">
+      <magnitude><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>54</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Gelechiidae">
+      <magnitude><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>29</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Noctuidae">
+      <magnitude><val>88</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>15</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>62</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>88</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>15</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>62</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>88</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>15</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>62</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Blastobasidae">
+      <magnitude><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>9</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Coleoptera">
+     <magnitude><val>37122</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
+     <node name="Tenebrionidae">
+      <magnitude><val>37086</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>37086</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>37086</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>84</val><val>188</val><val>816</val><val>647</val><val>209</val><val>211</val><val>4210</val><val>30571</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>150</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Carabidae">
+      <magnitude><val>34</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>34</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>34</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>7</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>27</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Coccinellidae">
+      <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Neuroptera">
+     <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
+     <node name="Chrysopidae">
+      <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>10</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>10</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Blattodea">
+     <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
+     <node name="Blaberidae">
+      <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
+      <node name="NA">
+       <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1186</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>28</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>89</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>14</val><val>29</val><val>52</val><val>23</val><val>0</val><val>0</val><val>0</val><val>858</val><val>24</val><val>46</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Diptera">
+     <magnitude><val>145</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>113</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
+     <node name="Chironomidae">
+      <magnitude><val>109</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>105</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>109</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>105</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>109</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>4</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>105</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Culicidae">
+      <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>6</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Tipulidae">
+      <magnitude><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>8</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Cecidomyiidae">
+      <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Hemiptera">
+     <magnitude><val>61</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>5</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
+     <node name="Lygaeidae">
+      <magnitude><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>3</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>3</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Lachnidae">
+      <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>13</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>11</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Miridae">
+      <magnitude><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>5</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Cicadellidae">
+      <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>12</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Aphididae">
+      <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Liviidae">
+      <magnitude><val>26</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>26</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>26</val><val>0</val><val>0</val><val>0</val><val>26</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Hymenoptera">
+     <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Formicidae">
+      <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>21</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Malacostraca">
+    <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+    <node name="Isopoda">
+     <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Porcellionidae">
+      <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>38</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>36</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Diplopoda">
+    <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+    <node name="Julida">
+     <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+     <node name="Julidae">
+      <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>22</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Arachnida">
+    <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
+    <node name="Scorpiones">
+     <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
+     <node name="Scorpionidae">
+      <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>805068</val><val>0</val><val>43950</val><val>2302</val><val>4231</val><val>53117</val><val>4982</val><val>0</val><val>4099</val><val>4913</val><val>19407</val><val>32416</val><val>2694</val><val>2606</val><val>9547</val><val>10568</val><val>6876</val><val>45355</val><val>42232</val><val>9721</val><val>1661</val><val>2760</val><val>28444</val><val>3296</val><val>64251</val><val>35089</val><val>45430</val><val>14822</val><val>48550</val><val>3377</val><val>15758</val><val>4446</val><val>2888</val><val>100427</val><val>29486</val><val>1136</val><val>69922</val><val>2889</val><val>23394</val><val>8026</val><val>0</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Hexanauplia">
+    <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+    <node name="Cyclopoida">
+     <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+     <node name="Cyclopidae">
+      <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+      <node name="NA">
+       <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
+       <node name="NA">
+        <magnitude><val>2</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>0</val><val>2</val><val>0</val></magnitude>
        </node>
       </node>
      </node>
