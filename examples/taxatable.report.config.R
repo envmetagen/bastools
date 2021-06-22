@@ -103,6 +103,7 @@ hidelegend=T
 #hide legend for pca plots
 hidelegend.pca=T
 #split plots by facet, set to NULL if not required, usually for "below" plotting.vars (not implemeted for pca plots yet)
+#facetcol is also used to create a comparison taxatable, which highlights taxa detected via one facet or another. This is only produced if the facet has two categories. 
 facetcol=NULL
 #add a colour bar to heatmap plots (only makes sense if "above" plotting.vars). 
 #can be NULL, can be up to three - samples will be ordered according to the last one
