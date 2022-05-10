@@ -5,6 +5,7 @@ taxatab.check.names<-function(taxatab,master_sheet, ms_column_name){
   print(master_sheet[,ms_column_name][!master_sheet[,ms_column_name] %in% colnames(taxatab)])
 }
 
+
 plot.bars2<-function(all.stats.df,type="percent.dxns"){
   
   if(type=="percent.dxns") title="Percent Detections"
