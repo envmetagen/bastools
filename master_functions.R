@@ -1,3 +1,27 @@
+taxatab.check.names<-function(taxatab,master_sheet, ms_column_name){
+  message("taxatab column names not in mastersheet:")
+  print(colnames(taxatab)[!colnames(taxatab) %in% master_sheet[,ms_column_name]])
+  message("mastersheet names not in taxatab:")
+  print(master_sheet[,ms_column_name][!master_sheet[,ms_column_name] %in% colnames(taxatab)])
+}
+
+plot.bars2<-function(all.stats.df,type="percent.dxns"){
+  
+  if(type=="percent.dxns") title="Percent Detections"
+  if(type=="percent.reads") title="Percent Reads"
+  if(type=="percent.dxns") ylabel="Percent Detections"
+  if(type=="percent.reads") ylabel="Percent Reads"
+  
+  ggplot(all.stats.df,aes(x=name,y=all.stats.df[,type],fill=rank))+geom_bar(stat = "identity") +
+    theme(axis.text.x = element_text(angle = 45,hjust=1))+
+    theme(axis.line = element_line(colour = "black"))+
+    theme(panel.background = element_blank())+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    scale_y_continuous(labels = scales::comma)+
+    ggtitle(title)+
+    ylab(ylabel)
+}
+
 taxon.filter.solo<-function(files,filterpc=0.1){
   #remove detections where less than x% of total reads for taxon
   taxatables<-list()
@@ -86,6 +110,9 @@ bas.merge.taxatabs<-function(taxatabs){
   for(i in 1:length(taxatabs)){
     taxatabs.list[[i]]<-data.table::fread(taxatabs[i],sep = "\t",data.table = F)
     colnames(taxatabs.list[[i]])[1]<-"taxon" #this is for handling OTUtabs
+    #collapse identical paths
+    message("Collapsing identical paths")
+    taxatabs.list[[i]]<-aggregate(taxatabs.list[[i]][,-1,drop=F],by = list(taxon=taxatabs.list[[i]]$taxon),FUN=sum)
     counts[i,2]<-sum(taxatabs.list[[i]][,-1],na.rm = T)
     counts[i,3]<-length(taxatabs.list[[i]][,1])
     counts[i,4]<-length(colnames(taxatabs.list[[i]][,-1]))
@@ -1220,7 +1247,7 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL,out=NULL){
   for(i in 1:length(d)){
     sample<-cbind(a[,d[i]],b)
     colnames(sample)[1]<-d[i]
-    write.table(sample,row.names = F,file = paste0(d[i],".krona.txt"),quote = F,sep = "\t",col.names = F)
+    write.table(sample,row.names = F,file = paste0(gsub(" ","_",d[i]),".krona.txt"),quote = F,sep = "\t",col.names = F)
   }
   
   if(!is.null(KronaPath)){
@@ -1231,9 +1258,9 @@ bas.krona.plot<-function(taxatable,KronaPath=NULL,out=NULL){
     outfile<-out
   } else {outfile<-paste0(gsub(".txt",".krona.html",taxatable))}
   
-  system2(command = command,args = c(paste0(d,".krona.txt"),"-o",outfile) ,stdout = F,stderr = "",wait = T)
+  system2(command = command,args = c(paste0(gsub(" ","_",d),".krona.txt"),"-o",outfile) ,stdout = F,stderr = "",wait = T)
   
-  file.remove(paste0(d,".krona.txt"))
+  file.remove(paste0(gsub(" ","_",d),".krona.txt"))
 }
 
 taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,as.dxns=F,facetcol=NULL,hidelegend=F,grouping="ss_sample_id",
@@ -1312,7 +1339,8 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
 }
 
 #Plotting bray distance matrix PCA
-taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lines=F,longnames=F,shortnames=F,
+taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lines=F,
+                               longnames=F,shortnames=F,
                                ellipse=T,hidelegend=F){
   #message("Assuming grouping has already been done")
   
@@ -5782,7 +5810,8 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
   
   #comparison
   if(comparison){
-    if(length(unique(ms_ss[,facetcol]))>2) message("More than 2 facets, not implemented yet")
+    if(is.null(facetcol)) message("Please select a facetcol to run comparison")
+    if(length(unique(master_sheet[,facetcol]))>2) message("More than 2 facets, not implemented yet")
     
     taxatab.list[[1]]<-binarise.taxatab(taxatab.list[[1]],t=T)
     taxatab.list[[2]]<-binarise.taxatab(taxatab.list[[2]],t=T)
@@ -5933,17 +5962,24 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
         #if detected in all samples, need to change a little. 
         if(length(taxatab.list2[[1]][taxatab.list2[[1]]==0])==0) {
           
-          coldxns=c("red","green","black")
+          coldxns=c("coral1","darkgreen","darkorchid")
           levels=c(9,10,-1)
-          labels=c("Both",unique(ms_ss[,facetcol])[2],unique(ms_ss[,facetcol])[1]) 
+          labels=c("Both",unique(sort(master_sheet[,facetcol]))[1],unique(sort(master_sheet[,facetcol]))[2]) 
         } else {
+          #also if zero agreements
+          if(length(taxatab.list2[[1]][taxatab.list2[[1]]==9])==0) {
+            
+            coldxns=c("coral1","grey90","darkorchid")
+            levels=c(0,10,-1)
+            labels=c("Neither",unique(sort(master_sheet[,facetcol]))[1],unique(sort(master_sheet[,facetcol]))[2]) 
+          } else {
           
-        coldxns=c("red","grey90","green","black")
+        coldxns=c("coral1","grey90","darkgreen","darkorchid")
         levels=c(0,9,10,-1)
-        labels=c("Neither","Both",unique(ms_ss[,facetcol])[2],unique(ms_ss[,facetcol])[1]) 
+        labels=c("Neither","Both",unique(sort(master_sheet[,facetcol]))[1],unique(sort(master_sheet[,facetcol]))[2]) 
         #0=neither #10=T1 #9=both #-1=T2
-        } 
-        }else {
+         
+        }}} else {
         
       #if detected in all samples, need to change a little. 
       if(mean(taxatab.list2[[i]])==1) {
@@ -5956,6 +5992,7 @@ taxatab.heatmap<-function(taxatab,master_sheet,group.by="ss_sample_id",values="n
         labels=c("Detected","Not Detected") 
       }
         }
+        
       
       CurrentData<-round(taxatab.list2[[i]],digits = 0)
       

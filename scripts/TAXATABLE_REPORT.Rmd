@@ -73,7 +73,7 @@ stepcounter<-0
 if(is.null(master_sheet_file)){
   master_sheet<-google.overlord(url = url,tokenDir = bastoolsDir)
 } else {
-  master_sheet<-data.table::fread(master_sheet_file,data.table = F,sep = "\t")
+  master_sheet<-data.table::fread(master_sheet_file,data.table = F,sep = "\t",header = T)
 }
 
 ##subset master sheet for this study 
@@ -546,6 +546,42 @@ if(plot.bars) if(!is.null(plotting.vars)){
   
 ```
   
+## group stats
+```{r grouped stats, eval=TRUE,echo=F}
+#grouping stats
+#rank stats
+if(!is.null(plotting.vars)){
+  
+  stats.list<-list()
+  bigger.stats.list<-list()
+  
+  ms_ss2<-ms_ss
+  ms_ss2$groupedtab<- do.call(paste, c(ms_ss2[plotting.vars], sep = ":")) 
+  
+  plotting.vars.grouped<-c(plotting.vars,"groupedtab")
+  
+  for(j in 1:length(plotting.vars.grouped)){
+  grouped.tab<-sumreps(all.taxatabs.ss,ms_ss2,grouping = plotting.vars.grouped[j],discard = F)
+  
+    for(i in 2:ncol(grouped.tab)){
+      xtab<-grouped.tab[,c(1,i)]
+      #message(colnames(xtab)[2])
+      #print(stats.by.rank(taxatab = xtab))
+      stats.list[[i]]<-as.data.frame(stats.by.rank(taxatab = xtab))
+      stats.list[[i]]$name<-colnames(xtab)[2]
+    }
+  all.stats.df<-data.frame(Reduce(rbind, stats.list))
+  
+
+   print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.dxns"))
+   
+     print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.reads"))
+  }
+}
+
+
+```
+
 ## set heatmap size 
 ```{r heatmap_size, eval=TRUE,echo=F,fig.height=14,fig.width=20}
   heatmap.h<-5
