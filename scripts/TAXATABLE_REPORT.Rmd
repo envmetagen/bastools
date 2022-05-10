@@ -553,8 +553,7 @@ if(plot.bars) if(!is.null(plotting.vars)){
 if(!is.null(plotting.vars)){
   
   stats.list<-list()
-  bigger.stats.list<-list()
-  
+
   ms_ss2<-ms_ss
   ms_ss2$groupedtab<- do.call(paste, c(ms_ss2[plotting.vars], sep = ":")) 
   
