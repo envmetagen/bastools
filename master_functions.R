@@ -1,3 +1,43 @@
+taxatab.pieplot.multilev<-function(taxtab,yaxisTaxlevel="class"){
+  
+  taxlevels<-c("kingdom","phylum","class", "order","family","genus", "species")
+  #class
+  aa<-keep.below.xLevel.assigns(grouped.tab,xLevel = yaxisTaxlevel,rm.trailing.NA = F)
+  tablev<-as.data.frame(stringr::str_split(aa$taxon,pattern = ";",
+                                           simplify = T)[,match(yaxisTaxlevel,taxlevels)])
+  colnames(tablev)<-"level"
+  
+  agg.path.split<-setNames(split(aa, f = tablev$level),sort(unique(tablev$level)))
+  agg.path.split.levs<-list()
+  for(l in 1:length(agg.path.split)){
+    
+    for(i in 2:(ncol(agg.path.split[[l]]))){
+      xtab<-agg.path.split[[l]][,c(1,i)]
+      stats.list[[i]]<-as.data.frame(stats.by.rank(taxatab = xtab,grouphtf = F))
+      stats.list[[i]]$name<-colnames(xtab)[2]
+      stats.list[[i]]$tax<-names(agg.path.split[l])
+    }
+    all.stats.df<-data.frame(Reduce(rbind, stats.list))
+    all.stats.df$rank<-factor(all.stats.df$rank,levels = taxlevels)
+    
+    agg.path.split.levs[[l]]<-all.stats.df
+  }
+  all.aggs.df<-data.frame(Reduce(rbind, agg.path.split.levs))
+  
+  
+  print(
+    ggplot(all.aggs.df, aes(x=" ", y=percent.dxns, fill=rank)) +
+      geom_bar(stat="identity", width=1) +
+      coord_polar("y", start=0) +
+      facet_grid(tax ~ name) + #taxon~name
+      theme(axis.text = element_blank(),
+            axis.ticks = element_blank(),
+            panel.grid  = element_blank(),
+            strip.text.y = element_text(angle = 0))
+  )
+}
+
+
 taxatab.check.names<-function(taxatab,master_sheet, ms_column_name){
   message("taxatab column names not in mastersheet:")
   print(colnames(taxatab)[!colnames(taxatab) %in% master_sheet[,ms_column_name]])
@@ -360,7 +400,6 @@ remove.contaminant.taxa<-function(master_sheet,taxatab,negatives,group.codes,pri
 
 #keep only xLevel assignments
 keep.below.xLevel.assigns<-function(taxatab,xLevel="species",rm.trailing.NA=F){
-  if(!xLevel %in% c("species","genus","family","order")) stop("Only allowable at genus, family, order or species level")
   message("Reminder: this changes 'unknown' and 'collapsed' to 'NA'")
   
   taxatab$taxon<-gsub("unknown","NA",taxatab$taxon)
@@ -370,9 +409,17 @@ keep.below.xLevel.assigns<-function(taxatab,xLevel="species",rm.trailing.NA=F){
   taxatab<-taxatab[taxatab$taxon!="NA;NA;NA;NA;NA;NA;NA",]
   taxatab<-taxatab[taxatab$taxon!="no_hits;no_hits;no_hits;no_hits;no_hits;no_hits;no_hits",]
 
-  if(length(grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon),]
-  if(length(grep(";NA;NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA$",taxatab$taxon),]
-  if(length(grep(";NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA$",taxatab$taxon),]
+  if(xLevel=="phylum" | xLevel=="class" | xLevel=="order" | xLevel=="family" | xLevel=="genus" | xLevel=="species" )  {
+    if(length(grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA;NA$",taxatab$taxon),]
+  }
+  
+  if(xLevel=="class" | xLevel=="order" | xLevel=="family" | xLevel=="genus" | xLevel=="species" )  {
+    if(length(grep(";NA;NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA;NA$",taxatab$taxon),]
+  }
+  
+  if(xLevel=="order" | xLevel=="family" | xLevel=="genus" | xLevel=="species" )  {
+    if(length(grep(";NA;NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA;NA$",taxatab$taxon),]
+  }
   
   if(xLevel=="family" | xLevel=="genus" | xLevel=="species" )  {
     if(length(grep(";NA;NA;NA$",taxatab$taxon))>0) taxatab<-taxatab[-grep(";NA;NA;NA$",taxatab$taxon),]
@@ -388,6 +435,10 @@ keep.below.xLevel.assigns<-function(taxatab,xLevel="species",rm.trailing.NA=F){
   
   taxatab<-rm.0readtaxSam(taxatab)
   
+  if(rm.trailing.NA) if(xLevel=="kingdom") taxatab$taxon<-gsub(";NA;NA;NA;NA;NA;NA$","",taxatab$taxon)
+  if(rm.trailing.NA) if(xLevel=="phylum") taxatab$taxon<-gsub(";NA;NA;NA;NA;NA$","",taxatab$taxon)
+  if(rm.trailing.NA) if(xLevel=="class") taxatab$taxon<-gsub(";NA;NA;NA;NA$","",taxatab$taxon)
+  if(rm.trailing.NA) if(xLevel=="order") taxatab$taxon<-gsub(";NA;NA;NA$","",taxatab$taxon)
   if(rm.trailing.NA) if(xLevel=="family") taxatab$taxon<-gsub(";NA;NA$","",taxatab$taxon)
   if(rm.trailing.NA) if(xLevel=="genus") taxatab$taxon<-gsub(";NA$","",taxatab$taxon)
   
@@ -396,7 +447,7 @@ keep.below.xLevel.assigns<-function(taxatab,xLevel="species",rm.trailing.NA=F){
 
 aggregate.at.xLevel<-function(taxatab,xLevel,rm.above=F,rm.trailing.NA=F){
   
-  if(!xLevel %in% c("genus","family","order","class","phylum")) stop("Only allowable at genus, family, order, class or phylum level")
+  if(!xLevel %in% c("genus","family","order","class","phylum","kingdom")) stop("Only allowable at genus, family, order, class or phylum level")
   
   splittaxonomy<-as.data.frame(do.call(rbind,stringr::str_split(taxatab[,1],";")))
   
@@ -424,6 +475,11 @@ aggregate.at.xLevel<-function(taxatab,xLevel,rm.above=F,rm.trailing.NA=F){
   if(xLevel=="phylum"){
     xPath=paste0(splittaxonomy[,1],";",splittaxonomy[,2])
     leftover<-c(";collapsed;collapsed;collapsed;collapsed;collapsed")
+  }
+  
+  if(xLevel=="kingdom"){
+    xPath=paste0(splittaxonomy[,1])
+    leftover<-c(";collapsed;collapsed;collapsed;collapsed;collapsed;collapsed")
   }
   
   taxatab<-aggregate(taxatab[,-1,drop=F],by = list(xPath),FUN=sum)
@@ -6991,3 +7047,17 @@ bas.dat2fasta<-function(dat, outfile = "out.fasta") {
   #cat(paste(outfile, "has been saved to ", getwd(), "\n"))
 }
 
+taxatab.venn.plot<-function(taxatab){
+  taxatab.list<-list()
+  for(i in 2:ncol(taxatab)){
+    taxatab.list[[i]]<-taxatab[,c(1,i)]
+    taxatab.list[[i]]<-rm.0readtaxSam(taxatab.list[[i]])
+    taxatab.list[[i]]<-taxatab.list[[i]][,1]
+    taxatab.list[[i]]<-as.character(taxatab.list[[i]])
+  }
+  
+  taxatab.list<- taxatab.list %>% discard(is.null)
+  names(taxatab.list)<-colnames(taxatab[,-1,drop=F])
+  ggVennDiagram(taxatab.list,category.names = names(taxatab.list)) 
+  
+}

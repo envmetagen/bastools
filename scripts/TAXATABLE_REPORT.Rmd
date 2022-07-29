@@ -63,6 +63,7 @@ message("Note that 'htf'= higher-than-family throughout")
 source(paste0(bastoolsDir,"master_functions.R"))
 library(ggplot2)
 library(dplyr)
+library(ggVennDiagram)
 options(httr_oob_default = TRUE)
 all.stats<-list()
 stepcounter<-0
@@ -546,11 +547,12 @@ if(plot.bars) if(!is.null(plotting.vars)){
   
 ```
   
-## group stats
-```{r grouped stats, eval=TRUE,echo=F}
-#grouping stats
+## rank stats
+```{r rank stats, eval=TRUE,echo=F}
 #rank stats
 if(!is.null(plotting.vars)){
+  
+  message("Ignore the fact that plots are duplicated")
   
   stats.list<-list()
 
@@ -564,21 +566,50 @@ if(!is.null(plotting.vars)){
   
     for(i in 2:ncol(grouped.tab)){
       xtab<-grouped.tab[,c(1,i)]
-      #message(colnames(xtab)[2])
-      #print(stats.by.rank(taxatab = xtab))
-      stats.list[[i]]<-as.data.frame(stats.by.rank(taxatab = xtab))
+      stats.list[[i]]<-as.data.frame(stats.by.rank(taxatab = xtab,grouphtf = F))
       stats.list[[i]]$name<-colnames(xtab)[2]
     }
   all.stats.df<-data.frame(Reduce(rbind, stats.list))
+  all.stats.df$rank<-factor(all.stats.df$rank,levels = c("species","genus","family","order","class","phylum","kingdom"))
   
+  
+  #summary
+DT::datatable(  reshape2::dcast(all.stats.df[,c("rank","dxns","name")],formula = rank~name,value.var = "dxns" )
+, rownames = FALSE, options = list(pageLength = 50, scrollX=T),caption = "Number of detections at each taxonomic rank")
 
    print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.dxns"))
+   
+   DT::datatable(  reshape2::dcast(all.stats.df[,c("rank","reads","name")],formula = rank~name,value.var = "reads" )
+, rownames = FALSE, options = list(pageLength = 50, scrollX=T),caption = "Number of reads at each taxonomic rank")
    
      print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.reads"))
   }
 }
+```
 
+## pie rank stats
+```{r pie rank stats, eval=TRUE,echo=F,fig.width=70}
+#piechart by family
+if(!is.null(plotting.vars)){
+  
+  stats.list<-list()
 
+  ms_ss2<-ms_ss
+  ms_ss2$groupedtab<- do.call(paste, c(ms_ss2[plotting.vars], sep = ":")) 
+  
+  #plotting.vars.grouped<-c(plotting.vars,"groupedtab")
+  
+  for(j in 1:length(plotting.vars)){
+  grouped.tab<-sumreps(all.taxatabs.ss,ms_ss2,grouping = plotting.vars[j],discard = F)
+  
+   taxatab.pieplot.multilev(taxtab = grouped.tab,yaxisTaxlevel = "kingdom")
+    taxatab.pieplot.multilev(grouped.tab,"phylum")
+    taxatab.pieplot.multilev(grouped.tab,"class")
+    taxatab.pieplot.multilev(grouped.tab,"order")
+    taxatab.pieplot.multilev(grouped.tab,"family")
+    taxatab.pieplot.multilev(grouped.tab,"genus")
+  }
+}
 ```
 
 ## set heatmap size 
@@ -680,6 +711,34 @@ if(plot.pca) if(!is.null(plotting.vars)){
   
  
 } else message("plotting.vars=F...skipping pca plots")
+```
+
+## venns 
+```{r venns, eval=TRUE,echo=F,fig.height=heatmap.h,fig.width=heatmap.w}
+
+if(plot.venn) if(!is.null(plotting.vars)) {
+  
+  message("Plotting venn")
+  
+  if(!exists("plotting.vars.venn")) plotting.vars.venn<-plotting.vars
+  
+  for(j in 1:length(taxatabs.multilevels)){
+    
+  message("The following plots are venns at ",names(taxatabs.multilevels)[j]," level for each of ", plotting.vars, " (if <8 dimensions)")
+    
+     #then group by group.by
+    for(i in 1:length(plotting.vars)){
+      taxatabtemp<- sumreps(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = plotting.vars[i],discard = F,  current.grouping = sumrepsby)
+      if(ncol(taxatabtemp)<8) {
+        print(taxatab.venn.plot(taxatabtemp))
+      } else {
+        message("Only support 2-7 dimension Venn diagram")
+      }
+    }
+  }
+ 
+} else message("plotting.vars=F...skipping venn plots")
+
 ```
 
 ## species accumulation curve 
