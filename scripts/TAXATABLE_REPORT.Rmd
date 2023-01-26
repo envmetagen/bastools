@@ -75,6 +75,10 @@ if(is.null(master_sheet_file)){
   master_sheet<-google.overlord(url = url,tokenDir = bastoolsDir)
 } else {
   master_sheet<-data.table::fread(master_sheet_file,data.table = F,sep = "\t",header = T)
+  #make plotting vars categorical
+  for (i in 1:length(plotting.vars)){
+       master_sheet[,plotting.vars[i]]<-as.character(master_sheet[,plotting.vars[i]])
+  }
 }
 
 ##subset master sheet for this study 
@@ -562,7 +566,8 @@ if(!is.null(plotting.vars)){
   plotting.vars.grouped<-c(plotting.vars,"groupedtab")
   
   for(j in 1:length(plotting.vars.grouped)){
-  grouped.tab<-sumreps(all.taxatabs.ss,ms_ss2,grouping = plotting.vars.grouped[j],discard = F)
+  grouped.tab<-sumreps(all.taxatabs.ss,ms_ss2,grouping = plotting.vars.grouped[j],discard = F
+                       , current.grouping = sumrepsby)
   
     for(i in 2:ncol(grouped.tab)){
       xtab<-grouped.tab[,c(1,i)]
@@ -577,37 +582,16 @@ if(!is.null(plotting.vars)){
 DT::datatable(  reshape2::dcast(all.stats.df[,c("rank","dxns","name")],formula = rank~name,value.var = "dxns" )
 , rownames = FALSE, options = list(pageLength = 50, scrollX=T),caption = "Number of detections at each taxonomic rank")
 
-   print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.dxns"))
+ print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "dxns",x_axis_title = plotting.vars.grouped[j]))
+ 
+   print(plot.bars2(all.stats.df = all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.dxns",x_axis_title = plotting.vars.grouped[j]))
    
    DT::datatable(  reshape2::dcast(all.stats.df[,c("rank","reads","name")],formula = rank~name,value.var = "reads" )
 , rownames = FALSE, options = list(pageLength = 50, scrollX=T),caption = "Number of reads at each taxonomic rank")
    
-     print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.reads"))
-  }
-}
-```
-
-## pie rank stats
-```{r pie rank stats, eval=TRUE,echo=F,fig.width=70}
-#piechart by family
-if(!is.null(plotting.vars)){
-  
-  stats.list<-list()
-
-  ms_ss2<-ms_ss
-  ms_ss2$groupedtab<- do.call(paste, c(ms_ss2[plotting.vars], sep = ":")) 
-  
-  #plotting.vars.grouped<-c(plotting.vars,"groupedtab")
-  
-  for(j in 1:length(plotting.vars)){
-  grouped.tab<-sumreps(all.taxatabs.ss,ms_ss2,grouping = plotting.vars[j],discard = F)
-  
-   taxatab.pieplot.multilev(taxtab = grouped.tab,yaxisTaxlevel = "kingdom")
-    taxatab.pieplot.multilev(grouped.tab,"phylum")
-    taxatab.pieplot.multilev(grouped.tab,"class")
-    taxatab.pieplot.multilev(grouped.tab,"order")
-    taxatab.pieplot.multilev(grouped.tab,"family")
-    taxatab.pieplot.multilev(grouped.tab,"genus")
+     print(plot.bars2(all.stats.df[all.stats.df$name %in% unique(ms_ss2[,plotting.vars.grouped[j]]),],type = "percent.reads",x_axis_title = plotting.vars.grouped[j]))
+     
+    
   }
 }
 ```
@@ -632,6 +616,34 @@ if(!is.null(plotting.vars)){
   
   message("heatmap width=",heatmap.w," based on ",ncol(all.taxatabs.ss)," samples")
 
+```
+
+## pie rank stats
+```{r pie rank stats, eval=TRUE,echo=F,fig.height=heatmap.h,fig.width=heatmap.w}
+#piechart by family
+if (plot.pies) if(!is.null(plotting.vars)){
+  
+  stats.list<-list()
+
+  ms_ss2<-ms_ss
+  ms_ss2$groupedtab<- do.call(paste, c(ms_ss2[plotting.vars], sep = ":")) 
+  
+  #plotting.vars.grouped<-c(plotting.vars,"groupedtab")
+  
+  for(j in 1:length(plotting.vars)){
+  grouped.tab<-sumreps(taxatab =  all.taxatabs.ss,ms_ss = ms_ss2,current.grouping = sumrepsby,
+                       grouping = plotting.vars[j],discard = F)
+  
+    print(taxatab.pieplot.multilev(taxtab = grouped.tab,yaxisTaxlevel = "kingdom",title = "kingdom"))
+    print(taxatab.pieplot.multilev(grouped.tab,"phylum",title = "phylum"))
+    print(taxatab.pieplot.multilev(grouped.tab,yaxisTaxlevel = "class",title = "class"))
+    print(taxatab.pieplot.multilev(grouped.tab,"order",title = "order"))
+    print(taxatab.pieplot.multilev(grouped.tab,"family",title = "family"))
+    print(taxatab.pieplot.multilev(grouped.tab,"genus",title = "genus"))
+  }
+} else {
+  message("plot pies=F or no plotting vars chosen")
+}
 ```
 
 ## heatmaps 
@@ -702,9 +714,25 @@ if(plot.pca) if(!is.null(plotting.vars)){
       message("The following plots are comparisons at ",names(taxatabs.multilevels)[j]," level")
       
     for(i in 1:length(plotting.vars.pca)){
-      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = sumrepsby,
-                                 lines = show.pca.lines,longnames = F,
-                                 shortnames = T,ellipse = T,factors = plotting.vars.pca[i],hidelegend = hidelegend.pca))
+      print(taxatab.pca.plot.col(taxatab = taxatabs.multilevels[[j]],
+                                 ms_ss = ms_ss,
+                                 grouping = sumrepsby,
+                                 lines = show.pca.lines,
+                                 longnames = F,
+                                 shortnames = T,
+                                 ellipse = T,
+                                 factors = plotting.vars.pca[i],
+                                 hidelegend = hidelegend.pca,
+                                 plot_title = paste(names(taxatabs.multilevels)[j],
+                                                    "level, coloured by", plotting.vars.pca[i])
+                                                    
+                                 ))
+      if(do.adonis==T) {
+        x<-adonis.bas(taxatab = taxatabs.multilevels[[j]],master_sheet = ms_ss,factor1 = plotting.vars.pca[i]
+                   #,stratum = "site"
+                   ,samLevel = sumrepsby)
+        print(x)
+      }
     }
     } else message("Only two samples at ", names(taxatabs.multilevels)[j]," level, skipping PCoA plot")
   }
@@ -730,14 +758,24 @@ if(plot.venn) if(!is.null(plotting.vars)) {
     for(i in 1:length(plotting.vars)){
       taxatabtemp<- sumreps(taxatab = taxatabs.multilevels[[j]],ms_ss = ms_ss,grouping = plotting.vars[i],discard = F,  current.grouping = sumrepsby)
       if(ncol(taxatabtemp)<8) {
-        print(taxatab.venn.plot(taxatabtemp))
+        print(taxatab.venn.plot(taxatab = taxatabtemp, title=paste(names(taxatabs.multilevels[j]),"level")))
       } else {
         message("Only support 2-7 dimension Venn diagram")
       }
+      
+      #was attempt at listing taxa identified in only one grouping, but gave up (better 
+      #to do on grouped by zlevel to interpret properly )
+      #for (k in 2:ncol(taxatabtemp)){
+       # colaa<-colnames(taxatabtemp)[k]
+        #message(colnames(taxatabtemp)[k], " only, at ", names(taxatabs.multilevels)[j], "level")
+      #print(taxatabtemp[(taxatabtemp[,colaa]>0) & (rowSums()taxatabtemp[,colaa]>0),])
+      
     }
   }
  
 } else message("plotting.vars=F...skipping venn plots")
+
+
 
 ```
 

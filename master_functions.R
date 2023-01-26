@@ -1,4 +1,44 @@
-taxatab.pieplot.multilev<-function(taxtab,yaxisTaxlevel="class"){
+NMdata_to_bastools_inputs<-function(NMOTU,NMQC){
+  #NMOTU<-"/media/sf_tmp_win_vm/scotgov/P2/ZG0002133.client.otuids.txt"
+  #NMQC<-"/media/sf_tmp_win_vm/scotgov/P2/ZG0002133_QC.txt"
+  require(dplyr)
+  MS<-data.table::fread(NMQC,skip = 6)
+  taxtab<-NMOTU_to_bastoolsOTU(NMOTU)
+  names(MS)[names(MS)=="DNA_ID"] <- "ss_sample_id"
+  colnames(taxtab)<-c("taxon",str_match(colnames(taxtab[,-1]),"^[^_]*_(.+)_[^_]*$")[,2])
+  write.table(MS,gsub(".txt",".bastools.txt",NMQC),row.names = F,quote = F,sep = "\t")
+  write.table(taxtab,gsub(".txt",".bastools.txt",NMOTU),row.names = F,quote = F,sep = "\t")
+}
+
+NMOTU_to_bastoolsOTU<-function(NMOTU){
+  require(tidyverse)
+  taxtab<-data.table::fread(NMOTU)
+  taxtab<-taxtab[taxtab$Status=="Target",]
+  taxtab[taxtab == ""] <- NA
+  taxtab$taxon<-paste0(taxtab$Kingdom,";",taxtab$Phylum,";",taxtab$Class,";",taxtab$Order,";",taxtab$Family,";",taxtab$Genus,";",taxtab$Species)
+  taxtab<-taxtab %>% select(taxon,starts_with("ZG"))
+  taxtab
+}
+
+
+taxatab.replace_non_utf8<-function(taxatab, replace_with=""){
+  
+  taxatabtemp<-taxatab
+  
+  for (i in 1:nrow(taxatabtemp)){
+    
+    x<-!is.na(taxatabtemp$taxon[i]) & is.na(iconv(taxatabtemp$taxon[i], "UTF-8", "UTF-8"))
+    if(x==T) {
+      message(paste("non utf8 character in row",i, taxatabtemp$taxon[i]))
+      taxatabtemp$taxon[i]<-iconv(taxatabtemp$taxon[i], "latin1", "ASCII", sub=replace_with)
+      message(paste("converted to", taxatabtemp$taxon[i]))
+    }
+  }
+  taxatabtemp
+}
+
+
+taxatab.pieplot.multilev<-function(taxtab,yaxisTaxlevel="class",title=NULL){
   
   taxlevels<-c("kingdom","phylum","class", "order","family","genus", "species")
   #class
@@ -23,18 +63,32 @@ taxatab.pieplot.multilev<-function(taxtab,yaxisTaxlevel="class"){
     agg.path.split.levs[[l]]<-all.stats.df
   }
   all.aggs.df<-data.frame(Reduce(rbind, agg.path.split.levs))
+  all.aggs.df$AAcombos<-paste0(all.aggs.df$name,all.aggs.df$tax)
   
+  count.aggs<-as.data.frame(aggregate(all.aggs.df$dxns,list(all.aggs.df$tax,all.aggs.df$name),FUN=sum))
+  count.aggs$CAcombos<-as.character(paste0(count.aggs$Group.2,count.aggs$Group.1))
   
-  print(
-    ggplot(all.aggs.df, aes(x=" ", y=percent.dxns, fill=rank)) +
+  all.aggs.df<-merge(all.aggs.df,count.aggs[,c("CAcombos","x")],by.x = "AAcombos",by.y = "CAcombos")
+  
+a<-ggplot(all.aggs.df, aes(x=" ", y=percent.dxns, fill=rank)) +
       geom_bar(stat="identity", width=1) +
       coord_polar("y", start=0) +
       facet_grid(tax ~ name) + #taxon~name
       theme(axis.text = element_blank(),
             axis.ticks = element_blank(),
             panel.grid  = element_blank(),
-            strip.text.y = element_text(angle = 0))
-  )
+            strip.text.y = element_text(angle = 0),
+            axis.title.y = element_blank()) +
+      geom_text(data=all.aggs.df,
+                #plyr::count(all.aggs.df, vars = c("dxns","name)), 
+                aes(
+                  x=1.8, 
+                  y=1, 
+                  label=paste0("N=",x)), colour="black", 
+                inherit.aes=FALSE, 
+                parse=FALSE) +
+  ggtitle(title)
+  
 }
 
 
@@ -46,12 +100,14 @@ taxatab.check.names<-function(taxatab,master_sheet, ms_column_name){
 }
 
 
-plot.bars2<-function(all.stats.df,type="percent.dxns"){
+plot.bars2<-function(all.stats.df,type="percent.dxns", x_axis_title=""){
   
   if(type=="percent.dxns") title="Percent Detections"
   if(type=="percent.reads") title="Percent Reads"
   if(type=="percent.dxns") ylabel="Percent Detections"
   if(type=="percent.reads") ylabel="Percent Reads"
+  if(type=="dxns") title="Number Detections"
+  if(type=="dxns") ylabel="Number Detections"
   
   ggplot(all.stats.df,aes(x=name,y=all.stats.df[,type],fill=rank))+geom_bar(stat = "identity") +
     theme(axis.text.x = element_text(angle = 45,hjust=1))+
@@ -60,7 +116,8 @@ plot.bars2<-function(all.stats.df,type="percent.dxns"){
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
     scale_y_continuous(labels = scales::comma)+
     ggtitle(title)+
-    ylab(ylabel)
+    ylab(ylabel)+
+    xlab(x_axis_title)
 }
 
 taxon.filter.solo<-function(files,filterpc=0.1){
@@ -139,7 +196,7 @@ rm.0readOTUSam<-function(taxatab){
   taxatab3<-cbind(OTU=taxatab2$OTU,taxatab2[,-1][,colSums(taxatab2[,-1])!=0])
 }
 
-bas.merge.taxatabs<-function(taxatabs){
+bas.merge.taxatabs<-function(taxatabs, separator="\t"){
   
   if(TRUE %in% duplicated(taxatabs)) stop("taxatabs provided are not unique")
   
@@ -149,17 +206,23 @@ bas.merge.taxatabs<-function(taxatabs){
   counts<-data.frame(file=taxatabs,reads=0,taxa=0,samples=0)
   
   for(i in 1:length(taxatabs)){
-    taxatabs.list[[i]]<-data.table::fread(taxatabs[i],sep = "\t",data.table = F)
+    taxatabs.list[[i]]<-data.table::fread(taxatabs[i],sep = separator,data.table = F)
+    
     colnames(taxatabs.list[[i]])[1]<-"taxon" #this is for handling OTUtabs
+    #convert non utf8 characters
+    #taxatabs.list[[i]]<-taxatab.replace_non_utf8(taxatabs.list[[i]])
+    
     #collapse identical paths
     message("Collapsing identical paths")
     taxatabs.list[[i]]<-aggregate(taxatabs.list[[i]][,-1,drop=F],by = list(taxon=taxatabs.list[[i]]$taxon),FUN=sum)
     counts[i,2]<-sum(taxatabs.list[[i]][,-1],na.rm = T)
     counts[i,3]<-length(taxatabs.list[[i]][,1])
-    counts[i,4]<-length(colnames(taxatabs.list[[i]][,-1]))
+    counts[i,4]<-length(colnames(taxatabs.list[[i]][,-1,drop=F]))
     
     message(counts[i,1])
     message(paste0("reads: ",counts[i,2],", taxa: ",counts[i,3],", samples: ",counts[i,4]))
+    
+    
   }
   
   all.taxatabs<-taxatabs.list %>% purrr::reduce(full_join, by = "taxon")
@@ -508,17 +571,19 @@ adonis.bas<-function(taxatab,master_sheet,factor1,samLevel="ss_sample_id",stratu
     master_sheet2<-master_sheet2[!duplicated(master_sheet2[,samLevel]),,drop=F]
   }
   
-  
   if(!is.null(stratum)){
     #model using adonis
-    vegan::adonis(distance_matrix~master_sheet2[,factor1],by="term",method="bray", data = master_sheet2,
+    vegan::adonis2(distance_matrix~master_sheet2[,factor1],by="term",method="bray", 
+                   #data = master_sheet2,
                   strata = master_sheet2[,stratum],permutations = 10000)
   } else {
     #model using adonis
-    vegan::adonis(distance_matrix~master_sheet2[,factor1],by="term",method="bray", data = master_sheet2,permutations = 10000)
+    vegan::adonis2(distance_matrix~master_sheet2[,factor1],
+                   by="term",method="bray", #data = master_sheet2,
+                   permutations = 10000)
   }
   
-}
+  }
 
 add.lineage.df<-function(dframe,ncbiTaxDir,taxCol="taxids",as.taxids=F){
   
@@ -1398,7 +1463,7 @@ taxatab.stackplot<-function(taxatab,master_sheet=NULL,column=NULL,as.percent=T,a
 #Plotting bray distance matrix PCA
 taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lines=F,
                                longnames=F,shortnames=F,
-                               ellipse=T,hidelegend=F){
+                               ellipse=T,hidelegend=F, plot_title=""){
   #message("Assuming grouping has already been done")
   
   taxatab2<-taxatab
@@ -1432,7 +1497,8 @@ taxatab.pca.plot.col<-function(taxatab,ms_ss,grouping="ss_sample_id",factors,lin
     theme(legend.title = element_blank())+
     theme(legend.text=element_text(size=12))+
     theme(legend.spacing.x = unit(0.2, 'cm'))+
-    theme(axis.title = element_text(size = 12))
+    theme(axis.title = element_text(size = 12))+
+    ggtitle(plot_title)
   
   # if(!is.null(facetcol))  if(length(facetcol)==1) p<-p+facet_wrap(vars(cmdspoints[,match(facetcol[1],colnames(cmdspoints))]),scales = "fixed")
   # if(!is.null(facetcol))  if(length(facetcol)>1) p<-p+facet_wrap(facetcol,scales = "fixed")
@@ -2179,7 +2245,8 @@ names2taxids<-function(vector,ncbiTaxDir){
   outdf<-merge(outdf,taxidsA7,by.x = "vec2",by.y = "V1",all.x = T,all.y = F)
   if(length(namesB)>0){
     outdf<-merge(outdf,taxidsB7,by.x = "vec3",by.y = "V1",all.x = T,all.y = F)
-    outdf$V2.z<-ifelse(!is.na(outdf$V2.x) & !is.na(outdf$V2.y) | is.na(outdf$V2.y),outdf$V2.z<-outdf$V2.x,NA)}
+    outdf$V2.z<-ifelse(!is.na(outdf$V2.x) & !is.na(outdf$V2.y) | is.na(outdf$V2.y),outdf$V2.z<-outdf$V2.x,NA)
+    }
   #add choosegenus
   if(length(namesB)>0){
     outdf<-merge(outdf,choosegenusdf,by.x = "vec3",by.y = "name",all.x = T,all.y = F)
@@ -2187,7 +2254,8 @@ names2taxids<-function(vector,ncbiTaxDir){
   
   #combine taxids into one column
   if(length(namesB)>0){
-    outdf$taxids<-do.call(pmax, c(outdf[,c("V2.z","V2.y","V2.w")], list(na.rm=TRUE)))} else {outdf$taxids<-outdf$V2}
+    outdf$taxids<-do.call(pmax, c(outdf[,c("V2.z","V2.y","V2.w")], list(na.rm=TRUE)))
+    } else {outdf$taxids<-outdf$V2}
   
   #remove files
   unlink(names_fileA)
@@ -7047,7 +7115,7 @@ bas.dat2fasta<-function(dat, outfile = "out.fasta") {
   #cat(paste(outfile, "has been saved to ", getwd(), "\n"))
 }
 
-taxatab.venn.plot<-function(taxatab){
+taxatab.venn.plot<-function(taxatab, title=NULL){
   taxatab.list<-list()
   for(i in 2:ncol(taxatab)){
     taxatab.list[[i]]<-taxatab[,c(1,i)]
@@ -7058,6 +7126,6 @@ taxatab.venn.plot<-function(taxatab){
   
   taxatab.list<- taxatab.list %>% discard(is.null)
   names(taxatab.list)<-colnames(taxatab[,-1,drop=F])
-  ggVennDiagram(taxatab.list,category.names = names(taxatab.list)) 
-  
+  ggVennDiagram(taxatab.list,category.names = names(taxatab.list)) +
+    ggtitle(title)
 }
